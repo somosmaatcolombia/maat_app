@@ -1,0 +1,6 @@
+.DS_Store
+.claude/
+supabase/.temp/
+node_modules/
+.env
+*.log

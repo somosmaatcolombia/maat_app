@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0d1117">
+<title>MAAT — Portal del Mentor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@400;600;700&family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --c:#39A1C9;--o:#EBA055;--m:#7DCD93;--v:#89608E;--r:#D76B6E;
+  --bg:#0d1117;--bg2:#111827;--text:#e8eaf0;--mu:#8892a4;--mu2:#6b7280;
+  --bd:rgba(255,255,255,0.08);
+  --phase1:#39A1C9;--phase2:#EBA055;--phase3:#7DCD93;--phase4:#89608E;
+  --radius:14px;--radius-sm:8px;
+  --font-title:'Saira Condensed',sans-serif;
+  --font-body:'Sora',sans-serif;
+  --sidebar-w:220px;--topbar-h:56px;
+}
+[data-theme="light"]{--bg:#f0f4f8;--bg2:#e2e8f0;--text:#1a2030;--mu:#5a6377;--mu2:#6b7280;--bd:rgba(0,0,0,0.08);}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;overflow:hidden;}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;}
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-thumb{background:var(--mu2);border-radius:4px;}
+a{color:var(--c);text-decoration:none;}
+
+/* BOOT LOADER */
+#boot-loader{display:flex;align-items:center;justify-content:center;height:100vh;background:var(--bg);gap:8px;}
+#boot-loader .boot-dot{width:10px;height:10px;border-radius:50%;background:var(--c);animation:bootPulse .8s infinite alternate;}
+#boot-loader .boot-dot:nth-child(2){animation-delay:.15s;background:var(--o);}
+#boot-loader .boot-dot:nth-child(3){animation-delay:.3s;background:var(--m);}
+@keyframes bootPulse{to{opacity:.2;transform:scale(.6);}}
+
+/* AUTH — hidden by default, .visible shows it */
+#auth-screen{display:none;flex-direction:column;align-items:center;justify-content:center;height:100vh;padding:24px;text-align:center;}
+#auth-screen.visible{display:flex;}
+#auth-screen .logo-auth{width:100px;margin-bottom:20px;border-radius:16px;}
+#auth-screen h1{font-family:var(--font-title);font-size:28px;font-weight:700;letter-spacing:1px;}
+#auth-screen .subtitle{color:var(--mu);font-size:13px;margin-bottom:28px;}
+.auth-box{width:100%;max-width:340px;}
+.auth-box input{width:100%;padding:13px 16px;margin-bottom:10px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--bg2);color:var(--text);font-family:var(--font-body);font-size:14px;outline:none;transition:border .2s;}
+.auth-box input:focus{border-color:var(--c);}
+.btn-primary{width:100%;padding:13px;border:none;border-radius:var(--radius-sm);background:var(--c);color:#fff;font-family:var(--font-title);font-size:15px;font-weight:600;letter-spacing:1px;cursor:pointer;touch-action:manipulation;}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;}
+#auth-error{color:var(--r);font-size:13px;margin-top:10px;min-height:18px;}
+
+/* LAYOUT */
+#app{display:none;height:100vh;}
+.layout{display:flex;height:100%;}
+.sidebar{width:var(--sidebar-w);height:100vh;background:var(--bg2);border-right:1px solid var(--bd);display:flex;flex-direction:column;position:fixed;left:0;top:0;z-index:100;transition:transform .3s ease;}
+.sidebar-header{padding:20px 16px 16px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:10px;}
+.sidebar-header img{height:32px;border-radius:8px;}
+.sidebar-header span{font-family:var(--font-title);font-size:20px;font-weight:700;letter-spacing:.5px;}
+.sidebar-nav{flex:1;padding:12px 0;overflow-y:auto;}
+.nav-link{display:flex;align-items:center;gap:10px;padding:10px 20px;color:var(--mu);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;border-left:3px solid transparent;touch-action:manipulation;}
+.nav-link:hover{color:var(--text);background:rgba(255,255,255,.03);}
+.nav-link.active{color:var(--c);border-left-color:var(--c);background:rgba(57,161,201,.06);}
+.nav-link svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
+.nav-section{padding:16px 20px 6px;font-size:10px;color:var(--mu2);letter-spacing:1.5px;font-weight:600;text-transform:uppercase;}
+.sidebar-footer{padding:12px 16px;border-top:1px solid var(--bd);display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mu);}
+.sidebar-footer .avatar{width:28px;height:28px;border-radius:50%;background:var(--c);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--font-title);font-size:12px;font-weight:700;flex-shrink:0;}
+.main-area{flex:1;margin-left:var(--sidebar-w);display:flex;flex-direction:column;height:100vh;}
+.topbar{height:var(--topbar-h);display:flex;align-items:center;justify-content:space-between;padding:0 24px;border-bottom:1px solid var(--bd);background:var(--bg);flex-shrink:0;}
+.topbar-left{display:flex;align-items:center;gap:12px;}
+.hamburger{display:none;background:none;border:none;color:var(--text);font-size:22px;cursor:pointer;padding:4px;touch-action:manipulation;}
+.topbar h2{font-family:var(--font-title);font-size:20px;font-weight:600;letter-spacing:.3px;}
+.topbar-actions{display:flex;align-items:center;gap:12px;}
+.topbar-actions select{padding:6px 10px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--bg2);color:var(--text);font-size:12px;outline:none;}
+.btn-icon{background:none;border:1px solid var(--bd);border-radius:var(--radius-sm);color:var(--text);padding:6px 10px;cursor:pointer;font-size:13px;transition:all .15s;touch-action:manipulation;}
+.btn-icon:hover{border-color:var(--c);color:var(--c);}
+.content-area{flex:1;overflow-y:auto;padding:24px;}
+.view{display:none;}
+.view.active{display:block;animation:fadeIn .25s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99;}
+.sidebar-overlay.show{display:block;}
+
+/* COMPONENTS */
+.card{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--radius);padding:20px;margin-bottom:16px;}
+.card-title{font-family:var(--font-title);font-size:16px;font-weight:600;margin-bottom:12px;letter-spacing:.3px;}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:20px;}
+.stat-card{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--radius);padding:16px 20px;}
+.stat-card .stat-val{font-family:var(--font-title);font-size:28px;font-weight:700;line-height:1.1;}
+.stat-card .stat-label{font-size:12px;color:var(--mu);margin-top:4px;}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;font-family:var(--font-title);letter-spacing:.3px;}
+.badge-alert{background:rgba(215,107,110,.15);color:var(--r);}
+.badge-ok{background:rgba(125,205,147,.15);color:var(--m);}
+.badge-info{background:rgba(57,161,201,.15);color:var(--c);}
+.btn{padding:10px 20px;border:none;border-radius:var(--radius-sm);font-family:var(--font-title);font-size:14px;font-weight:600;letter-spacing:.5px;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px;touch-action:manipulation;}
+.btn-c{background:var(--c);color:#fff;}.btn-c:hover{opacity:.9;}
+.btn-r{background:var(--r);color:#fff;}
+.btn-outline{background:transparent;border:1px solid var(--bd);color:var(--text);}
+.btn-outline:hover{border-color:var(--c);color:var(--c);}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+.tbl{width:100%;border-collapse:collapse;}
+.tbl th{text-align:left;padding:10px 12px;font-size:11px;color:var(--mu);font-weight:600;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--bd);}
+.tbl td{padding:10px 12px;border-bottom:1px solid var(--bd);font-size:13px;}
+.tbl tr:hover td{background:rgba(255,255,255,.02);}
+
+/* CLIENT CARDS */
+.clients-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px;}
+.client-card{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--radius);padding:16px;cursor:pointer;transition:all .15s;position:relative;touch-action:manipulation;}
+.client-card:hover{border-color:var(--c);transform:translateY(-1px);}
+.cc-top{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.cc-avatar{width:38px;height:38px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--font-title);font-size:15px;font-weight:700;flex-shrink:0;}
+.cc-name{font-family:var(--font-title);font-size:15px;font-weight:600;}
+.cc-week{font-size:11px;color:var(--mu);}
+.cc-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px;}
+.cc-metric{text-align:center;padding:6px 2px;background:var(--bg);border-radius:var(--radius-sm);}
+.cc-metric .val{font-family:var(--font-title);font-size:15px;font-weight:700;}
+.cc-metric .lbl{font-size:9px;color:var(--mu);margin-top:1px;}
+.cc-last{font-size:11px;color:var(--mu2);}
+.cc-alert{position:absolute;top:10px;right:10px;width:10px;height:10px;border-radius:50%;background:var(--r);}
+.cc-actions{display:flex;gap:6px;margin-top:10px;}
+.cc-actions button{flex:1;padding:6px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:transparent;color:var(--mu);font-size:11px;cursor:pointer;font-family:var(--font-title);letter-spacing:.3px;transition:all .15s;touch-action:manipulation;}
+.cc-actions button:hover{border-color:var(--c);color:var(--c);}
+
+/* MINI CHART */
+.mini-chart{display:flex;align-items:flex-end;gap:2px;height:32px;}
+.mini-bar{width:6px;border-radius:2px 2px 0 0;transition:height .3s;}
+
+/* SEARCH */
+.search-bar{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+.search-bar input{flex:1;padding:10px 14px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-family:var(--font-body);font-size:13px;outline:none;}
+.search-bar input:focus{border-color:var(--c);}
+
+/* PROFILE DETAIL */
+.profile-header{display:flex;align-items:center;gap:16px;margin-bottom:20px;}
+.profile-header .p-avatar{width:56px;height:56px;border-radius:50%;background:var(--c);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--font-title);font-size:22px;font-weight:700;}
+.profile-header .p-info h3{font-family:var(--font-title);font-size:22px;}
+.profile-header .p-info p{font-size:12px;color:var(--mu);}
+.metrics-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;}
+.metric-box{background:var(--bg);border:1px solid var(--bd);border-radius:var(--radius-sm);padding:14px;text-align:center;}
+.metric-box .m-val{font-family:var(--font-title);font-size:24px;font-weight:700;}
+.metric-box .m-lbl{font-size:11px;color:var(--mu);}
+
+/* ALERTS */
+.alert-item{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--radius-sm);margin-bottom:8px;cursor:pointer;transition:all .15s;touch-action:manipulation;}
+.alert-item:hover{border-color:var(--r);}
+.alert-dot{width:8px;height:8px;border-radius:50%;background:var(--r);flex-shrink:0;}
+.alert-info{flex:1;}
+.alert-info .a-name{font-weight:600;font-size:14px;}
+.alert-info .a-reason{font-size:12px;color:var(--mu);}
+
+/* SESSION FORM */
+.session-form{display:grid;gap:12px;}
+.session-form label{font-size:12px;color:var(--mu);font-weight:500;}
+.session-form textarea,.session-form input,.session-form select{width:100%;padding:10px 12px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-family:var(--font-body);font-size:16px;outline:none;resize:vertical;touch-action:manipulation;-webkit-appearance:none;}
+.session-form textarea{min-height:80px;}
+
+/* MODALS — centrado, compatible con Elementor */
+.sheet-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:99999;opacity:0;pointer-events:none;transition:opacity .3s;}
+.sheet-backdrop.show{opacity:1;pointer-events:auto;}
+.modal-overlay{position:fixed;inset:0;z-index:100000;display:none;align-items:center;justify-content:center;padding:16px;overflow-y:auto;}
+.modal-overlay.show{display:flex;}
+.modal{background:var(--bg2);border-radius:var(--radius);overflow-y:auto;max-height:85vh;width:100%;max-width:500px;-webkit-overflow-scrolling:touch;padding:24px 20px;border:1px solid var(--bd);box-shadow:0 20px 60px rgba(0,0,0,.5);}
+.modal-handle{width:40px;height:4px;background:var(--bd);border-radius:2px;margin:0 auto 18px;cursor:pointer;}
+.modal h3{font-family:var(--font-title);font-size:20px;margin-bottom:16px;}
+.modal-actions{display:flex;gap:8px;margin-top:20px;justify-content:flex-end;}
+@media(max-width:480px){.modal{max-width:100%;max-height:90vh;border-radius:var(--radius) var(--radius) 0 0;}}
+
+/* PROMPT EDITOR */
+.prompt-editor{width:100%;min-height:300px;padding:16px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-family:var(--font-body);font-size:13px;line-height:1.6;outline:none;resize:vertical;}
+
+/* TOAST */
+#toast{position:fixed;top:20px;right:20px;padding:12px 24px;border-radius:var(--radius-sm);font-size:13px;font-weight:500;z-index:999;transform:translateX(200%);transition:transform .3s ease;background:var(--bg2);border:1px solid var(--bd);color:var(--text);}
+#toast.show{transform:translateX(0);}
+#toast.ok{border-color:var(--m);color:var(--m);}
+#toast.err{border-color:var(--r);color:var(--r);}
+
+/* SUCCESS */
+.success-screen{text-align:center;padding:16px 0;}
+.success-screen .icon{font-size:48px;margin-bottom:12px;}
+.success-screen h3{font-family:var(--font-title);font-size:22px;margin-bottom:8px;}
+.success-screen .cred{background:var(--bg);border:1px solid var(--bd);border-radius:var(--radius-sm);padding:14px;margin:16px 0;font-family:monospace;font-size:14px;text-align:left;word-break:break-all;}
+.success-screen .cred strong{color:var(--c);}
+
+/* PROGRESS PHASE VIEW */
+.phase-section-m{margin-bottom:16px;border:1px solid var(--bd);border-radius:var(--radius);overflow:hidden;}
+.phase-header-m{display:flex;align-items:center;gap:8px;padding:12px 16px;font-family:var(--font-title);font-size:14px;font-weight:600;}
+.phase-week-row{display:flex;align-items:center;gap:10px;padding:10px 16px;border-top:1px solid var(--bd);font-size:13px;}
+.phase-week-row .pw-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.phase-week-row .pw-text{flex:1;color:var(--mu);}
+.phase-week-row .pw-learning{font-size:11px;color:var(--mu2);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.empty{text-align:center;padding:40px;color:var(--mu);}
+.empty .icon{font-size:36px;margin-bottom:8px;}
+/* OFFLINE BANNER */
+#offline-banner{position:fixed;top:0;left:0;right:0;z-index:1100;background:#D76B6E;color:#fff;text-align:center;font-size:13px;font-weight:500;padding:8px;transform:translateY(-100%);transition:transform .3s ease;}
+#offline-banner.show{transform:translateY(0);}
+/* PWA INSTALL BANNER */
+#pwa-banner{position:fixed;bottom:16px;left:12px;right:12px;z-index:1099;background:var(--bg2);border:1px solid var(--c);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:12px;transform:translateY(200%);transition:transform .4s ease;box-shadow:0 4px 20px rgba(0,0,0,.3);}
+#pwa-banner.show{transform:translateY(0);}
+#pwa-banner p{flex:1;font-size:13px;color:var(--text);}
+#pwa-banner .pwa-install{padding:8px 14px;border:none;border-radius:8px;background:var(--c);color:#fff;font-size:13px;font-weight:600;cursor:pointer;touch-action:manipulation;}
+#pwa-banner .pwa-dismiss{padding:8px;border:none;background:none;color:var(--mu);font-size:18px;cursor:pointer;touch-action:manipulation;}
+/* STAT CARD HOVER EFFECT */
+.stat-card{transition:transform .15s,box-shadow .15s;}
+.stat-card:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,.15);}
+/* CLIENT CARD HOVER */
+.client-card{transition:transform .15s,box-shadow .15s;}
+.client-card:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.12);}
+/* SMOOTH CONTENT TRANSITIONS */
+.view.active{animation:fadeInView .25s ease;}
+@keyframes fadeInView{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+/* ALERT ITEM HOVER */
+.alert-item{transition:background .15s;}
+.alert-item:hover{background:rgba(215,107,110,.06);}
+/* TOPBAR TITLE SMOOTH */
+#topbar-title{transition:opacity .2s;}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%);}
+  .sidebar.open{transform:translateX(0);}
+  .main-area{margin-left:0;}
+  .hamburger{display:block;}
+  .content-area{padding:16px;}
+  .stat-grid{grid-template-columns:1fr 1fr;}
+  .clients-grid{grid-template-columns:1fr;}
+  .metrics-row{grid-template-columns:1fr 1fr;}
+  .tbl th,.tbl td{padding:8px 6px;}
+}
+</style>
+</head>
+<body>
+
+<!-- BOOT LOADER -->
+<div id="boot-loader">
+  <div class="boot-dot"></div><div class="boot-dot"></div><div class="boot-dot"></div>
+</div>
+
+<!-- AUTH — hidden by default, shown via .visible class -->
+<div id="auth-screen">
+  <img src="https://somosmaat.org/wp-content/uploads/2026/02/logo_app.png" alt="MAAT" class="logo-auth" onerror="this.style.display='none'">
+  <h1>MENTOR</h1>
+  <p class="subtitle">Portal de Mentor</p>
+  <div class="auth-box">
+    <input type="email" id="auth-email" placeholder="Email" autocomplete="email">
+    <input type="password" id="auth-pass" placeholder="Contraseña" autocomplete="current-password">
+    <button class="btn-primary" id="auth-btn" onclick="doAuth()">INICIAR SESIÓN</button>
+    <p id="auth-error"></p>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <img src="https://somosmaat.org/wp-content/uploads/2026/02/logo_app.png" alt="M" style="height:32px;border-radius:8px" onerror="this.style.display='none'">
+      <span>MAAT</span>
+    </div>
+    <nav class="sidebar-nav" id="sidebar-nav">
+      <div class="nav-link active" data-view="overview" onclick="goView('overview')">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Resumen
+      </div>
+      <div class="nav-link" data-view="clients" onclick="goView('clients')">
+        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        Mis Clientes
+      </div>
+      <div class="nav-link" data-view="alerts" onclick="goView('alerts')">
+        <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Alertas
+      </div>
+      <div class="nav-link" data-view="sessions" onclick="goView('sessions')">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Notas de Sesión
+      </div>
+      <div class="nav-section">MI CUENTA</div>
+      <div class="nav-link" data-view="mentor-config" onclick="goView('mentor-config')">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        Mi Configuración
+      </div>
+      <div class="nav-section admin-only">ADMIN</div>
+      <div class="nav-link admin-only" data-view="admin-users" onclick="goView('admin-users')">
+        <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Usuarios
+      </div>
+      <div class="nav-link admin-only" data-view="admin-prompt" onclick="goView('admin-prompt')">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        Coach IA Config
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="avatar" id="sidebar-avatar">M</div>
+      <div><div id="sidebar-name" style="font-weight:500;color:var(--text);font-size:13px;">Mentor</div><div id="sidebar-role" style="font-size:11px;color:var(--mu);">mentor</div></div>
+    </div>
+  </aside>
+
+  <div class="main-area">
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="hamburger" onclick="toggleSidebar()">☰</button>
+        <h2 id="topbar-title">Resumen</h2>
+      </div>
+      <div class="topbar-actions">
+        <select id="theme-select" onchange="setTheme(this.value)"><option value="dark">Dark</option><option value="light">Light</option></select>
+        <button class="btn-icon" onclick="doLogout()">Salir</button>
+      </div>
+    </div>
+    <div class="content-area">
+      <div id="v-overview" class="view active"></div>
+      <div id="v-clients" class="view"></div>
+      <div id="v-profile" class="view"></div>
+      <div id="v-alerts" class="view"></div>
+      <div id="v-sessions" class="view"></div>
+      <div id="v-mentor-config" class="view"></div>
+      <div id="v-admin-users" class="view"></div>
+      <div id="v-admin-prompt" class="view"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- MODALS -->
+<div class="sheet-backdrop" id="sheet-backdrop" onclick="closeActiveModal()"></div>
+<div class="modal-overlay" id="modal-create">
+  <div class="modal">
+    <div class="modal-handle" onclick="closeModal('modal-create')"></div>
+    <h3>Crear Nuevo Cliente</h3>
+    <div class="session-form">
+      <div><label>Nombre completo</label><input type="text" id="nc-name" placeholder="Juan Pérez"></div>
+      <div><label>Email</label><input type="email" id="nc-email" placeholder="juan@email.com"></div>
+    </div>
+    <div id="nc-result"></div>
+    <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modal-create')">Cancelar</button><button class="btn btn-c" id="nc-btn" onclick="createClient()">CREAR CLIENTE</button></div>
+  </div>
+</div>
+<div class="modal-overlay" id="modal-session">
+  <div class="modal">
+    <div class="modal-handle" onclick="closeModal('modal-session')"></div>
+    <h3>Nueva Nota de Sesión</h3>
+    <div class="session-form">
+      <div><label>Cliente</label><div id="ms-client" style="font-weight:600;padding:4px 0;color:var(--text);"></div></div>
+      <div><label>Tipo de sesión</label><select id="ms-type"><option value="1on1">1 on 1</option><option value="async">Async</option><option value="group">Grupo</option></select></div>
+      <div><label>Fecha</label><input type="date" id="ms-date"></div>
+      <div><label>Notas de la sesión</label><textarea id="ms-notes" rows="4" placeholder="Resumen de la sesión..."></textarea></div>
+      <div><label>Plan / tarea para el cliente</label><textarea id="ms-plan" rows="3" placeholder="¿Qué debe hacer el cliente antes de la próxima sesión?"></textarea></div>
+    </div>
+    <input type="hidden" id="ms-client-id">
+    <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modal-session')">Cancelar</button><button class="btn btn-c" id="ms-btn" onclick="saveSessionNote()">GUARDAR</button></div>
+  </div>
+</div>
+<div class="modal-overlay" id="modal-role">
+  <div class="modal">
+    <div class="modal-handle" onclick="closeModal('modal-role')"></div>
+    <h3>Cambiar Rol</h3>
+    <div class="session-form">
+      <div><label>Usuario</label><div id="mr-user" style="font-weight:600;padding:4px 0;"></div></div>
+      <div><label>Nuevo rol</label><select id="mr-role"><option value="client">client</option><option value="mentor">mentor</option><option value="admin">admin</option></select></div>
+    </div>
+    <input type="hidden" id="mr-uid">
+    <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modal-role')">Cancelar</button><button class="btn btn-c" id="mr-btn" onclick="saveRole()">CONFIRMAR</button></div>
+  </div>
+</div>
+<div id="offline-banner">📡 Sin conexión — revisando...</div>
+<div id="pwa-banner">
+  <p>📲 Agrega MAAT Mentor a tu pantalla de inicio para una mejor experiencia</p>
+  <button class="pwa-install" onclick="pwaInstall()">Instalar</button>
+  <button class="pwa-dismiss" onclick="pwaDismiss()">✕</button>
+</div>
+<div id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+/* ============================================ */
+/* CONFIG                                       */
+/* ============================================ */
+const SU="https://pcclptmojjzqmfmzftot.supabase.co";
+const SK="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjY2xwdG1vamp6cW1mbXpmdG90Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4OTg3MjAsImV4cCI6MjA4NzQ3NDcyMH0.VuFBEy19fgNN5pSp_r8p2ZVViniunKdVW7Hy3AmqJXE";
+const sb=supabase.createClient(SU,SK);
+
+/* ============================================ */
+/* STATE                                        */
+/* ============================================ */
+let user=null,prof=null,myRole="client";
+let _allProfiles=[],_clientIds=[],_allCals=[],_allWkp=[],_allHt=[],_allSessions=[],_allUsers=[];
+let _clientMetrics={};
+let _currentView="overview",_selectedClient=null;
+let theme=localStorage.getItem("maat-m-theme")||(window.matchMedia('(prefers-color-scheme:light)').matches?'light':'dark');
+let _pwaPrompt=null;
+
+const PHASE_NAMES=["GRATITUD","AMOR","INTENCIÓN","VOLUNTAD"];
+const PHASE_KEYS=["UNCOVER","REWRITE","REBUILD","INTEGRATE"];
+const PHASE_HEXES=["#39A1C9","#EBA055","#7DCD93","#89608E"];
+
+/* ============================================ */
+/* UTILITIES                                    */
+/* ============================================ */
+function san(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");}
+function toast(msg,type){const el=document.getElementById("toast");el.textContent=msg;el.className=type||"";el.classList.add("show");setTimeout(()=>el.classList.remove("show"),2800);}
+function chkAuthErr(error){if(!error)return false;const msg=(error.message||"").toLowerCase();if(msg.includes("jwt")||msg.includes("expired")||msg.includes("not authenticated")){toast("Tu sesión expiró. Vuelve a iniciar sesión.","err");setTimeout(()=>doLogout(),2200);return true;}return false;}
+function getPhase(w){return w<=4?1:w<=8?2:w<=12?3:4;}
+function getPhaseHex(p){return PHASE_HEXES[(p||1)-1];}
+function cohColor(v){return v>=70?"var(--m)":v>=40?"var(--o)":"var(--r)";}
+function cohHex(v){return v>=70?"#7DCD93":v>=40?"#EBA055":"#D76B6E";}
+function attColor(v){return v>=7?"var(--m)":v>=4?"var(--o)":"var(--r)";}
+function attHex(v){return v>=7?"#7DCD93":v>=4?"#EBA055":"#D76B6E";}
+function daysBetween(d1,d2){return Math.floor((d2-d1)/(1000*60*60*24));}
+function setTheme(t){theme=t;localStorage.setItem("maat-m-theme",t);document.documentElement.setAttribute("data-theme",t);document.getElementById("theme-select").value=t;}
+let _activeModal=null;
+function openModal(id){
+  if(_activeModal)closeModal(_activeModal);
+  const el=document.getElementById(id);
+  if(!el)return;
+  _activeModal=id;
+  el.classList.add("show");
+  document.getElementById("sheet-backdrop")?.classList.add("show");
+  // scroll sheet to top
+  const inner=el.querySelector(".modal");
+  if(inner)inner.scrollTop=0;
+}
+function closeModal(id){
+  document.getElementById(id)?.classList.remove("show");
+  document.getElementById("sheet-backdrop")?.classList.remove("show");
+  if(_activeModal===id)_activeModal=null;
+}
+function closeActiveModal(){
+  if(_activeModal)closeModal(_activeModal);
+}
+function toggleSidebar(){document.getElementById("sidebar").classList.toggle("open");document.getElementById("sidebar-overlay").classList.toggle("show");}
+function closeSidebar(){document.getElementById("sidebar").classList.remove("open");document.getElementById("sidebar-overlay").classList.remove("show");}
+
+function genPass(){const chars="ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%&*";const arr=new Uint8Array(14);crypto.getRandomValues(arr);return Array.from(arr,b=>chars[b%chars.length]).join("");}
+
+/* ============================================ */
+/* SYNCED METRIC FUNCTIONS                      */
+/* Must match client dashboard calcCoherence()  */
+/* and calcHabPct() exactly                     */
+/* ============================================ */
+
+/* Coherencia = promedio del % de cumplimiento de cada hábito */
+function calcCoherenceFromHabits(habitsData){
+  let habits;
+  try{habits=typeof habitsData==="string"?JSON.parse(habitsData):habitsData||[];}catch(e){return null;}
+  if(!habits.length)return null;
+  let sumPct=0;
+  habits.forEach(h=>{
+    const freq=h.frequency||7;
+    const checked=Math.min((h.days||[]).filter(Boolean).length,freq);
+    sumPct+=(checked/freq)*100;
+  });
+  return Math.round(sumPct/habits.length);
+}
+
+/* Hábitos % = días cumplidos / días esperados × 100 */
+function calcHabPctFromHabits(habitsData){
+  let habits;
+  try{habits=typeof habitsData==="string"?JSON.parse(habitsData):habitsData||[];}catch(e){return null;}
+  if(!habits.length)return null;
+  let totalExpected=0,totalDone=0;
+  habits.forEach(h=>{
+    const freq=h.frequency||7;
+    totalExpected+=freq;
+    totalDone+=Math.min((h.days||[]).filter(Boolean).length,freq);
+  });
+  return totalExpected?Math.round(totalDone/totalExpected*100):null;
+}
+
+/* Actitud promedio = avg de últimas N calibraciones */
+function calcAttAvgFromCals(clientCals,n){
+  if(!clientCals||!clientCals.length)return null;
+  const recent=clientCals.slice(0,n||7);
+  return parseFloat((recent.reduce((s,c)=>s+c.coherence,0)/recent.length).toFixed(1));
+}
+
+/* ============================================ */
+/* AUTH                                         */
+/* ============================================ */
+async function doAuth(){
+  const email=document.getElementById("auth-email").value.trim();
+  const pass=document.getElementById("auth-pass").value;
+  const errEl=document.getElementById("auth-error");
+  const btn=document.getElementById("auth-btn");
+  if(!email||!pass){errEl.textContent="Email y contraseña requeridos";return;}
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span>';errEl.textContent="";
+  try{
+    const{data,error}=await sb.auth.signInWithPassword({email,password:pass});
+    if(error){errEl.textContent=error.message;return;}
+    if(data.user){user=data.user;await initApp();}
+  }catch(e){errEl.textContent=e.message;}
+  finally{btn.disabled=false;btn.textContent="INICIAR SESIÓN";}
+}
+
+async function doLogout(){
+  await sb.auth.signOut();
+  user=null;prof=null;myRole="client";
+  document.getElementById("app").style.display="none";
+  document.getElementById("auth-screen").classList.add("visible");
+}
+
+/* ============================================ */
+/* INIT & ACCESS CONTROL                        */
+/* ============================================ */
+async function initApp(){
+  document.getElementById("boot-loader").style.display="none";
+  document.getElementById("auth-screen").classList.remove("visible");
+
+  const{data:profData,error:profErr}=await sb.from("profiles").select("*").eq("id",user.id).single();
+  if(profErr){chkAuthErr(profErr);return;}
+  prof=profData;myRole=prof.role||"client";
+
+  if(myRole==="client"){
+    document.getElementById("boot-loader").style.display="none";
+    document.getElementById("auth-error").textContent="Esta cuenta no tiene acceso al portal del mentor.";
+    document.getElementById("auth-btn").disabled=false;document.getElementById("auth-btn").textContent="INICIAR SESIÓN";
+    document.getElementById("auth-screen").classList.add("visible");
+    await sb.auth.signOut();user=null;prof=null;return;
+  }
+
+  document.getElementById("app").style.display="block";
+  setTheme(theme);
+  document.querySelectorAll(".admin-only").forEach(el=>{el.style.display=myRole==="admin"?"":"none";});
+  document.getElementById("sidebar-avatar").textContent=(prof.full_name||"M")[0].toUpperCase();
+  document.getElementById("sidebar-name").textContent=prof.full_name||user.email;
+  document.getElementById("sidebar-role").textContent=myRole;
+  await loadData();
+  goView("overview");
+}
+
+/* ============================================ */
+/* LOAD DATA                                    */
+/* ============================================ */
+async function loadData(){
+  const uid=user.id;
+  if(myRole==="admin"){
+    const{data}=await sb.from("profiles").select("*").order("full_name");
+    _allUsers=data||[];_allProfiles=_allUsers.filter(u=>u.role==="client");_clientIds=_allProfiles.map(u=>u.id);
+  }else{
+    const{data:mc,error:mcErr}=await sb.from("mentor_clients").select("client_id").eq("mentor_id",uid).or("active.eq.true,active.is.null");
+    if(mcErr)chkAuthErr(mcErr);
+    _clientIds=(mc||[]).map(r=>r.client_id);
+    if(_clientIds.length){const{data:profs}=await sb.from("profiles").select("*").in("id",_clientIds).order("full_name");_allProfiles=profs||[];}
+    else _allProfiles=[];
+  }
+  if(!_clientIds.length){_allCals=[];_allWkp=[];_allHt=[];_allSessions=[];_clientMetrics={};return;}
+
+  const[r1,r2,r3,r4]=await Promise.allSettled([
+    sb.from("calibrations").select("*").in("user_id",_clientIds).order("created_at",{ascending:false}),
+    sb.from("week_progress").select("*").in("user_id",_clientIds),
+    sb.from("habit_tracker").select("*").in("user_id",_clientIds),
+    sb.from("session_notes").select("*").eq("mentor_id",uid).order("created_at",{ascending:false}),
+  ]);
+  _allCals=r1.status==="fulfilled"?(r1.value.data||[]):[];
+  _allWkp=r2.status==="fulfilled"?(r2.value.data||[]):[];
+  _allHt=r3.status==="fulfilled"?(r3.value.data||[]):[];
+  _allSessions=r4.status==="fulfilled"?(r4.value.data||[]):[];
+  computeMetrics();
+}
+
+/* ============================================ */
+/* COMPUTE METRICS                              */
+/* ============================================ */
+function computeMetrics(){
+  _clientMetrics={};
+  const now=new Date();
+  _allProfiles.forEach(p=>{
+    const uid=p.id;
+    const clientCals=_allCals.filter(c=>c.user_id===uid);
+    const clientHtAll=_allHt.filter(h=>h.user_id===uid);
+    const currentWeekHt=clientHtAll.find(h=>h.week===p.current_week);
+    const clientWkp=_allWkp.filter(w=>w.user_id===uid&&w.completed);
+
+    const coherence=currentWeekHt?calcCoherenceFromHabits(currentWeekHt.habits):null;
+    const habPct=currentWeekHt?calcHabPctFromHabits(currentWeekHt.habits):null;
+    const attAvg=calcAttAvgFromCals(clientCals,7);
+
+    let daysSince=null;
+    if(clientCals.length){daysSince=daysBetween(new Date(clientCals[0].created_at),now);}
+
+    const progressPct=Math.round(clientWkp.length/16*100);
+
+    // Alertas: sin calibrar ≥3 días, coherencia <30%, hábitos <30%
+    const hasAlert=
+      (daysSince!==null&&daysSince>=3)||
+      (coherence!==null&&coherence<30)||
+      (habPct!==null&&habPct<30);
+
+    const attHist=clientCals.slice(0,14).map(c=>c.coherence).reverse();
+
+    const learningNotes={};
+    clientHtAll.forEach(h=>{if(h.learned)learningNotes[h.week]=h.learned;});
+
+    _clientMetrics[uid]={
+      coherence,habPct,attAvg,daysSince,hasAlert,attHist,progressPct,learningNotes,
+      name:p.full_name||"Sin nombre",
+      week:p.current_week||1,
+    };
+  });
+}
+
+/* ============================================ */
+/* NAVIGATION                                   */
+/* ============================================ */
+function goView(viewId){
+  document.querySelector('.content-area')?.scrollTo({top:0,behavior:'instant'});
+  _currentView=viewId;
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  const el=document.getElementById("v-"+viewId);if(el)el.classList.add("active");
+  document.querySelectorAll(".nav-link").forEach(n=>{n.classList.toggle("active",n.dataset.view===viewId);});
+  closeSidebar();
+  const titles={overview:"Resumen",clients:"Mis Clientes",profile:"Perfil del Cliente",alerts:"Alertas",sessions:"Notas de Sesión","mentor-config":"Mi Configuración","admin-users":"Usuarios","admin-prompt":"Coach IA Config"};
+  document.getElementById("topbar-title").textContent=titles[viewId]||"MAAT";
+  if(viewId==="overview")renderOverview();
+  else if(viewId==="clients")renderClients();
+  else if(viewId==="alerts")renderAlerts();
+  else if(viewId==="sessions")renderSessions();
+  else if(viewId==="mentor-config")renderMentorConfig();
+  else if(viewId==="admin-users")renderAdminUsers();
+  else if(viewId==="admin-prompt")loadAIPrompt();
+}
+
+/* ============================================ */
+/* OVERVIEW                                     */
+/* ============================================ */
+function renderOverview(){
+  const total=_allProfiles.length;
+  const alertCount=Object.values(_clientMetrics).filter(m=>m.hasAlert).length;
+  const allCoh=Object.values(_clientMetrics).filter(m=>m.coherence!==null);
+  const avgCoh=allCoh.length?Math.round(allCoh.reduce((s,m)=>s+m.coherence,0)/allCoh.length):null;
+  const allAtt=Object.values(_clientMetrics).filter(m=>m.attAvg!==null);
+  const avgAtt=allAtt.length?(allAtt.reduce((s,m)=>s+m.attAvg,0)/allAtt.length).toFixed(1):null;
+
+  const today=new Date();today.setHours(0,0,0,0);
+  const activeToday=new Set(_allCals.filter(c=>{const d=new Date(c.created_at);d.setHours(0,0,0,0);return d.getTime()===today.getTime();}).map(c=>c.user_id));
+
+  const alerts=Object.entries(_clientMetrics).filter(([_,m])=>m.hasAlert).slice(0,5);
+  const recentCals=_allCals.slice(0,8);
+
+  document.getElementById("v-overview").innerHTML=`
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-val" style="color:var(--c)">${total}</div><div class="stat-label">Clientes Activos</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:var(--r)">${alertCount}</div><div class="stat-label">Requieren Atención</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:${avgCoh!==null?cohColor(avgCoh):'var(--mu)'}">${avgCoh!==null?avgCoh+'%':'—'}</div><div class="stat-label">Coherencia Promedio</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:${avgAtt?attColor(parseFloat(avgAtt)):'var(--mu)'}">${avgAtt||'—'}</div><div class="stat-label">Actitud Promedio</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:var(--m)">${activeToday.size}</div><div class="stat-label">Activos Hoy</div></div>
+    </div>
+    ${alerts.length?`<div class="card"><div class="card-title">⚠️ Alertas Recientes</div>
+      ${alerts.map(([uid,m])=>{
+        const reasons=[];
+        if(m.daysSince>=3)reasons.push("Sin calibrar "+m.daysSince+" días");
+        if(m.coherence!==null&&m.coherence<30)reasons.push("Coherencia "+m.coherence+"%");
+        if(m.habPct!==null&&m.habPct<30)reasons.push("Hábitos "+m.habPct+"%");
+        return`<div class="alert-item" onclick="openProfile('${uid}')"><div class="alert-dot"></div><div class="alert-info"><div class="a-name">${san(m.name)}</div><div class="a-reason">${reasons.join(" · ")}</div></div><span class="badge badge-alert">Sem ${m.week}</span></div>`;
+      }).join("")}
+    </div>`:""}
+    <div class="card"><div class="card-title">📋 Actividad Reciente</div>
+      ${recentCals.length?recentCals.map(c=>{const m=_clientMetrics[c.user_id];
+        return`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd);">
+          <div style="width:6px;height:6px;border-radius:50%;background:${attHex(c.coherence)}"></div>
+          <div style="flex:1;font-size:13px;"><strong>${san(m?.name||"")}</strong> — Actitud ${c.coherence}/10</div>
+          <span style="font-size:11px;color:var(--mu)">${san(c.date||"")}</span>
+        </div>`;}).join(""):`<div class="empty"><div class="icon">📭</div><p>Sin actividad reciente</p></div>`}
+    </div>
+  `;
+}
+
+/* ============================================ */
+/* CLIENTS                                      */
+/* ============================================ */
+let _clientSearch="";
+async function reloadClients(){
+  toast("Recargando...","");
+  await loadData();
+  renderClients();
+  toast("Datos actualizados ✓","ok");
+}
+function renderClients(){
+  const filtered=_allProfiles.filter(p=>!_clientSearch||(p.full_name||"").toLowerCase().includes(_clientSearch.toLowerCase()));
+  document.getElementById("v-clients").innerHTML=`
+    <div class="search-bar">
+      <input type="text" placeholder="Buscar por nombre..." value="${san(_clientSearch)}" oninput="_clientSearch=this.value;renderClients()">
+      <button class="btn btn-outline" onclick="reloadClients()" title="Recargar">↻</button>
+      <button class="btn btn-c" onclick="openCreateModal()">+ Nuevo Cliente</button>
+    </div>
+    ${filtered.length?`<div class="clients-grid">${filtered.map(p=>{
+      const m=_clientMetrics[p.id]||{};
+      const phase=getPhase(m.week||1);
+      return`<div class="client-card">
+        ${m.hasAlert?'<div class="cc-alert"></div>':""}
+        <div class="cc-top">
+          <div class="cc-avatar" style="background:${getPhaseHex(phase)}">${san((m.name||"?")[0].toUpperCase())}</div>
+          <div><div class="cc-name">${san(m.name)}</div><div class="cc-week">Semana ${m.week} · Fase ${phase}</div></div>
+        </div>
+        <div class="cc-metrics">
+          <div class="cc-metric"><div class="val" style="color:${m.coherence!==null?cohColor(m.coherence):'var(--mu)'}">${m.coherence!==null?m.coherence+'%':'—'}</div><div class="lbl">Coherencia</div></div>
+          <div class="cc-metric"><div class="val" style="color:${m.habPct!==null&&m.habPct>=30?'var(--m)':'var(--r)'}">${m.habPct!==null?m.habPct+'%':'—'}</div><div class="lbl">Hábitos</div></div>
+          <div class="cc-metric"><div class="val" style="color:${m.attAvg?attColor(m.attAvg):'var(--mu)'}">${m.attAvg||'—'}</div><div class="lbl">Actitud</div></div>
+          <div class="cc-metric">
+            <div class="mini-chart">${(m.attHist||[]).map(v=>`<div class="mini-bar" style="height:${v*10}%;background:${attHex(v)}"></div>`).join("")}</div>
+            <div class="lbl">14 días</div>
+          </div>
+        </div>
+        <div class="cc-last">${m.daysSince!==null?'Última calibración hace '+m.daysSince+' día'+(m.daysSince!==1?'s':''):'Sin calibraciones'}</div>
+        <div class="cc-actions">
+          <button onclick="event.stopPropagation();openProfile('${p.id}')">Ver Perfil</button>
+          <button onclick="event.stopPropagation();openSessionModal('${p.id}','${san(m.name)}')">+ Sesión</button>
+        </div>
+      </div>`;
+    }).join("")}</div>`:`<div class="empty"><div class="icon">👥</div><p>No hay clientes${_clientSearch?" con ese nombre":""}</p></div>`}
+  `;
+}
+
+/* ============================================ */
+/* CLIENT PROFILE                               */
+/* ============================================ */
+function openProfile(uid){_selectedClient=uid;goView("profile");renderProfile();}
+
+function renderProfile(){
+  const uid=_selectedClient;
+  const p=_allProfiles.find(x=>x.id===uid);
+  const m=_clientMetrics[uid]||{};
+  if(!p){document.getElementById("v-profile").innerHTML='<p>Cliente no encontrado</p>';return;}
+
+  const phase=getPhase(m.week||1);
+  const clientCals=_allCals.filter(c=>c.user_id===uid).slice(0,10);
+  const clientSessions=_allSessions.filter(s=>s.client_id===uid);
+  const clientWkp={};_allWkp.filter(w=>w.user_id===uid).forEach(w=>{clientWkp[w.week]=w.completed;});
+
+  document.getElementById("topbar-title").textContent="Perfil del Cliente";
+  document.getElementById("v-profile").innerHTML=`
+    <button class="btn btn-outline" onclick="goView('clients')" style="margin-bottom:16px;">‹ Volver a Clientes</button>
+    <div class="profile-header">
+      <div class="p-avatar" style="background:${getPhaseHex(phase)}">${san((m.name||"?")[0].toUpperCase())}</div>
+      <div class="p-info"><h3>${san(m.name)}</h3><p>Semana ${m.week} · Fase ${phase}: ${PHASE_NAMES[phase-1]} ${m.hasAlert?'<span class="badge badge-alert">Requiere Atención</span>':''}</p></div>
+    </div>
+    <div class="metrics-row">
+      <div class="metric-box"><div class="m-val" style="color:${m.coherence!==null?cohColor(m.coherence):'var(--mu)'}">${m.coherence!==null?m.coherence+'%':'—'}</div><div class="m-lbl">Coherencia</div></div>
+      <div class="metric-box"><div class="m-val" style="color:var(--m)">${m.habPct!==null?m.habPct+'%':'—'}</div><div class="m-lbl">Hábitos</div></div>
+      <div class="metric-box"><div class="m-val" style="color:${m.attAvg?attColor(m.attAvg):'var(--mu)'}">${m.attAvg||'—'}</div><div class="m-lbl">Actitud (7d)</div></div>
+      <div class="metric-box"><div class="m-val">${m.daysSince!==null?m.daysSince:'—'}</div><div class="m-lbl">Días sin calibrar</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">📊 Actitud — últimos 14 días</div>
+      <div style="display:flex;align-items:flex-end;gap:6px;height:80px;">
+        ${(m.attHist||[]).map(v=>`<div style="flex:1;border-radius:3px 3px 0 0;background:${attHex(v)};height:${v*10}%;min-height:2px;"></div>`).join("")}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📈 Progreso de Mentoría — ${m.progressPct||0}%</div>
+      ${[1,2,3,4].map(ph=>{
+        const startW=(ph-1)*4+1;
+        const weeks=[startW,startW+1,startW+2,startW+3];
+        return`<div class="phase-section-m">
+          <div class="phase-header-m" style="background:${PHASE_HEXES[ph-1]}22;color:${PHASE_HEXES[ph-1]};">◆ Fase ${ph}: ${PHASE_NAMES[ph-1]} — ${PHASE_KEYS[ph-1]}</div>
+          ${weeks.map(w=>{
+            const done=clientWkp[w];
+            const isCurrent=w===(m.week||1);
+            const learning=(m.learningNotes||{})[w]||"";
+            return`<div class="phase-week-row">
+              <div class="pw-dot" style="background:${done?'#7DCD93':isCurrent?'#39A1C9':'var(--mu2)'};"></div>
+              <span style="font-weight:600;font-size:13px;">Sem ${w}</span>
+              <div class="pw-learning">${learning?san(learning.substring(0,60)):'<span style="color:var(--mu2)">—</span>'}</div>
+              ${done?'<span class="badge badge-ok">✓</span>':isCurrent?'<span class="badge badge-info">Actual</span>':''}
+            </div>`;
+          }).join("")}
+        </div>`;
+      }).join("")}
+    </div>
+
+    <div style="display:flex;gap:8px;margin-bottom:16px;">
+      <button class="btn btn-c" onclick="openSessionModal('${uid}','${san(m.name)}')">+ Nueva Sesión</button>
+      <button class="btn btn-outline" id="btn-ai-summary" onclick="genAI('${uid}')">🤖 Resumen IA</button>
+    </div>
+    <div id="ai-summary-result"></div>
+
+    <div class="card">
+      <div class="card-title">📋 Últimas Calibraciones</div>
+      ${clientCals.length?clientCals.map(c=>`
+        <div style="padding:8px 0;border-bottom:1px solid var(--bd);font-size:13px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+            <strong>${san(c.date||"")} · Sem ${c.week}</strong>
+            <span style="color:${attHex(c.coherence)};font-weight:600;">Actitud: ${c.coherence}/10</span>
+          </div>
+          <div style="color:var(--mu);font-size:12px;">
+            <div><strong>Q1:</strong> ${san((c.answer_q1||"").substring(0,120))}</div>
+            <div><strong>Q2:</strong> ${san((c.answer_q2||"").substring(0,120))}</div>
+            <div><strong>Q3:</strong> ${san((c.answer_q3||"").substring(0,120))}</div>
+          </div>
+        </div>
+      `).join(""):`<p style="color:var(--mu);padding:12px 0;">Sin calibraciones</p>`}
+    </div>
+
+    <div class="card">
+      <div class="card-title">📝 Sesiones con este cliente</div>
+      ${clientSessions.length?clientSessions.map(s=>`
+        <div style="padding:10px 0;border-bottom:1px solid var(--bd);font-size:13px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><strong>${s.session_type} — ${s.session_date}</strong><span class="badge badge-info">Sem ${s.client_week||"?"}</span></div>
+          <p style="color:var(--mu);">${san(s.notes||"Sin notas")}</p>
+          ${s.next_plan?`<p style="color:var(--c);font-size:12px;margin-top:4px;">➜ ${san(s.next_plan)}</p>`:""}
+        </div>
+      `).join(""):`<p style="color:var(--mu);padding:12px 0;">Sin sesiones registradas</p>`}
+    </div>
+  `;
+}
+
+/* ============================================ */
+/* AI SUMMARY                                   */
+/* ============================================ */
+async function genAI(uid){
+  const btn=document.getElementById("btn-ai-summary");
+  const result=document.getElementById("ai-summary-result");
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Generando...';
+  try{
+    const session=await sb.auth.getSession();const token=session?.data?.session?.access_token;
+    if(!token){toast("Sesión expirada. Vuelve a iniciar sesión.","err");return;}
+    const res=await fetch(SU+"/functions/v1/maat-summary",{
+      method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token,"apikey":SK},
+      body:JSON.stringify({client_id:uid})
+    });
+    const json=await res.json();
+    if(!res.ok){throw new Error(json.error||'Error del servidor ('+res.status+')');}
+    const summary=json.summary||json.content||json.message||"Sin respuesta";
+    result.innerHTML=`<div class="card" style="border-color:var(--c);"><div class="card-title">🤖 Resumen IA</div><p style="font-size:13px;line-height:1.6;white-space:pre-wrap;">${san(summary)}</p></div>`;
+  }catch(e){result.innerHTML=`<div class="card" style="border-color:var(--r);color:var(--r);">Error: ${san(e.message)}</div>`;}
+  finally{btn.disabled=false;btn.innerHTML="🤖 Resumen IA";}
+}
+
+/* ============================================ */
+/* ALERTS                                       */
+/* ============================================ */
+function renderAlerts(){
+  const alerts=Object.entries(_clientMetrics).filter(([_,m])=>m.hasAlert);
+  document.getElementById("v-alerts").innerHTML=alerts.length?alerts.map(([uid,m])=>{
+    const reasons=[];
+    if(m.daysSince!==null&&m.daysSince>=3)reasons.push("⏰ Sin calibrar "+m.daysSince+" días");
+    if(m.coherence!==null&&m.coherence<30)reasons.push("📉 Coherencia: "+m.coherence+"%");
+    if(m.habPct!==null&&m.habPct<30)reasons.push("⚡ Hábitos: "+m.habPct+"%");
+    return`<div class="alert-item" onclick="openProfile('${uid}')"><div class="alert-dot"></div><div class="alert-info"><div class="a-name">${san(m.name)}</div><div class="a-reason">${reasons.join(" · ")}</div></div><span class="badge badge-alert">Sem ${m.week}</span></div>`;
+  }).join(""):`<div class="empty"><div class="icon">✅</div><p>Sin alertas — todos tus clientes están en buen camino</p></div>`;
+}
+
+/* ============================================ */
+/* SESSIONS                                     */
+/* ============================================ */
+function renderSessions(){
+  const grouped={};
+  _allSessions.forEach(s=>{const m=_clientMetrics[s.client_id];const name=m?m.name:s.client_id.slice(0,8);if(!grouped[s.client_id])grouped[s.client_id]={name,sessions:[]};grouped[s.client_id].sessions.push(s);});
+  const groups=Object.entries(grouped);
+  document.getElementById("v-sessions").innerHTML=groups.length?groups.map(([uid,g])=>`
+    <div class="card"><div class="card-title" style="cursor:pointer;" onclick="openProfile('${uid}')">${san(g.name)}</div>
+      ${g.sessions.map(s=>`<div style="padding:10px 0;border-bottom:1px solid var(--bd);font-size:13px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span><strong>${s.session_type}</strong> — ${s.session_date}</span><span class="badge badge-info">Sem ${s.client_week||"?"}</span></div>
+        <p style="color:var(--mu);">${san(s.notes||"")}</p>
+        ${s.next_plan?`<p style="color:var(--c);font-size:12px;margin-top:4px;">➜ ${san(s.next_plan)}</p>`:""}
+      </div>`).join("")}
+    </div>
+  `).join(""):`<div class="empty"><div class="icon">📝</div><p>Sin notas de sesión registradas</p></div>`;
+}
+
+function openSessionModal(clientId,clientName){
+  document.getElementById("ms-client").textContent=clientName;
+  document.getElementById("ms-client-id").value=clientId;
+  document.getElementById("ms-date").value=new Date().toISOString().split("T")[0];
+  document.getElementById("ms-notes").value="";document.getElementById("ms-plan").value="";
+  openModal("modal-session");
+}
+
+async function saveSessionNote(){
+  const clientId=document.getElementById("ms-client-id").value;
+  const m=_clientMetrics[clientId]||{};
+  const btn=document.getElementById("ms-btn");
+  btn.disabled=true;btn.textContent="GUARDANDO...";
+  try{
+    const{data,error}=await sb.from("session_notes").insert({
+      mentor_id:user.id,client_id:clientId,
+      session_type:document.getElementById("ms-type").value,
+      session_date:document.getElementById("ms-date").value,
+      notes:document.getElementById("ms-notes").value.trim(),
+      next_plan:document.getElementById("ms-plan").value.trim(),
+      client_week:m.week||null,
+      client_coherence_avg:m.attAvg||null
+    }).select().single();
+    if(error){if(!chkAuthErr(error))toast(error.message,"err");return;}
+    _allSessions.unshift(data);closeModal("modal-session");toast("Sesión guardada ✓","ok");
+    if(_currentView==="profile")renderProfile();
+    else if(_currentView==="sessions")renderSessions();
+  }finally{btn.disabled=false;btn.textContent="GUARDAR";}
+}
+
+/* ============================================ */
+/* CREATE CLIENT                                */
+/* ============================================ */
+function openCreateModal(){
+  document.getElementById("nc-name").value="";
+  document.getElementById("nc-email").value="";
+  document.getElementById("nc-result").innerHTML="";
+  const btn=document.getElementById("nc-btn");
+  if(btn){btn.disabled=false;btn.textContent="CREAR CLIENTE";}
+  openModal("modal-create");
+}
+
+async function createClient(){
+  const name=document.getElementById("nc-name").value.trim();
+  const email=document.getElementById("nc-email").value.trim();
+  const btn=document.getElementById("nc-btn");const resultEl=document.getElementById("nc-result");
+  if(!name||!email){toast("Nombre y email requeridos","err");return;}
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Creando...';resultEl.innerHTML="";
+  try{
+    const password=genPass();
+    const sb2=supabase.createClient(SU,SK,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
+    const{data:signUpData,error:signUpErr}=await sb2.auth.signUp({email,password});
+    if(signUpErr){toast(signUpErr.message,"err");return;}
+    const newUid=signUpData.user?.id;
+    if(!newUid){toast("Error: no se obtuvo UID","err");return;}
+    await sb2.auth.signOut();
+    const{error:profErr}=await sb.from("profiles").upsert({id:newUid,full_name:name,role:"client",current_week:1});
+    if(profErr){toast("Perfil: "+profErr.message,"err");return;}
+    const{error:mcErr}=await sb.from("mentor_clients").upsert({mentor_id:user.id,client_id:newUid,active:true},{onConflict:"mentor_id,client_id"});
+    if(mcErr)console.warn("mentor_clients:",mcErr.message);
+    resultEl.innerHTML=`<div class="success-screen"><div class="icon">✅</div><h3>Cliente creado exitosamente</h3><div class="cred"><strong>Email:</strong> ${san(email)}<br><strong>Contraseña:</strong> ${san(password)}</div><p style="font-size:12px;color:var(--mu);">Guarda estas credenciales — la contraseña no se puede recuperar.</p></div>`;
+    await loadData();
+    if(_currentView==="clients")setTimeout(()=>renderClients(),300);
+  }catch(e){toast(e.message,"err");}
+  finally{btn.disabled=false;btn.textContent="CREAR CLIENTE";}
+}
+
+/* ============================================ */
+/* MENTOR CONFIG                                */
+/* ============================================ */
+async function renderMentorConfig(){
+  const{data:myProfile}=await sb.from("profiles").select("whatsapp_number,full_name").eq("id",user.id).single();
+  const currentWA=myProfile?.whatsapp_number||"";
+  document.getElementById("v-mentor-config").innerHTML=`
+    <div class="card">
+      <div class="card-title">Configuración del Mentor</div>
+      <p style="font-size:13px;color:var(--mu);margin-bottom:16px;">Estos datos son visibles para tus clientes en la app.</p>
+      <div style="margin-bottom:16px;">
+        <label style="display:block;font-size:12px;color:var(--mu);margin-bottom:4px;font-weight:600;">Número de contacto (WhatsApp)</label>
+        <input type="text" id="cfg-whatsapp" value="${san(currentWA)}" placeholder="573001234567" style="width:100%;padding:10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--text);font-size:14px;">
+        <p style="font-size:11px;color:var(--mu);margin-top:4px;">Formato internacional sin +, ej: 573001234567. Tus clientes verán un botón "Contactar al Mentor" en su app.</p>
+      </div>
+      <button class="btn btn-c" id="btn-save-mentor-cfg" onclick="saveMentorConfig()">GUARDAR CONFIGURACIÓN</button>
+    </div>
+  `;
+}
+async function saveMentorConfig(){
+  const wa=document.getElementById("cfg-whatsapp").value.trim().replace(/[^0-9]/g,'');
+  const btn=document.getElementById("btn-save-mentor-cfg");btn.disabled=true;btn.textContent="GUARDANDO...";
+  try{
+    const{error}=await sb.from("profiles").update({whatsapp_number:wa}).eq("id",user.id);
+    if(error){if(!chkAuthErr(error))toast(error.message,"err");return;}
+    toast("Configuración guardada ✓","ok");
+  }finally{btn.disabled=false;btn.textContent="GUARDAR CONFIGURACIÓN";}
+}
+
+/* ============================================ */
+/* ADMIN: USERS                                 */
+/* ============================================ */
+function renderAdminUsers(){
+  if(myRole!=="admin")return;
+  document.getElementById("v-admin-users").innerHTML=`<div class="card"><table class="tbl">
+    <thead><tr><th>Nombre</th><th>ID</th><th>Rol</th><th>Semana</th><th>Acción</th></tr></thead>
+    <tbody>${_allUsers.map(u=>`<tr>
+      <td><strong>${san(u.full_name||"—")}</strong></td>
+      <td style="font-family:monospace;font-size:11px;color:var(--mu)">${u.id.slice(0,8)}</td>
+      <td><span class="badge ${u.role==='admin'?'badge-alert':u.role==='mentor'?'badge-info':'badge-ok'}">${u.role||"client"}</span></td>
+      <td>${u.current_week||1}</td>
+      <td><button class="btn btn-outline" style="padding:4px 10px;font-size:11px;" data-uid="${u.id}" data-name="${san(u.full_name||'')}" data-role="${u.role||'client'}" onclick="openRoleModal(this)">Cambiar rol</button></td>
+    </tr>`).join("")}</tbody></table></div>`;
+}
+function openRoleModal(el){
+  document.getElementById("mr-user").textContent=el.dataset.name||el.dataset.uid.slice(0,8);
+  document.getElementById("mr-uid").value=el.dataset.uid;document.getElementById("mr-role").value=el.dataset.role;
+  openModal("modal-role");
+}
+async function saveRole(){
+  const uid=document.getElementById("mr-uid").value;const role=document.getElementById("mr-role").value;
+  const btn=document.getElementById("mr-btn");btn.disabled=true;btn.textContent="GUARDANDO...";
+  try{
+    const{error}=await sb.from("profiles").update({role}).eq("id",uid);
+    if(error){if(!chkAuthErr(error))toast(error.message,"err");return;}
+    const u=_allUsers.find(x=>x.id===uid);if(u)u.role=role;
+    closeModal("modal-role");toast("Rol actualizado ✓","ok");renderAdminUsers();
+  }finally{btn.disabled=false;btn.textContent="CONFIRMAR";}
+}
+
+/* ============================================ */
+/* ADMIN: COACH IA CONFIG                       */
+/* ============================================ */
+async function loadAIPrompt(){
+  if(myRole!=="admin")return;
+  const{data}=await sb.from("ai_config").select("system_prompt").eq("id",1).single();
+  document.getElementById("v-admin-prompt").innerHTML=`<div class="card">
+    <div class="card-title">System Prompt del Coach MAAT IA</div>
+    <p style="font-size:12px;color:var(--mu);margin-bottom:12px;">Modelo: claude-opus-4-6 · Este prompt es enviado al coach en cada sesión del cliente.</p>
+    <textarea class="prompt-editor" id="ai-prompt-editor">${san(data?.system_prompt||"")}</textarea>
+    <button class="btn btn-c" style="margin-top:12px;" id="btn-save-prompt" onclick="saveAIPrompt()">GUARDAR PROMPT</button>
+  </div>`;
+}
+async function saveAIPrompt(){
+  const prompt=document.getElementById("ai-prompt-editor").value;
+  const btn=document.getElementById("btn-save-prompt");btn.disabled=true;btn.textContent="GUARDANDO...";
+  try{
+    const{error}=await sb.from("ai_config").update({system_prompt:prompt,updated_at:new Date().toISOString()}).eq("id",1);
+    if(error){if(!chkAuthErr(error))toast(error.message,"err");return;}
+    toast("Prompt guardado ✓","ok");
+  }finally{btn.disabled=false;btn.textContent="GUARDAR PROMPT";}
+}
+
+// Offline/online detection
+window.addEventListener('offline',()=>document.getElementById("offline-banner")?.classList.add("show"));
+window.addEventListener('online',()=>document.getElementById("offline-banner")?.classList.remove("show"));
+
+// PWA install prompt
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();
+  _pwaPrompt=e;
+  if(!localStorage.getItem("maat-m-pwa-dismissed")){
+    setTimeout(()=>document.getElementById("pwa-banner")?.classList.add("show"),3000);
+  }
+});
+function pwaInstall(){
+  if(!_pwaPrompt)return;
+  _pwaPrompt.prompt();
+  _pwaPrompt.userChoice.then(()=>{_pwaPrompt=null;pwaDismiss();});
+}
+function pwaDismiss(){
+  document.getElementById("pwa-banner")?.classList.remove("show");
+  localStorage.setItem("maat-m-pwa-dismissed","1");
+}
+
+/* ============================================ */
+/* BOOTSTRAP — sin flash de auth               */
+/* ============================================ */
+(async function boot(){
+  setTheme(theme);
+  try{
+    const{data:{session}}=await sb.auth.getSession();
+    if(session?.user){user=session.user;await initApp();}
+    else document.getElementById("auth-screen").classList.add("visible");
+  }catch(e){
+    document.getElementById("auth-screen").classList.add("visible");
+  }finally{
+    document.getElementById("boot-loader").style.display="none";
+  }
+})();
+</script>
+</body>
+</html>

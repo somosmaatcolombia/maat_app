@@ -1,0 +1,1848 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#0d1117">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>MAAT — Calibración Diaria</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@400;600;700&family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --c:#39A1C9;--o:#EBA055;--m:#7DCD93;--v:#89608E;--r:#D76B6E;
+  --bg:#0d1117;--bg2:#161b22;--text:#e8eaf0;--mu:#a0a8b8;--mu2:#7b8494;
+  --bd:rgba(255,255,255,0.10);
+  --phase1:#39A1C9;--phase2:#EBA055;--phase3:#7DCD93;--phase4:#89608E;
+  --radius:14px;--radius-sm:8px;
+  --font-title:'Saira Condensed',sans-serif;
+  --font-body:'Sora',sans-serif;
+  --nav-h:64px;--topbar-h:56px;
+}
+[data-theme="light"]{
+  --bg:#f5f7fa;--bg2:#ffffff;--text:#111827;--mu:#374151;--mu2:#4b5563;
+  --bd:rgba(0,0,0,0.12);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;overflow:hidden;}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;}
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-thumb{background:var(--mu2);border-radius:4px;}
+
+/* FIX: auth hidden by default — no flash */
+#auth-screen{display:none;flex-direction:column;align-items:center;justify-content:center;height:100vh;padding:24px;text-align:center;}
+#auth-screen.visible{display:flex;}
+#auth-screen .logo-auth{width:120px;margin-bottom:24px;border-radius:20px;}
+#auth-screen h1{font-family:var(--font-title);font-size:32px;font-weight:700;letter-spacing:1px;margin-bottom:6px;}
+#auth-screen .subtitle{color:var(--mu);font-size:14px;margin-bottom:32px;}
+.auth-box{width:100%;max-width:340px;}
+.auth-box input{width:100%;padding:14px 16px;margin-bottom:12px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--bg2);color:var(--text);font-family:var(--font-body);font-size:15px;outline:none;transition:border .2s;}
+.auth-box input:focus{border-color:var(--c);}
+.btn-primary{width:100%;padding:14px;border:none;border-radius:var(--radius-sm);background:var(--c);color:#fff;font-family:var(--font-title);font-size:16px;font-weight:600;letter-spacing:1px;cursor:pointer;transition:opacity .2s;touch-action:manipulation;}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;}
+/* auth helper text */
+#auth-error{color:var(--r);font-size:13px;margin-top:12px;min-height:18px;}
+
+/* BOOT LOADER */
+#boot-loader{display:flex;align-items:center;justify-content:center;height:100vh;background:var(--bg);}
+#boot-loader .boot-dot{width:10px;height:10px;border-radius:50%;background:var(--c);animation:bootPulse .8s infinite alternate;}
+#boot-loader .boot-dot:nth-child(2){animation-delay:.15s;background:var(--o);}
+#boot-loader .boot-dot:nth-child(3){animation-delay:.3s;background:var(--m);}
+#boot-loader{gap:8px;}
+@keyframes bootPulse{to{opacity:.2;transform:scale(.6);}}
+
+/* APP SHELL */
+#app{display:none;height:100vh;flex-direction:column;}
+.topbar{height:var(--topbar-h);display:flex;align-items:center;justify-content:space-between;padding:0 16px;border-bottom:1px solid var(--bd);background:var(--bg);position:sticky;top:0;z-index:90;}
+.topbar .logo-small{height:28px;border-radius:6px;}
+.topbar .topbar-title{font-family:var(--font-title);font-size:18px;font-weight:600;letter-spacing:.5px;}
+.topbar .btn-profile{width:36px;height:36px;border-radius:50%;border:2px solid var(--c);background:var(--bg2);color:var(--c);font-family:var(--font-title);font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;touch-action:manipulation;}
+.main-content{flex:1;overflow-y:auto;overflow-x:hidden;padding:16px 16px calc(var(--nav-h) + 16px);scroll-behavior:smooth;}
+.view{display:none;}
+.view.active{display:block;animation:fadeUp .3s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+.sv-header{display:flex;align-items:center;gap:12px;margin-bottom:20px;}
+.sv-header .btn-back{background:none;border:none;color:var(--c);font-size:22px;cursor:pointer;padding:10px;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;touch-action:manipulation;}
+.sv-header h2{font-family:var(--font-title);font-size:22px;font-weight:600;}
+
+/* NAV BAR */
+.nav-bar{height:var(--nav-h);display:flex;align-items:center;justify-content:space-around;background:var(--bg);border-top:1px solid var(--bd);position:fixed;bottom:0;left:0;right:0;z-index:100;padding-bottom:env(safe-area-inset-bottom,0);}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 12px;cursor:pointer;color:var(--mu2);transition:color .2s;background:none;border:none;font-family:var(--font-body);font-size:11px;touch-action:manipulation;}
+.nav-item svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.nav-item.active{color:var(--c);}
+
+/* CARDS */
+.card{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--radius);padding:16px;margin-bottom:12px;}
+.card-title{font-family:var(--font-title);font-size:16px;font-weight:600;margin-bottom:8px;letter-spacing:.3px;}
+.stat-row{display:flex;gap:8px;margin-bottom:12px;}
+.stat-box{flex:1;background:var(--bg);border:1px solid var(--bd);border-radius:var(--radius-sm);padding:12px 10px;text-align:center;}
+.stat-box .stat-val{font-family:var(--font-title);font-size:22px;font-weight:700;}
+.stat-box .stat-label{font-size:14px;color:var(--mu);margin-top:2px;}
+
+/* FORMS */
+textarea,.input-field{width:100%;padding:12px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-family:var(--font-body);font-size:15px;outline:none;resize:vertical;transition:border .2s;}
+textarea:focus,.input-field:focus{border-color:var(--c);}
+textarea{min-height:80px;}
+label.field-label{display:block;font-size:14px;color:var(--mu);margin-bottom:6px;font-weight:500;}
+
+/* SLIDER */
+.slider-wrap{margin:16px 0;}
+.slider-wrap input[type=range]{-webkit-appearance:none;width:100%;height:6px;border-radius:3px;background:linear-gradient(to right,var(--r),var(--o),var(--m));outline:none;}
+.slider-wrap input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:var(--text);border:3px solid var(--c);cursor:pointer;}
+.slider-labels{display:flex;justify-content:space-between;font-size:14px;color:var(--mu);margin-top:4px;}
+.slider-val{text-align:center;font-family:var(--font-title);font-size:36px;font-weight:700;color:var(--c);}
+
+/* BUTTONS */
+.btn-action{width:100%;padding:14px;border:none;border-radius:var(--radius-sm);background:var(--c);color:#fff;font-family:var(--font-title);font-size:15px;font-weight:600;letter-spacing:1px;cursor:pointer;transition:all .2s;margin-top:12px;touch-action:manipulation;}
+.btn-action:disabled{opacity:.5;cursor:not-allowed;}
+.btn-action.secondary{background:transparent;border:1px solid var(--c);color:var(--c);}
+
+/* TOAST */
+#toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-100px);padding:12px 24px;border-radius:var(--radius-sm);font-size:13px;font-weight:500;z-index:999;transition:transform .3s ease;pointer-events:none;background:var(--bg2);border:1px solid var(--bd);color:var(--text);}
+#toast.show{transform:translateX(-50%) translateY(0);}
+#toast.ok{border-color:var(--m);color:var(--m);}
+#toast.err{border-color:var(--r);color:var(--r);}
+
+/* HOME */
+.home-greeting{font-family:var(--font-title);font-size:26px;font-weight:700;margin-bottom:4px;}
+.home-week{color:var(--mu);font-size:13px;margin-bottom:16px;}
+.streak-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:16px;background:var(--bg2);border:1px solid var(--bd);font-size:14px;color:var(--o);margin-bottom:16px;}
+/* OFFLINE BANNER */
+#offline-banner{position:fixed;top:0;left:0;right:0;z-index:998;background:var(--r);color:#fff;text-align:center;font-size:13px;font-weight:500;padding:8px;transform:translateY(-100%);transition:transform .3s ease;}
+#offline-banner.show{transform:translateY(0);}
+/* PWA INSTALL BANNER */
+#pwa-banner{position:fixed;bottom:calc(var(--nav-h) + 8px);left:12px;right:12px;z-index:997;background:var(--bg2);border:1px solid var(--c);border-radius:var(--radius);padding:12px 16px;display:flex;align-items:center;gap:12px;transform:translateY(200%);transition:transform .4s ease;box-shadow:0 4px 20px rgba(0,0,0,.3);}
+#pwa-banner.show{transform:translateY(0);}
+#pwa-banner p{flex:1;font-size:13px;color:var(--text);}
+#pwa-banner .pwa-install{padding:8px 14px;border:none;border-radius:var(--radius-sm);background:var(--c);color:#fff;font-size:13px;font-weight:600;cursor:pointer;touch-action:manipulation;}
+#pwa-banner .pwa-dismiss{padding:8px;border:none;background:none;color:var(--mu);font-size:18px;cursor:pointer;touch-action:manipulation;}
+/* CALIB STEP INDICATOR */
+.calib-steps{display:flex;align-items:center;gap:6px;margin-bottom:20px;}
+.calib-step-dot{width:8px;height:8px;border-radius:50%;background:var(--bd);transition:all .3s;}
+.calib-step-dot.done{background:var(--m);}
+.calib-step-dot.active{background:var(--c);width:20px;border-radius:4px;}
+.calib-step-label{font-size:13px;color:var(--mu);margin-left:auto;}
+/* COACH CHIPS */
+.coach-chips{display:flex;flex-wrap:wrap;gap:8px;padding:12px 0;}
+.coach-chip{padding:8px 14px;border:1px solid var(--bd);border-radius:20px;font-size:13px;color:var(--mu);background:var(--bg2);cursor:pointer;transition:all .2s;touch-action:manipulation;}
+.coach-chip:hover{border-color:var(--c);color:var(--c);}
+/* HABIT CHECK ANIMATION */
+@keyframes habitPop{0%{transform:scale(1);}40%{transform:scale(1.35);}70%{transform:scale(.92);}100%{transform:scale(1);}}
+.habit-day.pop{animation:habitPop .35s ease;}
+/* COHERENCE RING */
+.coh-ring-wrap{position:relative;display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;margin:0 auto 4px;}
+.coh-ring-wrap svg{position:absolute;top:0;left:0;transform:rotate(-90deg);}
+.coh-ring-val{font-family:var(--font-title);font-size:14px;font-weight:700;position:relative;z-index:1;}
+/* ONBOARDING CARD */
+.onboarding-card{background:linear-gradient(135deg,rgba(57,161,201,.12),rgba(57,161,201,.04));border:1px solid rgba(57,161,201,.3);border-radius:var(--radius);padding:20px;text-align:center;margin:16px 0;}
+.onboarding-card h3{font-family:var(--font-title);font-size:18px;margin-bottom:8px;color:var(--c);}
+.onboarding-card p{font-size:13px;color:var(--mu);line-height:1.6;margin-bottom:14px;}
+.cta-calib{background:linear-gradient(135deg,var(--c),#2d8ab0);border-radius:var(--radius);padding:20px;text-align:center;margin:16px 0;cursor:pointer;transition:transform .15s;touch-action:manipulation;}
+.cta-calib:active{transform:scale(.98);}
+.cta-calib h3{font-family:var(--font-title);font-size:18px;margin-bottom:4px;}
+.cta-calib p{font-size:12px;opacity:.8;}
+.last-calib{font-size:14px;color:var(--mu);margin-top:8px;}
+.last-calib strong{color:var(--text);}
+.phase-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-family:var(--font-title);font-size:14px;font-weight:600;letter-spacing:.5px;}
+
+/* HABITS */
+.habit-item{background:var(--bg);border:1px solid var(--bd);border-radius:var(--radius-sm);padding:12px;margin-bottom:8px;}
+.habit-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;}
+.habit-name-text{font-weight:600;font-size:15px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.habit-freq{font-size:14px;color:var(--mu);background:var(--bg2);padding:2px 8px;border-radius:10px;white-space:nowrap;}
+.habit-days{display:flex;gap:4px;flex-wrap:nowrap;overflow-x:auto;}
+.habit-day{min-width:34px;width:34px;height:34px;border-radius:8px;border:1px solid var(--bd);background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--mu);cursor:pointer;transition:all .15s;flex-shrink:0;touch-action:manipulation;}
+.habit-day.checked{background:var(--m);color:#fff;border-color:var(--m);}
+.habit-progress{height:4px;border-radius:2px;background:var(--bd);margin-top:8px;overflow:hidden;}
+.habit-progress .fill{height:100%;border-radius:2px;transition:width .3s;}
+.btn-del-habit{background:none;border:none;color:var(--r);cursor:pointer;font-size:14px;padding:2px 6px;flex-shrink:0;touch-action:manipulation;}
+.add-habit-form{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--radius);padding:14px;margin-top:12px;}
+.add-habit-form .row{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;}
+.add-habit-form .row>div{flex:1;min-width:100px;}
+.add-habit-form .row>div:last-child{flex:0 0 auto;}
+.add-habit-form label{display:block;font-size:14px;color:var(--mu);margin-bottom:4px;}
+.add-habit-form input,.add-habit-form select{width:100%;padding:10px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-size:13px;outline:none;}
+.add-habit-form button{padding:10px 16px;background:var(--c);color:#fff;border:none;border-radius:var(--radius-sm);cursor:pointer;font-size:14px;white-space:nowrap;touch-action:manipulation;}
+.coherence-big{text-align:center;padding:20px;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--radius);margin-bottom:16px;}
+.coherence-big .coh-val{font-family:var(--font-title);font-size:48px;font-weight:700;}
+.coherence-big .coh-label{font-size:14px;color:var(--mu);}
+
+/* COACH */
+.chat-container{display:flex;flex-direction:column;height:calc(100vh - var(--topbar-h) - var(--nav-h) - 32px);}
+.chat-messages{flex:1;overflow-y:auto;padding:8px 0;display:flex;flex-direction:column;gap:8px;}
+.chat-msg{max-width:85%;padding:10px 14px;border-radius:14px;font-size:15px;line-height:1.5;word-wrap:break-word;}
+.chat-msg.user{align-self:flex-end;background:var(--c);color:#fff;border-bottom-right-radius:4px;}
+.chat-msg.assistant{align-self:flex-start;background:var(--bg2);border:1px solid var(--bd);border-bottom-left-radius:4px;}
+.chat-input-row{display:flex;gap:8px;padding-top:8px;border-top:1px solid var(--bd);margin-top:8px;}
+.chat-input-row input{flex:1;padding:12px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--bg2);color:var(--text);font-family:var(--font-body);font-size:15px;outline:none;}
+.chat-input-row button{padding:12px 16px;background:var(--c);color:#fff;border:none;border-radius:var(--radius-sm);cursor:pointer;font-size:16px;touch-action:manipulation;}
+.typing-indicator{display:flex;gap:4px;padding:10px 14px;}
+.typing-indicator span{width:8px;height:8px;border-radius:50%;background:var(--mu);animation:typeBounce .6s infinite alternate;}
+.typing-indicator span:nth-child(2){animation-delay:.2s;}
+.typing-indicator span:nth-child(3){animation-delay:.4s;}
+@keyframes typeBounce{to{opacity:.3;transform:translateY(-4px);}}
+
+/* MÁS */
+.menu-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.menu-item{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--radius);padding:20px 14px;text-align:center;cursor:pointer;transition:all .15s;touch-action:manipulation;}
+.menu-item:active{transform:scale(.97);}
+.menu-item .menu-icon{font-size:28px;margin-bottom:6px;}
+.menu-item .menu-label{font-family:var(--font-title);font-size:14px;font-weight:600;letter-spacing:.5px;}
+
+/* PROGRESO */
+.phase-section{margin-bottom:20px;}
+.phase-header{display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:var(--radius) var(--radius) 0 0;font-family:var(--font-title);font-size:16px;font-weight:600;}
+.phase-weeks{border:1px solid var(--bd);border-top:none;border-radius:0 0 var(--radius) var(--radius);overflow:hidden;}
+.pw-item{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border-bottom:1px solid var(--bd);}
+.pw-item:last-child{border-bottom:none;}
+.pw-dot{width:10px;height:10px;border-radius:50%;border:2px solid var(--mu2);flex-shrink:0;margin-top:4px;}
+.pw-dot.done{border-color:var(--m);background:var(--m);}
+.pw-dot.current{border-color:var(--c);background:var(--c);}
+.pw-info{flex:1;cursor:pointer;}
+.pw-title{font-weight:600;font-size:14px;}
+.pw-summary{font-size:14px;color:var(--mu);margin-top:2px;}
+.pw-edit{display:none;margin-top:10px;}
+.pw-edit.open{display:block;}
+.pw-edit textarea{min-height:100px;margin-bottom:8px;}
+.pw-edit button{padding:8px 16px;background:var(--c);color:#fff;border:none;border-radius:var(--radius-sm);font-size:13px;cursor:pointer;touch-action:manipulation;}
+
+/* BELIEFS */
+.belief-filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.belief-filter{padding:6px 12px;border-radius:16px;border:1px solid var(--bd);background:var(--bg);color:var(--mu);font-size:12px;cursor:pointer;touch-action:manipulation;}
+.belief-filter.active{background:var(--c);color:#fff;border-color:var(--c);}
+.belief-item{display:flex;align-items:flex-start;gap:10px;padding:12px;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--radius-sm);margin-bottom:8px;}
+.belief-cat-dot{width:10px;height:10px;border-radius:50%;margin-top:5px;flex-shrink:0;}
+.btn-del{background:none;border:none;color:var(--r);cursor:pointer;font-size:16px;padding:4px;touch-action:manipulation;}
+
+/* HISTORIAL */
+.hist-item{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--radius-sm);margin-bottom:8px;overflow:hidden;}
+.hist-header{display:flex;align-items:center;justify-content:space-between;padding:12px;cursor:pointer;}
+.hist-header .hist-date{font-family:var(--font-title);font-weight:600;}
+.hist-header .hist-coh{padding:2px 10px;border-radius:12px;font-size:14px;font-weight:600;font-family:var(--font-title);}
+.hist-body{padding:0 12px 12px;display:none;font-size:14px;color:var(--mu);}
+.hist-body.open{display:block;}
+.hist-body p{margin-bottom:6px;}
+.hist-body strong{color:var(--text);}
+
+/* AUDIO */
+.audio-player{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--radius);padding:20px;text-align:center;margin:16px 0;}
+.audio-player .play-btn{width:56px;height:56px;border-radius:50%;border:none;background:var(--c);color:#fff;font-size:24px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;margin:12px 0;touch-action:manipulation;}
+.audio-progress{width:100%;height:4px;border-radius:2px;background:var(--bd);margin:12px 0;position:relative;cursor:pointer;}
+.audio-progress .fill{height:100%;background:var(--c);border-radius:2px;transition:width .1s;}
+.audio-controls{display:flex;align-items:center;justify-content:center;gap:20px;}
+.audio-controls button{background:none;border:none;color:var(--mu);font-size:14px;cursor:pointer;touch-action:manipulation;}
+.audio-time{font-size:14px;color:var(--mu);font-family:var(--font-title);}
+
+/* SKELETON LOADERS */
+.skeleton{background:linear-gradient(90deg,var(--bg2) 25%,var(--bd) 50%,var(--bg2) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:var(--radius-sm);}
+@keyframes shimmer{from{background-position:200% 0;}to{background-position:-200% 0;}}
+.skel-line{height:14px;margin-bottom:10px;border-radius:4px;}
+.skel-line.short{width:60%;}
+.skel-line.med{width:80%;}
+.skel-box{height:72px;border-radius:var(--radius-sm);margin-bottom:10px;}
+.skel-circle{width:56px;height:56px;border-radius:50%;margin:0 auto 8px;}
+.skel-stat-row{display:flex;gap:8px;margin-bottom:12px;}
+.skel-stat-row .skel-box{flex:1;}
+/* FORM VALIDATION */
+.field-error{border-color:var(--r) !important;}
+.field-error-msg{color:var(--r);font-size:12px;margin-top:4px;}
+/* ONBOARDING OVERLAY */
+#onboarding-overlay{position:fixed;inset:0;background:var(--bg);z-index:300;display:none;flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center;}
+#onboarding-overlay.visible{display:flex;}
+.ob-step{max-width:340px;animation:fadeUp .4s ease;}
+.ob-icon{font-size:56px;margin-bottom:16px;}
+.ob-title{font-family:var(--font-title);font-size:24px;font-weight:700;margin-bottom:8px;}
+.ob-text{font-size:14px;color:var(--mu);line-height:1.7;margin-bottom:24px;}
+.ob-dots{display:flex;gap:6px;justify-content:center;margin-bottom:20px;}
+.ob-dot{width:8px;height:8px;border-radius:50%;background:var(--bd);}
+.ob-dot.active{background:var(--c);width:20px;border-radius:4px;}
+/* ACHIEVEMENT TOAST */
+#achievement{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);background:var(--bg2);border:2px solid var(--m);border-radius:var(--radius);padding:32px;text-align:center;z-index:400;transition:transform .4s cubic-bezier(.34,1.56,.64,1);pointer-events:none;min-width:260px;}
+#achievement.show{transform:translate(-50%,-50%) scale(1);pointer-events:auto;}
+#achievement .ach-icon{font-size:48px;margin-bottom:8px;}
+#achievement .ach-title{font-family:var(--font-title);font-size:20px;font-weight:700;color:var(--m);margin-bottom:4px;}
+#achievement .ach-text{font-size:14px;color:var(--mu);}
+
+/* PROFILE SHEET */
+.sheet-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;opacity:0;transition:opacity .3s;}
+.sheet-overlay.show{display:block;opacity:1;}
+.sheet{position:fixed;bottom:0;left:0;right:0;z-index:210;background:var(--bg);border-top-left-radius:20px;border-top-right-radius:20px;padding:20px 20px 40px;max-height:80vh;overflow-y:auto;transform:translateY(100%);transition:transform .3s ease;}
+.sheet-overlay.show .sheet{transform:translateY(0);}
+.sheet-handle{width:40px;height:4px;background:var(--mu2);border-radius:2px;margin:0 auto 20px;}
+.sheet h3{font-family:var(--font-title);font-size:20px;margin-bottom:16px;}
+.sheet-field{margin-bottom:16px;}
+.sheet-field label{display:block;font-size:14px;color:var(--mu);margin-bottom:6px;}
+.sheet-field input,.sheet-field select{width:100%;padding:12px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--bg2);color:var(--text);font-family:var(--font-body);font-size:15px;outline:none;}
+.sheet-actions{display:flex;gap:8px;margin-top:20px;}
+.sheet-actions button{flex:1;}
+.btn-logout{background:var(--r) !important;}
+.spinner{display:inline-block;width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.hidden{display:none !important;}
+.mt-8{margin-top:8px;}.mt-16{margin-top:16px;}.mb-8{margin-bottom:8px;}.mb-16{margin-bottom:16px;}
+.text-center{text-align:center;}.text-mu{color:var(--mu);font-size:13px;}
+/* FOCUS INDICATORS — accessibility */
+:focus-visible{outline:2px solid var(--c);outline-offset:2px;border-radius:4px;}
+button:focus-visible,.nav-item:focus-visible,.menu-item:focus-visible{outline:2px solid var(--c);outline-offset:2px;}
+input:focus-visible,textarea:focus-visible,select:focus-visible{outline:none;border-color:var(--c);box-shadow:0 0 0 2px rgba(57,161,201,.25);}
+/* SKIP NAV */
+.skip-nav{position:absolute;top:-100%;left:50%;transform:translateX(-50%);background:var(--c);color:#fff;padding:8px 20px;border-radius:0 0 var(--radius-sm) var(--radius-sm);z-index:999;font-size:14px;text-decoration:none;transition:top .2s;}
+.skip-nav:focus{top:0;}
+/* OFFLINE QUEUE BADGE */
+.offline-queue-badge{position:fixed;bottom:calc(var(--nav-h) + 8px);right:12px;background:var(--o);color:#fff;font-size:12px;font-weight:600;padding:4px 10px;border-radius:12px;z-index:150;display:none;}
+.offline-queue-badge.show{display:block;}
+</style>
+</head>
+<body>
+<a href="#main-content" class="skip-nav">Saltar al contenido</a>
+
+<!-- BOOT LOADER (visible while checking session) -->
+<div id="boot-loader" role="status" aria-label="Cargando aplicación">
+  <div class="boot-dot"></div><div class="boot-dot"></div><div class="boot-dot"></div>
+</div>
+
+<!-- AUTH (hidden by default, shown only if no session) -->
+<section id="auth-screen" aria-label="Inicio de sesión">
+  <img src="https://somosmaat.org/wp-content/uploads/2026/02/logo_app.png" alt="Logo MAAT" class="logo-auth" onerror="this.style.display='none'">
+  <h1></h1>
+  <p class="subtitle">Estoicismo & Bien-estar</p>
+  <form class="auth-box" onsubmit="event.preventDefault();doAuth();" aria-label="Formulario de login">
+    <input type="email" id="auth-email" placeholder="Email" autocomplete="email" aria-label="Email" required>
+    <input type="password" id="auth-pass" placeholder="Contraseña" autocomplete="current-password" aria-label="Contraseña" required>
+    <button type="submit" class="btn-primary" id="auth-btn">INICIAR SESIÓN</button>
+    <p id="auth-error" role="alert" aria-live="polite"></p>
+    <p style="color:var(--mu);font-size:12px;margin-top:16px;">Tu mentor te proporcionará las credenciales de acceso.</p>
+  </form>
+</section>
+
+<!-- APP -->
+<div id="app" role="application">
+  <header class="topbar">
+    <img src="https://somosmaat.org/wp-content/uploads/2026/02/logo_app.png" alt="Logo MAAT" class="logo-small" onerror="this.textContent='M'">
+    <span class="topbar-title">MAAT</span>
+    <button class="btn-profile" id="btn-profile" onclick="openProfile()" aria-label="Abrir perfil"></button>
+  </header>
+  <main class="main-content" id="main-content">
+    <section id="v-home" class="view active" aria-label="Dashboard"></section>
+    <section id="v-calib" class="view" aria-label="Calibración"></section>
+    <section id="v-habitos" class="view" aria-label="Hábitos"></section>
+    <section id="v-coach" class="view" aria-label="Coach IA">
+      <div class="chat-container" role="log" aria-label="Conversación con Coach IA">
+        <div class="chat-messages" id="chat-messages" aria-live="polite"></div>
+        <div class="chat-input-row">
+          <input type="text" id="chat-input" placeholder="" aria-label="Mensaje al coach" onkeydown="if(event.key==='Enter')sendMsg()">
+          <button onclick="sendMsg()" aria-label="Enviar mensaje">➤</button>
+        </div>
+      </div>
+    </section>
+    <section id="v-mas" class="view" aria-label="Más opciones"></section>
+    <section id="v-progreso" class="view" aria-label="Progreso"></section>
+    <section id="v-creencias" class="view" aria-label="Creencias"></section>
+    <section id="v-statement" class="view" aria-label="Statement"></section>
+    <section id="v-libro" class="view" aria-label="Libro"></section>
+    <section id="v-historial" class="view" aria-label="Historial"></section>
+    <section id="v-meditacion" class="view" aria-label="Meditación"></section>
+    <section id="v-dailymaat" class="view" aria-label="Daily MAAT"></section>
+    <section id="v-mentor-notes" class="view" aria-label="Notas del mentor"></section>
+  </main>
+  <nav class="nav-bar" aria-label="Navegación principal">
+    <button class="nav-item active" data-view="v-home" onclick="gv('v-home')" aria-label="Home" aria-current="page">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>Home</span>
+    </button>
+    <button class="nav-item" data-view="v-calib" onclick="gv('v-calib')" aria-label="Calibrar">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span id="nav-calib">Calibrar</span>
+    </button>
+    <button class="nav-item" data-view="v-habitos" onclick="gv('v-habitos')" aria-label="Hábitos">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      <span id="nav-habitos">Hábitos</span>
+    </button>
+    <button class="nav-item" data-view="v-coach" onclick="gv('v-coach')" aria-label="Coach IA">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+      <span>Maar GPT</span>
+    </button>
+    <button class="nav-item" data-view="v-mas" onclick="gv('v-mas')" aria-label="Más opciones">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+      <span id="nav-mas">Más</span>
+    </button>
+  </nav>
+</div>
+<div class="offline-queue-badge" id="queue-badge" aria-live="polite"></div>
+
+<!-- Profile Sheet -->
+<div class="sheet-overlay" id="profile-sheet" onclick="if(event.target===this)closeProfile()">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <h3>Perfil</h3>
+    <div class="sheet-field"><label>Nombre completo</label><input type="text" id="prof-name"></div>
+    <div class="sheet-field"><label>Semana actual (1-16)</label><input type="number" id="prof-week" min="1" max="16"></div>
+    <div class="sheet-field"><label>Hora de notificación (0-23)</label><input type="number" id="prof-notif" min="0" max="23"></div>
+    <div class="sheet-field"><label>Idioma</label><select id="prof-lang" onchange="setLang(this.value)"><option value="es">Español</option><option value="en">English</option></select></div>
+    <div class="sheet-field"><label>Tema</label><select id="prof-theme" onchange="setTheme(this.value)"><option value="dark">Dark</option><option value="light">Light</option></select></div>
+    <div class="sheet-actions">
+      <button class="btn-action" id="btn-save-prof" onclick="saveProfile()">GUARDAR</button>
+      <button class="btn-action btn-logout" onclick="doLogout()">SALIR</button>
+    </div>
+  </div>
+</div>
+<div id="offline-banner">📡 Sin conexión — revisando...</div>
+<div id="pwa-banner">
+  <p>📲 Agrega MAAT a tu pantalla de inicio para una mejor experiencia</p>
+  <button class="pwa-install" onclick="pwaInstall()">Instalar</button>
+  <button class="pwa-dismiss" onclick="pwaDismiss()">✕</button>
+</div>
+<div id="onboarding-overlay"></div>
+<div id="achievement"><div class="ach-icon"></div><div class="ach-title"></div><div class="ach-text"></div></div>
+<div id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+/* ============ CONFIG ============ */
+const SU="https://pcclptmojjzqmfmzftot.supabase.co";
+const SK="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjY2xwdG1vamp6cW1mbXpmdG90Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4OTg3MjAsImV4cCI6MjA4NzQ3NDcyMH0.VuFBEy19fgNN5pSp_r8p2ZVViniunKdVW7Hy3AmqJXE";
+const sb=supabase.createClient(SU,SK);
+
+/* ============ STATE ============ */
+let user=null,prof=null,cals=[],bels=[],wkp={},ht={},sh=null,aiCfg={};
+let hwk=1,notifHour=9;
+let chatHistory=[],chatLocked=false;
+let _calibStep=0,_calibAnswers={};
+let _pwaPrompt=null;
+let lang=localStorage.getItem("maat-lang")||"es";
+let theme=localStorage.getItem("maat-theme")||(window.matchMedia('(prefers-color-scheme:light)').matches?'light':'dark');
+let _appReady=false,_loading=false;
+let wkLearning={};
+// FIX: separate habits view week from global hwk
+let _habViewWeek=1;
+let mentorWhatsapp=null;
+let mentorNotes=[];
+let _belFilter="all";
+
+/* ============ i18n ============ */
+const I18N={
+  es:{
+    q1:"¿Por qué estoy genuinamente agradecido hoy?",
+    q2:"¿Qué creencia va a liderar mi día?",
+    q3:"¿Qué estoy evitando enfrentar hoy?",
+    attitude_label:"Nivel de actitud para el día",
+    attitude_low:"Baja energía",attitude_high:"Máxima actitud",
+    btn_save_calib:"GUARDAR CALIBRACIÓN",
+    streak:"días seguidos",calib_title:"Calibración",habits_title:"Hábitos",
+    coach_title:"Coach MAAT IA",coach_placeholder:"Escribe tu mensaje...",
+    menu_progress:"MI PROGRESO",menu_beliefs:"CREENCIAS",menu_statement:"MI STATEMENT",
+    menu_book:"LIBRO",menu_history:"HISTORIAL",menu_meditation:"MEDITACIÓN",
+    greeting:"Hola,",week_label:"Semana",of:" de 16",
+    progress_pct:"Progreso",coherence_pct:"Coherencia",habits_pct:"Hábitos",attitude_avg:"Actitud",
+    phase:"Fase",cta_calib:"Calibra tu día",cta_calib_sub:"3 preguntas · 2 minutos",
+    last_calib:"Última calibración:",no_calib:"Sin calibraciones aún",
+    saving:"GUARDANDO...",saved:"Guardado ✓",error_fields:"Completa las 3 preguntas",
+    add_habit:"Nombre del hábito",freq_label:"Frecuencia semanal",
+    no_habits:"Configura tus hábitos para medir coherencia",
+    beliefs_title:"Creencias",all_filter:"Todas",add_belief:"Agregar creencia",
+    cat_supervivencia:"Supervivencia",cat_limitante:"Limitante",cat_neutral:"Neutral",
+    cat_elegida:"Elegida",cat_expansiva:"Expansiva",
+    statement_title:"Mi Statement de Vida",statement_placeholder:"Escribe tu statement de vida...",
+    save:"GUARDAR",progress_title:"Mi Progreso",
+    historial_title:"Historial",meditation_title:"Meditación Guiada",book_title:"Libro MAAT",
+    profile:"Perfil",logout:"SALIR",login:"INICIAR SESIÓN",
+    audio_hipnosis:"Autohipnosis",upload_audio:"Subir audio MP3",
+    session_expired:"Tu sesión expiró. Vuelve a iniciar sesión.",
+    learning_placeholder:"Escribe un resumen de lo aprendido en la sesión de esta semana...",
+    days:["L","M","X","J","V","S","D"],
+    phases:["GRATITUD","AMOR","INTENCIÓN","VOLUNTAD"],
+    phase_names:["La Fundación de Todo","El Motor del Alto Rendimiento","La Arquitectura de una Vida Elegida","No Fuerza — Coherencia"],
+    phase_keywords:["UNCOVER","REWRITE","REBUILD","INTEGRATE"],
+  },
+  en:{
+    q1:"What am I genuinely grateful for today?",
+    q2:"What belief will lead my day?",
+    q3:"What am I avoiding facing today?",
+    attitude_label:"Attitude level for the day",
+    attitude_low:"Low energy",attitude_high:"Maximum attitude",
+    btn_save_calib:"SAVE CALIBRATION",
+    streak:"days in a row",calib_title:"Calibration",habits_title:"Habits",
+    coach_title:"MAAT AI Coach",coach_placeholder:"Type your message...",
+    menu_progress:"MY PROGRESS",menu_beliefs:"BELIEFS",menu_statement:"MY STATEMENT",
+    menu_book:"BOOK",menu_history:"HISTORY",menu_meditation:"MEDITATION",
+    greeting:"Hello,",week_label:"Week",of:" of 16",
+    progress_pct:"Progress",coherence_pct:"Coherence",habits_pct:"Habits",attitude_avg:"Attitude",
+    phase:"Phase",cta_calib:"Calibrate your day",cta_calib_sub:"3 questions · 2 minutes",
+    last_calib:"Last calibration:",no_calib:"No calibrations yet",
+    saving:"SAVING...",saved:"Saved ✓",error_fields:"Complete all 3 questions",
+    add_habit:"Habit name",freq_label:"Weekly frequency",
+    no_habits:"Set up your habits to measure coherence",
+    beliefs_title:"Beliefs",all_filter:"All",add_belief:"Add belief",
+    cat_supervivencia:"Survival",cat_limitante:"Limiting",cat_neutral:"Neutral",
+    cat_elegida:"Chosen",cat_expansiva:"Expansive",
+    statement_title:"My Life Statement",statement_placeholder:"Write your life statement...",
+    save:"SAVE",progress_title:"My Progress",
+    historial_title:"History",meditation_title:"Guided Meditation",book_title:"MAAT Book",
+    profile:"Profile",logout:"LOG OUT",login:"LOG IN",
+    audio_hipnosis:"Self-Hypnosis",upload_audio:"Upload MP3 audio",
+    session_expired:"Session expired. Please log in again.",
+    learning_placeholder:"Write a summary of what you learned in this week's mentoring session...",
+    days:["M","T","W","T","F","S","S"],
+    phases:["GRATITUDE","LOVE","INTENTION","WILL"],
+    phase_names:["The Foundation of Everything","The Engine of High Performance","The Architecture of a Chosen Life","Not Force — Coherence"],
+    phase_keywords:["UNCOVER","REWRITE","REBUILD","INTEGRATE"],
+  }
+};
+function t(k){return(I18N[lang]||I18N.es)[k]||k;}
+
+/* ============ UTILITIES ============ */
+function san(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");}
+function toast(msg,type){const el=document.getElementById("toast");el.textContent=msg;el.className=type||"";el.classList.add("show");setTimeout(()=>el.classList.remove("show"),2800);}
+function chkAuthErr(error){if(!error)return false;const msg=(error.message||"").toLowerCase();if(msg.includes("jwt")||msg.includes("expired")||msg.includes("not authenticated")){toast(t("session_expired"),"err");setTimeout(()=>doLogout(),2200);return true;}return false;}
+function fmtDate(){const d=new Date();const m=lang==="es"?["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"]:["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];return d.getDate()+" "+m[d.getMonth()];}
+function fmtDateISO(d){d=d||new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;}
+function calibradoHoy(){const td=fmtDate();const ti=fmtDateISO();return cals.some(c=>{const d=c.date||"";return d===td||d===ti;});}
+function getPhase(w){return w<=4?1:w<=8?2:w<=12?3:4;}
+function getPhaseColor(p){return[null,"var(--phase1)","var(--phase2)","var(--phase3)","var(--phase4)"][p];}
+function cohColor(v){return v>=70?"var(--m)":v>=40?"var(--o)":"var(--r)";}
+function attColor(v){return v>=7?"var(--m)":v>=4?"var(--o)":"var(--r)";}
+function showCohInfo(){
+  toast(lang==='es'
+    ?'Coherencia = % de hábitos completados en la semana actual'
+    :'Coherence = % of habits completed in the current week',
+    "");
+}
+
+// FIX: centralized habits parser — avoids repeated try/catch JSON parsing
+function getHabits(week){
+  const d=ht[week];
+  if(!d)return[];
+  try{return typeof d.habits==="string"?JSON.parse(d.habits):(d.habits||[]);}
+  catch(e){return[];}
+}
+
+function calcStreak(){
+  if(!cals.length)return 0;
+  const sorted=[...cals].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+  let streak=0;const today=new Date();today.setHours(0,0,0,0);
+  for(let i=0;i<sorted.length;i++){
+    const d=new Date(sorted[i].created_at);d.setHours(0,0,0,0);
+    const exp=new Date(today);exp.setDate(exp.getDate()-i);
+    if(d.getTime()===exp.getTime())streak++;else break;
+  }
+  return streak;
+}
+
+function calcCoherence(weekNum){
+  const habits=getHabits(weekNum||hwk);
+  if(!habits.length)return 0;
+  const sumPct=habits.reduce((s,h)=>{
+    const freq=h.frequency||7;
+    const checked=Math.min((h.days||[]).filter(Boolean).length,freq);
+    return s+(checked/freq)*100;
+  },0);
+  return Math.round(sumPct/habits.length);
+}
+
+function calcHabPct(weekNum){
+  const habits=getHabits(weekNum||hwk);
+  if(!habits.length)return 0;
+  let totalExpected=0,totalDone=0;
+  habits.forEach(h=>{
+    const freq=h.frequency||7;
+    totalExpected+=freq;
+    totalDone+=Math.min((h.days||[]).filter(Boolean).length,freq);
+  });
+  return totalExpected?Math.round(totalDone/totalExpected*100):0;
+}
+
+function calcAttitudeAvg(){
+  if(!cals.length)return null;
+  const recent=cals.slice(0,7);
+  return(recent.reduce((s,c)=>s+c.coherence,0)/recent.length).toFixed(1);
+}
+
+/* ============ AUDIO MANAGER — single instance, prevents overlap ============ */
+const Audio_={
+  _current:null,
+  // Create or reuse an Audio() object for a given url+key
+  get(key,url){
+    if(!this._store)this._store={};
+    if(!this._store[key]||this._store[key]._url!==url){
+      if(this._store[key])this._store[key].pause();
+      const a=new Audio();
+      a._url=url;a._key=key;a.preload="metadata";
+      this._store[key]=a;
+    }
+    return this._store[key];
+  },
+  // Stop all except given key
+  stopOthers(key){
+    if(!this._store)return;
+    Object.keys(this._store).forEach(k=>{
+      if(k!==key&&!this._store[k].paused)this._store[k].pause();
+    });
+  },
+  play(key,url){
+    const a=this.get(key,url);
+    this.stopOthers(key);
+    if(!a.src||a.src!==url)a.src=url;
+    return a.play();
+  },
+  pause(key){if(this._store&&this._store[key])this._store[key].pause();},
+  toggle(key,url,onPlay,onPause){
+    const a=this.get(key,url);
+    if(a.paused){this.play(key,url).then(()=>onPlay&&onPlay()).catch(e=>toast("Error: "+e.message,"err"));}
+    else{a.pause();onPause&&onPause();}
+  },
+  onTime(key,cb){const a=this._store?.[key];if(a){a.removeEventListener("timeupdate",a._timeCb);a._timeCb=cb;a.addEventListener("timeupdate",cb);}},
+  onEnd(key,cb){const a=this._store?.[key];if(a){a.removeEventListener("ended",a._endCb);a._endCb=cb;a.addEventListener("ended",cb);}},
+  seek(key,pct){const a=this._store?.[key];if(a&&a.duration)a.currentTime=pct*a.duration;},
+  skip(key,s){const a=this._store?.[key];if(a)a.currentTime=Math.max(0,a.currentTime+s);},
+  isPaused(key){return!this._store?.[key]||this._store[key].paused;},
+};
+
+/* ============ AUTH ============ */
+function updateAuthUI(){
+  const btn=document.getElementById("auth-btn");
+  btn.textContent=t("login");
+}
+
+async function doAuth(){
+  const email=document.getElementById("auth-email").value.trim();
+  const pass=document.getElementById("auth-pass").value;
+  const errEl=document.getElementById("auth-error");
+  const btn=document.getElementById("auth-btn");
+  if(!email||!pass){errEl.textContent=lang==='es'?"Email y contraseña requeridos":"Email and password required";return;}
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span>';errEl.textContent="";
+  try{
+    const{data,error}=await sb.auth.signInWithPassword({email,password:pass});
+    if(error){errEl.textContent=error.message;return;}
+    if(data.user){user=data.user;await initApp();}
+  }catch(e){errEl.textContent=e.message;}
+  finally{btn.disabled=false;updateAuthUI();}
+}
+
+async function doLogout(){
+  if(_realtimeSub){sb.removeChannel(_realtimeSub);_realtimeSub=null;}
+  await sb.auth.signOut();
+  user=null;prof=null;cals=[];bels=[];wkp={};ht={};sh=null;chatHistory=[];_appReady=false;
+  document.getElementById("app").style.display="none";
+  document.getElementById("auth-screen").classList.add("visible");
+}
+
+/* ============ REALTIME — session_notes from mentor ============ */
+let _realtimeSub=null;
+function setupRealtime(){
+  if(_realtimeSub||!user)return;
+  _realtimeSub=sb.channel('maat-client-'+user.id)
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'session_notes',filter:'client_id=eq.'+user.id},payload=>{
+      mentorNotes.unshift(payload.new);
+      if(document.getElementById("v-mentor-notes")?.classList.contains("active"))renderMentorNotes();
+      if(document.getElementById("v-home")?.classList.contains("active"))renderHome();
+      toast(lang==='es'?'Tu mentor dejó una nueva nota':'Your mentor left a new note','ok');
+    })
+    .subscribe();
+}
+
+/* ============ SKELETON LOADERS ============ */
+function skelHome(){
+  return`<div class="skel-line short skeleton"></div><div class="skel-line skeleton" style="width:40%;height:10px;"></div>
+  <div class="skel-stat-row"><div class="skel-box skeleton"></div><div class="skel-box skeleton"></div><div class="skel-box skeleton"></div></div>
+  <div class="skeleton" style="height:80px;border-radius:var(--radius);margin-bottom:12px;"></div>
+  <div class="skeleton" style="height:120px;border-radius:var(--radius);"></div>`;
+}
+function skelHabits(){
+  return`<div class="skel-line short skeleton"></div><div class="skeleton" style="height:80px;border-radius:var(--radius);margin-bottom:12px;"></div>
+  <div class="skeleton" style="height:60px;border-radius:var(--radius-sm);margin-bottom:8px;"></div>
+  <div class="skeleton" style="height:60px;border-radius:var(--radius-sm);margin-bottom:8px;"></div>`;
+}
+function skelHistory(){
+  return`<div class="skel-line short skeleton"></div>${[1,2,3,4].map(()=>'<div class="skeleton" style="height:48px;border-radius:var(--radius-sm);margin-bottom:8px;"></div>').join("")}`;
+}
+
+/* ============ ONBOARDING — first-time users ============ */
+let _obStep=0;
+const OB_STEPS=[
+  {icon:"🧭",title_es:"Bienvenido a MAAT",title_en:"Welcome to MAAT",text_es:"Un sistema de 16 semanas que integra neurociencia, filosofía y metacognición para transformar tu vida profesional.",text_en:"A 16-week system integrating neuroscience, philosophy, and metacognition to transform your professional life."},
+  {icon:"📊",title_es:"Calibración Diaria",title_en:"Daily Calibration",text_es:"Cada día responderás 3 preguntas poderosas y evaluarás tu actitud. Solo toma 2 minutos y es la base de todo tu progreso.",text_en:"Each day you'll answer 3 powerful questions and rate your attitude. It only takes 2 minutes and is the foundation of all your progress."},
+  {icon:"✅",title_es:"Hábitos Semanales",title_en:"Weekly Habits",text_es:"Programa los hábitos que construyen la versión de ti que quieres ser. Marca tus días y mide tu coherencia.",text_en:"Program the habits that build the version of yourself you want to be. Check your days and measure your coherence."},
+  {icon:"🤖",title_es:"Tu Coach IA",title_en:"Your AI Coach",text_es:"Tienes un coach de IA disponible 24/7 para guiarte con preguntas, reflexiones y apoyo personalizado.",text_en:"You have an AI coach available 24/7 to guide you with questions, reflections, and personalized support."}
+];
+function showOnboarding(){
+  _obStep=0;
+  document.getElementById("onboarding-overlay").classList.add("visible");
+  renderObStep();
+}
+function renderObStep(){
+  const s=OB_STEPS[_obStep];const last=_obStep===OB_STEPS.length-1;
+  document.getElementById("onboarding-overlay").innerHTML=`
+    <div class="ob-step">
+      <div class="ob-icon">${s.icon}</div>
+      <div class="ob-title">${lang==='es'?s.title_es:s.title_en}</div>
+      <div class="ob-text">${lang==='es'?s.text_es:s.text_en}</div>
+      <div class="ob-dots">${OB_STEPS.map((_,i)=>`<div class="ob-dot ${i===_obStep?'active':''}"></div>`).join("")}</div>
+      <button class="btn-action" onclick="${last?'finishOnboarding()':'nextObStep()'}" style="width:auto;padding:12px 32px;margin:0 auto;">
+        ${last?(lang==='es'?'Empezar mi calibración →':'Start my calibration →'):(lang==='es'?'Siguiente':'Next')}
+      </button>
+      ${_obStep>0?`<button class="btn-action secondary" onclick="prevObStep()" style="width:auto;padding:8px 20px;margin:8px auto 0;font-size:13px;">← ${lang==='es'?'Anterior':'Back'}</button>`:''}
+    </div>`;
+}
+function nextObStep(){_obStep++;renderObStep();}
+function prevObStep(){_obStep--;renderObStep();}
+function finishOnboarding(){
+  localStorage.setItem("maat-onboarded","1");
+  document.getElementById("onboarding-overlay").classList.remove("visible");
+  gv("v-calib");
+}
+
+/* ============ ACHIEVEMENT NOTIFICATIONS ============ */
+function showAchievement(icon,title,text){
+  const el=document.getElementById("achievement");
+  el.querySelector(".ach-icon").textContent=icon;
+  el.querySelector(".ach-title").textContent=title;
+  el.querySelector(".ach-text").textContent=text;
+  el.classList.add("show");
+  setTimeout(()=>el.classList.remove("show"),3500);
+}
+function checkAchievements(){
+  const streak=calcStreak();
+  const shownKey="maat-ach-"+user.id;
+  const shown=JSON.parse(localStorage.getItem(shownKey)||"{}");
+  // Streak milestones
+  [3,7,14,21,30].forEach(n=>{
+    if(streak>=n&&!shown["streak-"+n]){
+      shown["streak-"+n]=true;
+      const titles_es={"3":"¡3 días seguidos!","7":"¡Una semana completa!","14":"¡2 semanas imparable!","21":"¡21 días — Nuevo hábito!","30":"¡30 días — Leyenda!"};
+      const titles_en={"3":"3-day streak!","7":"Full week!","14":"2 weeks unstoppable!","21":"21 days — New habit!","30":"30 days — Legend!"};
+      setTimeout(()=>showAchievement("🔥",lang==='es'?titles_es[n]:titles_en[n],lang==='es'?`Llevas ${n} días calibrando sin parar`:`${n} days calibrating non-stop`),1200);
+    }
+  });
+  // Phase completion
+  [1,2,3,4].forEach(p=>{
+    const startW=(p-1)*4+1;const endW=p*4;
+    const allDone=[startW,startW+1,startW+2,endW].every(w=>wkp[w]);
+    if(allDone&&!shown["phase-"+p]){
+      shown["phase-"+p]=true;
+      const names_es=["GRATITUD","AMOR","INTENCIÓN","VOLUNTAD"];
+      const names_en=["GRATITUDE","LOVE","INTENTION","WILL"];
+      setTimeout(()=>showAchievement("◆",lang==='es'?`¡Fase ${p} completada!`:`Phase ${p} complete!`,lang==='es'?`Dominaste ${names_es[p-1]}`:`You mastered ${names_en[p-1]}`),1500);
+    }
+  });
+  // First calibration
+  if(cals.length===1&&!shown["first-calib"]){
+    shown["first-calib"]=true;
+    setTimeout(()=>showAchievement("🎯",lang==='es'?"¡Primera calibración!":"First calibration!",lang==='es'?"El viaje de 16 semanas comienza hoy":"The 16-week journey starts today"),800);
+  }
+  localStorage.setItem(shownKey,JSON.stringify(shown));
+}
+
+/* ============ INIT & LOAD ============ */
+async function initApp(){
+  document.getElementById("auth-screen").classList.remove("visible");
+  document.getElementById("app").style.display="flex";
+  setTheme(theme);
+  // Show skeleton while loading
+  document.getElementById("v-home").innerHTML=skelHome();
+  document.getElementById("v-home").classList.add("active");
+  await loadData();
+  _habViewWeek=hwk;// sync habits view to current week
+  await loadMentorContact();
+  setupRealtime();
+  await loadChatServer();
+  await requestNotifPermission();
+  scheduleNotifications();
+  _appReady=true;
+  applyI18N();
+  // Onboarding for first-time users
+  if(!localStorage.getItem("maat-onboarded")&&cals.length===0){showOnboarding();}
+  gv("v-home");
+  checkAchievements();
+}
+
+async function loadData(){
+  if(_loading)return;_loading=true;
+  const uid=user.id;
+  const timeout=new Promise((_,rej)=>setTimeout(()=>rej(new Error("timeout")),12000));
+  try{
+    const results=await Promise.race([
+      Promise.allSettled([
+        sb.from("profiles").select("*").eq("id",uid).single(),
+        sb.from("calibrations").select("*").eq("user_id",uid).order("created_at",{ascending:false}).limit(200),
+        sb.from("beliefs").select("*").eq("user_id",uid).order("created_at",{ascending:false}),
+        sb.from("week_progress").select("*").eq("user_id",uid),
+        sb.from("habit_tracker").select("*").eq("user_id",uid),
+        sb.from("statement_hipnosis").select("*").eq("user_id",uid).single(),
+        sb.from("ai_config").select("system_prompt").eq("id",1).single(),
+        sb.from("phase_reflections").select("*").eq("user_id",uid),
+        sb.from("session_notes").select("session_type,session_date,notes,next_plan,client_week").eq("client_id",uid).order("created_at",{ascending:false}).limit(10),
+      ]),timeout
+    ]);
+    if(results[0].status==="fulfilled"){const{data,error}=results[0].value;if(!error&&data){prof=data;hwk=prof.current_week||1;notifHour=prof.notification_hour||9;if(prof.preferred_lang&&prof.preferred_lang!==lang){lang=prof.preferred_lang;localStorage.setItem("maat-lang",lang);}}else if(error)chkAuthErr(error);}
+    if(results[1].status==="fulfilled"){const{data,error}=results[1].value;if(!error)cals=data||[];else chkAuthErr(error);}
+    if(results[2].status==="fulfilled"){const{data,error}=results[2].value;if(!error)bels=data||[];else chkAuthErr(error);}
+    if(results[3].status==="fulfilled"){const{data,error}=results[3].value;if(!error&&data){wkp={};data.forEach(r=>{wkp[r.week]=r.completed;});}else if(error)chkAuthErr(error);}
+    if(results[4].status==="fulfilled"){const{data,error}=results[4].value;if(!error&&data){ht={};wkLearning={};data.forEach(r=>{ht[r.week]=r;if(r.learned)wkLearning[r.week]=r.learned;});}else if(error)chkAuthErr(error);}
+    if(results[5].status==="fulfilled"){const{data}=results[5].value;if(data)sh=data;}
+    if(results[6].status==="fulfilled"){const{data}=results[6].value;if(data)aiCfg=data;}
+    if(results[8]?.status==="fulfilled"){const{data}=results[8].value;if(data)mentorNotes=data||[];}
+  }catch(e){console.warn("loadData:",e.message);}
+  finally{_loading=false;}
+}
+
+/* ============ NAVIGATION ============ */
+function gv(viewId){
+  document.querySelector('.main-content')?.scrollTo({top:0,behavior:'instant'});
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  const el=document.getElementById(viewId);if(el)el.classList.add("active");
+  document.querySelectorAll(".nav-item").forEach(n=>{const isActive=n.dataset.view===viewId;n.classList.toggle("active",isActive);n.setAttribute("aria-current",isActive?"page":"false");});
+  if(viewId==="v-home")renderHome();
+  else if(viewId==="v-calib")renderCalib();
+  else if(viewId==="v-habitos"){_habViewWeek=hwk;renderHabits();}// FIX: reset view week on nav
+  else if(viewId==="v-coach")renderCoach();
+  else if(viewId==="v-mas")renderMas();
+}
+function gs(subId){
+  document.querySelector('.main-content')?.scrollTo({top:0,behavior:'instant'});
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  const el=document.getElementById(subId);if(el)el.classList.add("active");
+  document.querySelectorAll(".nav-item").forEach(n=>n.classList.remove("active"));
+  if(subId==="v-progreso")renderProgress();
+  else if(subId==="v-creencias")renderBeliefs();
+  else if(subId==="v-statement")renderStatement();
+  else if(subId==="v-libro")renderLibro();
+  else if(subId==="v-historial")renderHistorial();
+  else if(subId==="v-meditacion")renderMeditacion();
+  else if(subId==="v-dailymaat")renderDailyMaat();
+  else if(subId==="v-mentor-notes")renderMentorNotes();
+}
+
+function applyI18N(){
+  document.getElementById("nav-calib").textContent=t("calib_title");
+  document.getElementById("nav-habitos").textContent=t("habits_title");
+  document.getElementById("nav-mas").textContent=lang==="es"?"Más":"More";
+  document.getElementById("chat-input").placeholder=t("coach_placeholder");
+  updateAuthUI();
+}
+function setLang(l){lang=l;localStorage.setItem("maat-lang",l);applyI18N();renderHome();}
+function setTheme(th){theme=th;localStorage.setItem("maat-theme",th);document.documentElement.setAttribute("data-theme",th);}
+
+/* ============ HOME ============ */
+function renderHome(){
+  const phase=getPhase(hwk);
+  const streak=calcStreak();
+  const coherence=calcCoherence(hwk);
+  const attAvg=calcAttitudeAvg();
+  const completedWeeks=Object.values(wkp).filter(Boolean).length;
+  const progressPct=Math.round(completedWeeks/16*100);
+  const lastCal=cals.length?cals[0]:null;
+
+  document.getElementById("v-home").innerHTML=`
+    <p class="home-greeting">${t("greeting")} ${san(prof?.full_name||"")}</p>
+    <p class="home-week">${t("week_label")} ${hwk}${t("of")} · ${t("phase")} ${phase}: ${t("phases")[phase-1]}</p>
+    ${streak>0?`<div class="streak-badge">🔥 ${streak} ${t("streak")}</div>`:""}
+    <div class="stat-row">
+      <div class="stat-box"><div class="stat-val" style="color:var(--c)">${progressPct}%</div><div class="stat-label">${t("progress_pct")}</div></div>
+      <div class="stat-box"><div class="coh-ring-wrap"><svg width="56" height="56"><circle cx="28" cy="28" r="22" fill="none" stroke="var(--bd)" stroke-width="4"/><circle cx="28" cy="28" r="22" fill="none" stroke="${cohColor(coherence)}" stroke-width="4" stroke-dasharray="${Math.round(2*Math.PI*22)}" stroke-dashoffset="${Math.round(2*Math.PI*22*(1-coherence/100))}" stroke-linecap="round"/></svg><span class="coh-ring-val" style="color:${cohColor(coherence)}">${coherence}%</span></div><div class="stat-label" style="cursor:pointer;" onclick="showCohInfo()">${t("coherence_pct")} ⓘ</div></div>
+      <div class="stat-box"><div class="stat-val" style="color:${attAvg?attColor(parseFloat(attAvg)):'var(--mu)'}">${attAvg||"—"}</div><div class="stat-label">${t("attitude_avg")}</div></div>
+    </div>
+    ${cals.length===0?`<div class="onboarding-card"><h3>${lang==='es'?'¡Bienvenido a MAAT! 👋':'Welcome to MAAT! 👋'}</h3><p>${lang==='es'?'Tu primer paso es calibrar tu día. Son solo 3 preguntas y 2 minutos. Empieza ahora.':'Your first step is to calibrate your day. It\'s just 3 questions and 2 minutes. Start now.'}</p><button class="btn-action" style="width:auto;padding:10px 24px;margin:0;" onclick="gv(\'v-calib\')">${lang==='es'?'Hacer mi primera calibración →':'Do my first calibration →'}</button></div>`:''}
+    <div class="phase-badge" style="background:${getPhaseColor(phase)}22;color:${getPhaseColor(phase)};border:1px solid ${getPhaseColor(phase)}44;">
+      ◆ ${t("phases")[phase-1]} — ${t("phase_names")[phase-1]}
+    </div>
+    <div class="cta-calib" onclick="gv('v-calib')"><h3>${t("cta_calib")}</h3><p>${t("cta_calib_sub")}</p></div>
+    ${(mentorNotes.length&&mentorNotes[0].next_plan)?'<div class="card" style="margin-top:16px;border-left:3px solid var(--c);"><div style="font-size:11px;color:var(--c);font-family:var(--font-title);font-weight:600;letter-spacing:1px;margin-bottom:6px;">📋 '+(lang==='es'?'TAREA DE TU MENTOR':'FROM YOUR MENTOR')+'</div><p style="font-size:14px;line-height:1.6;">'+san(mentorNotes[0].next_plan)+'</p><p style="font-size:11px;color:var(--mu);margin-top:6px;">'+san(mentorNotes[0].session_type||'')+' · '+san(mentorNotes[0].session_date||'')+' · '+(lang==='es'?'Sem':'Week')+' '+(mentorNotes[0].client_week||'?')+'</p></div>':''}
+    ${lastCal?`<p class="last-calib">${t("last_calib")} <strong>${san(lastCal.date||"")}</strong> · ${t("attitude_avg")}: <strong style="color:${attColor(lastCal.coherence)}">${lastCal.coherence}/10</strong></p>`:`<p class="last-calib text-mu">${t("no_calib")}</p>`}
+    <div class="card" style="margin-top:16px;border-left:3px solid var(--v);">
+      <div style="font-size:11px;color:var(--v);font-family:var(--font-title);font-weight:600;letter-spacing:1px;margin-bottom:6px;">✦ MI STATEMENT</div>
+      <p style="font-size:15px;line-height:1.7;font-style:italic;white-space:pre-wrap;">${sh?.statement?san(sh.statement):(lang==='es'?'¿Quién eres cuando nadie te ve?':'Who are you when nobody sees you?')}</p>
+      ${!sh?.statement?`<button class="btn-action secondary" style="margin-top:12px;width:auto;padding:8px 16px;font-size:12px;" onclick="gs('v-statement')">${lang==='es'?'Escribir mi Statement':'Write my Statement'}</button>`:''}
+      ${sh?.audio_url?`
+        <div style="display:flex;align-items:center;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid var(--bd);">
+          <button id="home-hip-btn" onclick="toggleHomeHip()" style="width:40px;height:40px;border-radius:50%;border:none;background:var(--v);color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;touch-action:manipulation;">▶</button>
+          <div style="flex:1;">
+            <div style="font-size:12px;color:var(--v);font-weight:500;">🎧 ${lang==='es'?'Autohipnosis':'Self-Hypnosis'}</div>
+            <div style="height:4px;border-radius:2px;background:var(--bd);margin-top:4px;cursor:pointer;" onclick="Audio_.seek('hip',event.offsetX/this.offsetWidth)">
+              <div id="home-hip-fill" style="height:100%;width:0%;background:var(--v);border-radius:2px;transition:width .1s;"></div>
+            </div>
+          </div>
+          <span id="home-hip-time" style="font-size:14px;color:var(--mu);font-family:var(--font-title);min-width:36px;">0:00</span>
+        </div>
+      `:''}
+    </div>
+  `;
+  document.getElementById("btn-profile").textContent=(prof?.full_name||"?")[0].toUpperCase();
+
+  // FIX: init audio via manager — not a DOM element reference
+  if(sh?.audio_url){
+    const a=Audio_.get('hip',sh.audio_url);
+    if(!a.src)a.src=sh.audio_url;
+    Audio_.onTime('hip',()=>{
+      const fill=document.getElementById("home-hip-fill");
+      const time=document.getElementById("home-hip-time");
+      if(!a.duration)return;
+      if(fill)fill.style.width=(a.currentTime/a.duration*100)+"%";
+      if(time){const m=Math.floor(a.currentTime/60);const s=Math.floor(a.currentTime%60);time.textContent=m+":"+(s<10?"0":"")+s;}
+    });
+    Audio_.onEnd('hip',()=>{const btn=document.getElementById("home-hip-btn");if(btn)btn.textContent="▶";});
+
+    // Retry with signed URL on error
+    if(!a._errBound){
+      a._errBound=true;
+      a.addEventListener("error",async()=>{
+        if(a._retried||!sh.audio_url)return;a._retried=true;
+        try{
+          const u=new URL(sh.audio_url);
+          const pm=u.pathname.match(/\/object\/public\/hipnosis\/(.+)/);
+          if(pm){
+            const{data:sd}=await sb.storage.from("hipnosis").createSignedUrl(decodeURIComponent(pm[1]),86400);
+            if(sd?.signedUrl){a.src=sd.signedUrl;a.load();}
+          }
+        }catch(e){console.warn("Hip audio fallback failed:",e);}
+      });
+    }
+  }
+}
+
+function toggleHomeHip(){
+  if(!sh?.audio_url)return;
+  Audio_.toggle('hip',sh.audio_url,
+    ()=>{const btn=document.getElementById("home-hip-btn");if(btn)btn.textContent="⏸";},
+    ()=>{const btn=document.getElementById("home-hip-btn");if(btn)btn.textContent="▶";}
+  );
+}
+
+/* ============ CALIBRACIÓN ============ */
+function renderCalib(){
+  _calibStep=0;_calibAnswers={};
+  renderCalibStep();
+}
+function renderCalibStep(){
+  const steps=[t("q1"),t("q2"),t("q3")];
+  const isLast=_calibStep===3;
+  const stepDots=`<div class="calib-steps">${[0,1,2,3].map(i=>`<div class="calib-step-dot ${i<_calibStep?'done':i===_calibStep?'active':''}"></div>`).join("")}<span class="calib-step-label">${isLast?t("attitude_label"):_calibStep+1+"/3"}</span></div>`;
+  const el=document.getElementById("v-calib");
+  if(isLast){
+    el.innerHTML=`
+      <h2 style="font-family:var(--font-title);font-size:22px;font-weight:600;margin-bottom:8px;">${t("calib_title")}</h2>
+      ${stepDots}
+      <div class="card">
+        <label class="field-label">${t("attitude_label")}</label>
+        <div class="slider-val" id="coh-val">5</div>
+        <div class="slider-wrap">
+          <input type="range" id="inp-coh" min="1" max="10" value="5" oninput="document.getElementById('coh-val').textContent=this.value">
+          <div class="slider-labels"><span>${t("attitude_low")}</span><span>${t("attitude_high")}</span></div>
+        </div>
+      </div>
+      <button class="btn-action" id="btn-save-calib" onclick="saveCalib()">${t("btn_save_calib")}</button>
+      <button class="btn-action secondary" style="margin-top:8px;" onclick="_calibStep=2;renderCalibStep()">← ${lang==='es'?'Anterior':'Back'}</button>
+    `;
+  } else {
+    const key=["q1","q2","q3"][_calibStep];
+    el.innerHTML=`
+      <h2 style="font-family:var(--font-title);font-size:22px;font-weight:600;margin-bottom:8px;">${t("calib_title")}</h2>
+      <p style="font-size:13px;color:var(--mu);line-height:1.6;margin-bottom:16px;">${lang==='es'?'La calibración es el ritual más poderoso del método MAAT. En solo tres preguntas y dos minutos, entrenas tu mente para elegir conscientemente la actitud con la que vas a vivir el día.':'The calibration is the most powerful ritual of the MAAT method. In just three questions and two minutes, you train your mind to consciously choose the attitude with which you will live the day.'}</p>
+      ${stepDots}
+      <div class="card"><label class="field-label">${steps[_calibStep]}</label><textarea id="inp-step" rows="4" placeholder="${lang==='es'?'Escribe tu respuesta...':'Write your answer...'}">${san(_calibAnswers[key]||"")}</textarea></div>
+      <button class="btn-action" onclick="nextCalibStep()">${_calibStep<2?(lang==='es'?'Siguiente':'Next')+' →':lang==='es'?'Continuar':'Continue'} →</button>
+      ${_calibStep>0?`<button class="btn-action secondary" style="margin-top:8px;" onclick="prevCalibStep()">← ${lang==='es'?'Anterior':'Back'}</button>`:''}
+    `;
+    setTimeout(()=>document.getElementById("inp-step")?.focus(),100);
+  }
+}
+function nextCalibStep(){
+  const keys=["q1","q2","q3"];
+  const inp=document.getElementById("inp-step");
+  const val=inp?.value.trim();
+  if(!val){inp?.classList.add("field-error");inp?.focus();toast(t("error_fields"),"err");return;}
+  inp?.classList.remove("field-error");
+  _calibAnswers[keys[_calibStep]]=val;
+  _calibStep++;
+  renderCalibStep();
+  document.getElementById("v-calib")?.scrollTo({top:0,behavior:'instant'});
+  document.querySelector('.main-content')?.scrollTo({top:0,behavior:'instant'});
+}
+function prevCalibStep(){
+  const keys=["q1","q2","q3"];
+  const val=document.getElementById("inp-step")?.value.trim();
+  if(val)_calibAnswers[keys[_calibStep]]=val;
+  _calibStep=Math.max(0,_calibStep-1);
+  renderCalibStep();
+}
+
+async function saveCalib(){
+  const q1=_calibAnswers.q1||"";
+  const q2=_calibAnswers.q2||"";
+  const q3=_calibAnswers.q3||"";
+  if(!q1||!q2||!q3){toast(t("error_fields"),"err");return;}
+  if(calibradoHoy()){toast(lang==="es"?"Ya calibraste hoy. ¡Vuelve mañana!":"Already calibrated today. Come back tomorrow!","err");return;}
+  const coh=parseInt(document.getElementById("inp-coh").value);
+  const btn=document.getElementById("btn-save-calib");
+  btn.disabled=true;btn.textContent=t("saving");
+  try{
+    const{data,error}=await sb.from("calibrations").insert({
+      user_id:user.id,date:fmtDate(),week:hwk,coherence:coh,
+      answer_q1:q1,answer_q2:q2,answer_q3:q3,session_note:""
+    }).select().single();
+    if(error){if(!chkAuthErr(error))toast(error.message,"err");return;}
+    cals.unshift(data);
+    _calibStep=0;_calibAnswers={};
+    toast(t("saved"),"ok");
+    checkAchievements();
+    setTimeout(()=>gv("v-home"),800);
+  }finally{btn.disabled=false;btn.textContent=t("btn_save_calib");}
+}
+
+/* ============ HÁBITOS — FIX: _habViewWeek, state sync ============ */
+function renderHabits(){
+  const w=_habViewWeek;// FIX: use local view week
+  const habits=getHabits(w);
+  const coherence=calcCoherence(w);
+  const dayLabels=t("days");
+
+  const _nextLocked=!wkp[w]&&w<16;
+  document.getElementById("v-habitos").innerHTML=`
+    <h2 style="font-family:var(--font-title);font-size:22px;font-weight:600;margin-bottom:8px;">${t("habits_title")}</h2>
+    <p style="font-size:13px;color:var(--mu);line-height:1.6;margin-bottom:16px;">${lang==='es'?'Los hábitos son la arquitectura invisible de tu identidad. Cada semana programas las acciones que construyen la versión de ti que quieres ser. Marca tus días, evalúa tu semana y avanza al siguiente nivel cuando estés listo.':'Habits are the invisible architecture of your identity. Each week you program the actions that build the version of yourself you want to be. Mark your days, evaluate your week, and advance to the next level when you\'re ready.'}</p>
+    <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:16px;">
+      <button onclick="chgHW(-1)" style="background:none;border:none;color:var(--c);font-size:20px;cursor:pointer;touch-action:manipulation;">‹</button>
+      <span style="font-family:var(--font-title);font-size:18px;font-weight:600;">${t("week_label")} ${w}${w===hwk?' (actual)':''}</span>
+      <button onclick="chgHW(1)" style="background:none;border:none;color:${_nextLocked?'var(--mu2)':'var(--c)'};font-size:20px;cursor:pointer;touch-action:manipulation;" title="${_nextLocked?(lang==='es'?'Evalúa esta semana primero':'Evaluate this week first'):''}">${_nextLocked?'🔒':'›'}</button>
+    </div>
+    <div class="coherence-big">
+      <div class="coh-val" style="color:${cohColor(coherence)}">${coherence}%</div>
+      <div class="coh-label">${t("coherence_pct")} — ${lang==='es'?'Promedio de cumplimiento':'Average completion'}</div>
+    </div>
+    <div id="habits-list">
+      ${habits.length?habits.map((h,i)=>{
+        const freq=h.frequency||7;
+        const days=h.days||[false,false,false,false,false,false,false];
+        const checked=Math.min(days.filter(Boolean).length,freq);
+        const isFulfilled=checked>=freq;
+        const pct=Math.min(100,Math.round(checked/freq*100));
+        return`<div class="habit-item">
+          <div class="habit-top">
+            <span class="habit-name-text">${san(h.name)}</span>
+            <span class="habit-freq">${checked}/${freq} · ${pct}%${isFulfilled?' <span style="color:var(--m)">✓</span>':''}</span>
+            <button class="btn-del-habit" onclick="removeHabit(${i})">✕</button>
+          </div>
+          <div class="habit-days">
+            ${days.map((d,di)=>
+              `<div class="habit-day ${d?"checked":""}" data-hi="${i}" data-di="${di}" onclick="toggleDay(this)">${d?"✓":dayLabels[di]}</div>`
+            ).join("")}
+          </div>
+          <div class="habit-progress"><div class="fill" style="width:${pct}%;background:${isFulfilled?'var(--m)':'var(--o)'}"></div></div>
+        </div>`;
+      }).join(""):`<p class="text-mu text-center" style="padding:20px;">${t("no_habits")}</p>`}
+    </div>
+    <div class="add-habit-form">
+      <div class="row">
+        <div><label>${t("add_habit")}</label><input type="text" id="new-h-name" placeholder="${t("add_habit")}..." onkeydown="if(event.key==='Enter')addHabit()"></div>
+        <div style="flex:0 0 100px;"><label>${t("freq_label")}</label>
+          <select id="new-h-freq">${[1,2,3,4,5,6,7].map(n=>`<option value="${n}" ${n===5?'selected':''}>${n}x</option>`).join("")}</select>
+        </div>
+        <div><button onclick="addHabit()" style="margin-top:18px;">${lang==='es'?'Agregar':'Add'}</button></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:14px;">
+      <button class="btn-action" id="btn-program-week" onclick="saveHabits()" style="flex:1;">${lang==='es'?'Guardar semana':'Save week'}</button>
+      <button class="btn-action" id="btn-evaluate-week" onclick="evaluateWeek()" style="flex:1;background:var(--m);">${lang==='es'?'Evaluar':'Evaluate'}</button>
+    </div>
+  `;
+}
+
+// FIX: chgHW modifies local view week only, not global hwk
+// LOCK: no puede avanzar a la siguiente semana sin evaluar la actual
+function chgHW(d){
+  const n=_habViewWeek+d;
+  if(n<1||n>16)return;
+  if(d>0&&!wkp[_habViewWeek]){
+    toast(lang==='es'
+      ?`Evalúa la Semana ${_habViewWeek} antes de continuar`
+      :`Evaluate Week ${_habViewWeek} before continuing`,"err");
+    return;
+  }
+  _habViewWeek=n;renderHabits();
+}
+
+// FIX: toggleDay updates both DOM and ht state object
+function toggleDay(el){
+  el.classList.toggle("checked");
+  el.classList.remove("pop");
+  void el.offsetWidth; // force reflow
+  el.classList.add("pop");
+  setTimeout(()=>el.classList.remove("pop"),400);
+  const isChecked=el.classList.contains("checked");
+  el.textContent=isChecked?"✓":t("days")[parseInt(el.dataset.di)];
+  // Sync state
+  const hi=parseInt(el.dataset.hi);
+  const di=parseInt(el.dataset.di);
+  const habits=getHabits(_habViewWeek);
+  if(habits[hi]){
+    if(!habits[hi].days)habits[hi].days=[false,false,false,false,false,false,false];
+    habits[hi].days[di]=isChecked;
+    if(!ht[_habViewWeek])ht[_habViewWeek]={habits:[]};
+    ht[_habViewWeek].habits=habits;
+    // Update progress bar inline without full re-render
+    const item=el.closest(".habit-item");
+    if(item){
+      const freq=habits[hi].frequency||7;
+      const done=Math.min(habits[hi].days.filter(Boolean).length,freq);
+      const pct=Math.min(100,Math.round(done/freq*100));
+      const isFulfilled=done>=freq;
+      const fill=item.querySelector(".habit-progress .fill");
+      if(fill){fill.style.width=pct+"%";fill.style.background=isFulfilled?'var(--m)':'var(--o)';}
+      const freqEl=item.querySelector(".habit-freq");
+      if(freqEl)freqEl.innerHTML=`${done}/${freq} · ${pct}%${isFulfilled?' <span style="color:var(--m)">✓</span>':''}`;
+    }
+    // Update coherence header
+    const cohEl=document.querySelector(".coherence-big .coh-val");
+    const coh=calcCoherence(_habViewWeek);
+    if(cohEl){cohEl.textContent=coh+"%";cohEl.style.color=cohColor(coh);}
+  }
+}
+
+function addHabit(){
+  const nameEl=document.getElementById("new-h-name");
+  const name=nameEl.value.trim();
+  const freq=parseInt(document.getElementById("new-h-freq").value)||5;
+  if(!name){nameEl.classList.add("field-error");nameEl.focus();toast(lang==='es'?'Escribe el nombre del hábito':'Enter habit name',"err");return;}
+  nameEl.classList.remove("field-error");
+  const habits=getHabits(_habViewWeek);
+  habits.push({name,frequency:freq,days:[false,false,false,false,false,false,false]});
+  if(!ht[_habViewWeek])ht[_habViewWeek]={habits,intention:"",learned:"",felt:"",belief:""};
+  else ht[_habViewWeek].habits=habits;
+  renderHabits();
+}
+
+function removeHabit(idx){
+  const habits=getHabits(_habViewWeek);
+  habits.splice(idx,1);
+  if(ht[_habViewWeek])ht[_habViewWeek].habits=habits;
+  renderHabits();
+}
+
+async function saveHabits(){
+  const habits=getHabits(_habViewWeek);// FIX: read from state, not DOM
+  const btn=document.getElementById("btn-program-week");
+  btn.disabled=true;btn.textContent=lang==='es'?'Guardando...':'Saving...';
+  try{
+    const existing=ht[_habViewWeek]||{};
+    const{data,error}=await sb.from("habit_tracker").upsert({
+      user_id:user.id,week:_habViewWeek,habits,
+      intention:existing.intention||"",learned:existing.learned||"",
+      felt:existing.felt||"",belief:existing.belief||"",
+      updated_at:new Date().toISOString()
+    },{onConflict:"user_id,week"}).select().single();
+    if(error){if(!chkAuthErr(error))toast(error.message,"err");return;}
+    ht[_habViewWeek]=data;
+    toast(lang==='es'?'Semana guardada ✓':'Week saved ✓',"ok");
+  }finally{btn.disabled=false;btn.textContent=lang==='es'?'Guardar semana':'Save week';}
+}
+
+async function evaluateWeek(){
+  const habits=getHabits(_habViewWeek);
+  if(!habits.length){toast(lang==='es'?'Agrega hábitos primero':'Add habits first',"err");return;}
+  const btn=document.getElementById("btn-evaluate-week");
+  btn.disabled=true;btn.textContent=lang==='es'?'Guardando...':'Saving...';
+  try{
+    const existing=ht[_habViewWeek]||{};
+    const{data,error}=await sb.from("habit_tracker").upsert({
+      user_id:user.id,week:_habViewWeek,habits,
+      intention:existing.intention||"",learned:existing.learned||"",
+      felt:existing.felt||"",belief:existing.belief||"",
+      updated_at:new Date().toISOString()
+    },{onConflict:"user_id,week"}).select().single();
+    if(error){if(!chkAuthErr(error))toast(error.message,"err");return;}
+    ht[_habViewWeek]=data;
+    const totalHabits=habits.length;
+    const fulfilled=habits.filter(h=>(h.days||[]).filter(Boolean).length>=(h.frequency||7)).length;
+    const coherence=calcCoherence(_habViewWeek);
+    toast(`${lang==='es'?'Coherencia':'Coherence'}: ${coherence}% — ${fulfilled}/${totalHabits} ${lang==='es'?'completos':'completed'}`,"ok");
+    renderHabits();
+  }finally{btn.disabled=false;btn.textContent=lang==='es'?'Evaluar':'Evaluate';}
+}
+
+/* ============ COACH IA — FIX: usa aiCfg.system_prompt ============ */
+function renderCoach(){
+  const container=document.getElementById("v-coach");
+  if(!container.querySelector(".coach-intro")){
+    const intro=document.createElement("div");
+    intro.className="coach-intro";
+    intro.style.cssText="padding:0 0 12px;border-bottom:1px solid var(--bd);margin-bottom:4px;";
+    intro.innerHTML=`<p style="font-size:13px;color:var(--mu);line-height:1.6;">${lang==='es'?'MAAT GPT es tu coach de inteligencia artificial disponible las 24 horas. Está entrenado con el método MAAT y tiene contexto de tu proceso. Úsalo para reflexionar, resolver dudas, preparar tu próxima sesión o procesar lo que estás viviendo.':'MAAT GPT is your AI coach available 24 hours a day. It is trained with the MAAT method and has context of your process. Use it to reflect, answer questions, prepare for your next session, or process what you are experiencing.'}</p>`;
+    container.insertBefore(intro,container.firstChild);
+  }
+  // Restore chat from localStorage
+  if(!chatHistory.length){
+    try{
+      const saved=localStorage.getItem("maat-chat-"+user?.id);
+      if(saved){chatHistory=JSON.parse(saved).slice(-20);}
+    }catch(e){}
+  }
+  const el=document.getElementById("chat-messages");
+  if(!chatHistory.length){
+    const chips=lang==='es'
+      ?['¿Cómo voy en mi proceso?','¿Qué debería priorizar esta semana?','Ayúdame a reflexionar sobre mis hábitos','Prepárame para mi próxima sesión','¿Qué significa mi índice de coherencia?']
+      :['How am I progressing?','What should I prioritize this week?','Help me reflect on my habits','Prepare me for my next session','What does my coherence score mean?'];
+    el.innerHTML=`<div class="text-center text-mu" style="padding:24px 0 8px;"><p style="font-size:28px;margin-bottom:8px;">🧠</p><p>${t("coach_title")}</p></div>
+      <div class="coach-chips">${chips.map(c=>`<button class="coach-chip" onclick="useChip(this)">${c}</button>`).join("")}</div>`;
+  } else {
+    el.innerHTML="";
+    chatHistory.forEach(m=>{
+      el.innerHTML+=`<div class="chat-msg ${m.role}">${san(m.content)}</div>`;
+    });
+    el.scrollTop=el.scrollHeight;
+  }
+}
+function useChip(btn){
+  document.getElementById("chat-input").value=btn.textContent;
+  sendMsg();
+}
+
+async function sendMsg(){
+  if(chatLocked)return;
+  const inp=document.getElementById("chat-input");
+  const msg=inp.value.trim();if(!msg)return;inp.value="";
+  chatHistory.push({role:"user",content:msg});
+  const msgEl=document.getElementById("chat-messages");
+  msgEl.innerHTML+=`<div class="chat-msg user">${san(msg)}</div>`;
+  msgEl.innerHTML+=`<div class="chat-msg assistant typing-indicator" id="typing"><span></span><span></span><span></span></div>`;
+  msgEl.scrollTop=msgEl.scrollHeight;
+  chatLocked=true;
+  try{
+    const{data:{session}}=await sb.auth.getSession();
+    const token=session?.access_token;
+    if(!token){toast(lang==='es'?'Tu sesión expiró. Vuelve a iniciar sesión.':'Session expired. Please log in again.','err');chatLocked=false;document.getElementById("typing")?.remove();return;}
+    const body={messages:chatHistory.slice(-20)};
+    if(aiCfg?.system_prompt)body.system=aiCfg.system_prompt;
+    const res=await fetch(SU+"/functions/v1/coach-maat",{
+      method:"POST",
+      headers:{"Content-Type":"application/json","Authorization":"Bearer "+token,"apikey":SK},
+      body:JSON.stringify(body)
+    });
+    const json=await res.json();
+    if(!res.ok){throw new Error(json.error||'Error del servidor ('+res.status+')');}
+    const reply=json.reply||json.content||json.message||"...";
+    chatHistory.push({role:"assistant",content:reply});
+    try{localStorage.setItem("maat-chat-"+user?.id,JSON.stringify(chatHistory.slice(-20)));}catch(e){}
+    saveChatServer();
+    document.getElementById("typing")?.remove();
+    msgEl.innerHTML+=`<div class="chat-msg assistant">${san(reply)}</div>`;
+  }catch(e){
+    document.getElementById("typing")?.remove();
+    msgEl.innerHTML+=`<div class="chat-msg assistant" style="color:var(--r)">Error: ${san(e.message)}</div>`;
+  }finally{chatLocked=false;msgEl.scrollTop=msgEl.scrollHeight;}
+}
+
+/* ============ MÁS ============ */
+async function loadMentorContact(){
+  try{
+    // Fetch mentor_clients join with profiles in one query to avoid RLS issues
+    const{data:mc,error:mcErr}=await sb.from("mentor_clients")
+      .select("mentor_id, profiles:mentor_id(full_name,whatsapp_number)")
+      .eq("client_id",user.id)
+      .or("active.eq.true,active.is.null")
+      .limit(1);
+    if(mcErr){
+      // Fallback: two separate queries
+      const{data:mc2}=await sb.from("mentor_clients").select("mentor_id").eq("client_id",user.id).or("active.eq.true,active.is.null").limit(1);
+      if(mc2&&mc2[0]){
+        const{data:mp}=await sb.from("profiles").select("whatsapp_number,full_name").eq("id",mc2[0].mentor_id).single();
+        if(mp?.whatsapp_number)mentorWhatsapp={number:mp.whatsapp_number,name:mp.full_name||"Mentor"};
+      }
+      return;
+    }
+    if(mc&&mc[0]){
+      const mp=mc[0].profiles;
+      if(mp?.whatsapp_number)mentorWhatsapp={number:mp.whatsapp_number,name:mp.full_name||"Mentor"};
+    }
+  }catch(e){console.warn("loadMentorContact:",e);}
+}
+function renderMas(){
+  document.getElementById("v-mas").innerHTML=`
+    <h2 style="font-family:var(--font-title);font-size:24px;font-weight:600;margin-bottom:16px;">${lang==="es"?"Más":"More"}</h2>
+    <div class="menu-grid">
+      <div class="menu-item" onclick="gs('v-progreso')"><div class="menu-icon">📊</div><div class="menu-label">${t("menu_progress")}</div></div>
+      <div class="menu-item" onclick="gs('v-creencias')"><div class="menu-icon">🧬</div><div class="menu-label">${t("menu_beliefs")}</div></div>
+      <div class="menu-item" onclick="gs('v-statement')"><div class="menu-icon">📝</div><div class="menu-label">${t("menu_statement")}</div></div>
+      <div class="menu-item" onclick="gs('v-historial')"><div class="menu-icon">📋</div><div class="menu-label">${t("menu_history")}</div></div>
+      <div class="menu-item" onclick="gs('v-meditacion')"><div class="menu-icon">🧘</div><div class="menu-label">${t("menu_meditation")}</div></div>
+      <div class="menu-item" onclick="gs('v-libro')"><div class="menu-icon">📖</div><div class="menu-label">${t("menu_book")}</div></div>
+      <div class="menu-item" onclick="gs('v-dailymaat')" style="border-color:var(--o);"><div class="menu-icon">☀️</div><div class="menu-label">DAILY MAAT</div></div>
+      <div class="menu-item" onclick="contactMentor()" style="border-color:var(--m);background:var(--m)11;"><div class="menu-icon">💬</div><div class="menu-label">${lang==='es'?'Contactar':'Contact'}</div></div>
+      ${mentorNotes.length?`<div class="menu-item" onclick="gs('v-mentor-notes')" style="border-color:var(--c);"><div class="menu-icon">📋</div><div class="menu-label">${lang==='es'?'NOTAS MENTOR':'MENTOR NOTES'}</div></div>`:''}
+      <div class="menu-item" onclick="exportProgress()" style="border-color:var(--mu2);"><div class="menu-icon">📥</div><div class="menu-label">${lang==='es'?'EXPORTAR':'EXPORT'}</div></div>
+    </div>
+  `;
+}
+async function contactMentor(){
+  toast(lang==='es'?'Buscando contacto...':'Looking up contact...',"");
+  await loadMentorContact();
+  if(!mentorWhatsapp?.number){toast(lang==='es'?'Tu mentor aún no configuró su número de WhatsApp':'Your mentor has not set up their WhatsApp number',"err");return;}
+  const num=mentorWhatsapp.number.replace(/[^0-9]/g,'');
+  if(!num){toast(lang==='es'?'Número no válido':'Invalid number',"err");return;}
+  const msg=encodeURIComponent(lang==='es'?`Hola ${mentorWhatsapp.name}, quiero hablar sobre mi proceso MAAT.`:`Hi ${mentorWhatsapp.name}, I want to talk about my MAAT process.`);
+  window.open(`https://wa.me/${num}?text=${msg}`,'_blank');
+}
+
+/* ============ PROGRESO ============ */
+function renderProgress(){
+  const phases=[
+    {id:1,name:t("phases")[0],keyword:t("phase_keywords")[0],desc:t("phase_names")[0],color:"var(--phase1)",hex:"#39A1C9",weeks:[1,2,3,4]},
+    {id:2,name:t("phases")[1],keyword:t("phase_keywords")[1],desc:t("phase_names")[1],color:"var(--phase2)",hex:"#EBA055",weeks:[5,6,7,8]},
+    {id:3,name:t("phases")[2],keyword:t("phase_keywords")[2],desc:t("phase_names")[2],color:"var(--phase3)",hex:"#7DCD93",weeks:[9,10,11,12]},
+    {id:4,name:t("phases")[3],keyword:t("phase_keywords")[3],desc:t("phase_names")[3],color:"var(--phase4)",hex:"#89608E",weeks:[13,14,15,16]},
+  ];
+  document.getElementById("v-progreso").innerHTML=`
+    <div class="sv-header"><button class="btn-back" onclick="gv('v-mas')">‹</button><h2>${t("progress_title")}</h2></div>
+    <p style="font-size:14px;color:var(--mu);margin:0 0 16px;line-height:1.6;">${lang==='es'?'Tu programa de 16 semanas está dividido en 4 fases de transformación. Aquí puedes ver dónde estás parado, revisar lo que aprendiste en cada etapa y registrar tus reflexiones semana a semana.':'Your 16-week program is divided into 4 transformation phases. Here you can see where you stand, review what you learned at each stage, and record your weekly reflections.'}</p>
+    ${phases.map(ph=>`
+      <div class="phase-section">
+        <div class="phase-header" style="background:${ph.hex}22;color:${ph.color};border:1px solid ${ph.hex}44;border-bottom:none;">
+          ◆ ${t("phase")} ${ph.id}: ${ph.name} — ${ph.keyword}
+        </div>
+        <div style="padding:8px 12px;background:var(--bg2);border:1px solid var(--bd);border-top:none;font-size:14px;color:var(--mu);">${ph.desc}</div>
+        <div class="phase-weeks">
+          ${ph.weeks.map(w=>{
+            const isDone=wkp[w];
+            const isCurrent=w===hwk;
+            const learning=wkLearning[w]||"";
+            return`<div class="pw-item" id="pw-${w}">
+              <div class="pw-dot ${isDone?'done':isCurrent?'current':''}"></div>
+              <div class="pw-info" onclick="toggleWeekEdit(${w})">
+                <div class="pw-title">${t("week_label")} ${w} ${isDone?'✓':isCurrent?'← actual':''}</div>
+                <div class="pw-summary">${learning?san(learning.substring(0,120)):'<span style="color:var(--mu2);font-style:italic;">'+(lang==='es'?'Sin resumen aún':'No summary yet')+'</span>'}</div>
+              </div>
+              <div class="pw-edit" id="pwe-${w}">
+                <textarea id="pwt-${w}" rows="4" placeholder="${t("learning_placeholder")}">${san(learning)}</textarea>
+                <div style="display:flex;gap:8px;align-items:center;">
+                  <button onclick="saveWeekLearning(${w})">${t("save")}</button>
+                  <label style="display:flex;align-items:center;gap:6px;font-size:14px;color:var(--mu);cursor:pointer;">
+                    <input type="checkbox" ${isDone?'checked':''} onchange="toggleWeekDone(${w},this.checked)"> ${lang==='es'?'Completada':'Completed'}
+                  </label>
+                </div>
+              </div>
+            </div>`;
+          }).join("")}
+        </div>
+      </div>
+    `).join("")}
+  `;
+}
+function toggleWeekEdit(w){document.getElementById("pwe-"+w)?.classList.toggle("open");}
+async function saveWeekLearning(w){
+  const text=document.getElementById("pwt-"+w).value.trim();
+  wkLearning[w]=text;
+  const existing=ht[w]||{};
+  const{data,error}=await sb.from("habit_tracker").upsert({
+    user_id:user.id,week:w,habits:existing.habits||[],learned:text,
+    intention:existing.intention||"",felt:existing.felt||"",belief:existing.belief||"",
+    updated_at:new Date().toISOString()
+  },{onConflict:"user_id,week"}).select().single();
+  if(error){if(!chkAuthErr(error))toast(error.message,"err");return;}
+  ht[w]=data;toast(t("saved"),"ok");renderProgress();
+}
+async function toggleWeekDone(w,done){
+  const{error}=await sb.from("week_progress").upsert({user_id:user.id,week:w,completed:done},{onConflict:"user_id,week"});
+  if(error){if(!chkAuthErr(error))toast(error.message,"err");return;}
+  wkp[w]=done;renderProgress();
+  if(done)checkAchievements();
+}
+
+/* ============ CREENCIAS ============ */
+const CAT_COLORS={Supervivencia:"var(--r)",Limitante:"var(--o)",Neutral:"var(--mu)",Elegida:"var(--c)",Expansiva:"var(--m)"};
+function renderBeliefs(){
+  const cats=["all","Supervivencia","Limitante","Neutral","Elegida","Expansiva"];
+  const filtered=_belFilter==="all"?bels:bels.filter(b=>b.category===_belFilter);
+  const catNames={all:t("all_filter"),Supervivencia:t("cat_supervivencia"),Limitante:t("cat_limitante"),Neutral:t("cat_neutral"),Elegida:t("cat_elegida"),Expansiva:t("cat_expansiva")};
+  document.getElementById("v-creencias").innerHTML=`
+    <div class="sv-header"><button class="btn-back" onclick="gv('v-mas')">‹</button><h2>${t("beliefs_title")}</h2></div>
+    <p style="font-size:14px;color:var(--mu);margin:0 0 16px;line-height:1.6;">${lang==='es'?'Las creencias son los lentes con los que interpretas el mundo. Registra aquí las tuyas, clasifícalas por tipo y observa cuáles te impulsan y cuáles te frenan. El primer paso para transformarlas es hacerlas conscientes.':'Beliefs are the lenses through which you interpret the world. Record yours here, classify them by type, and observe which ones drive you and which hold you back. The first step to transforming them is making them conscious.'}</p>
+    <div class="belief-filters">${cats.map(c=>`<button class="belief-filter ${_belFilter===c?"active":""}" onclick="_belFilter='${c}';renderBeliefs()">${catNames[c]||c}</button>`).join("")}</div>
+    <div class="card">
+      <div style="display:flex;gap:8px;margin-bottom:0;">
+        <input type="text" id="new-bel-text" class="input-field" placeholder="${t("add_belief")}..." style="flex:1;">
+        <select id="new-bel-cat" style="padding:8px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--bg2);color:var(--text);font-size:12px;">
+          ${["Supervivencia","Limitante","Neutral","Elegida","Expansiva"].map(c=>`<option value="${c}">${catNames[c]}</option>`).join("")}
+        </select>
+        <button onclick="addBelief()" style="padding:8px 14px;background:var(--c);color:#fff;border:none;border-radius:var(--radius-sm);cursor:pointer;touch-action:manipulation;">+</button>
+      </div>
+    </div>
+    <div id="bel-list">${filtered.map(b=>`
+      <div class="belief-item">
+        <div class="belief-cat-dot" style="background:${CAT_COLORS[b.category]||"var(--mu)"}"></div>
+        <div style="flex:1"><div style="font-size:14px;">${san(b.text)}</div><div style="font-size:14px;color:var(--mu);">${san(b.category||"")} · ${san(b.date||"")}</div></div>
+        <button class="btn-del" data-bid="${b.id}" onclick="delBelief(this)">✕</button>
+      </div>
+    `).join("")||`<p class="text-mu text-center" style="padding:20px;">${lang==='es'?'Sin creencias aún':'No beliefs yet'}</p>`}</div>
+  `;
+}
+async function addBelief(){
+  const inp=document.getElementById("new-bel-text");
+  const text=inp.value.trim();
+  const category=document.getElementById("new-bel-cat").value;
+  if(!text){inp.classList.add("field-error");inp.focus();toast(lang==='es'?'Escribe una creencia':'Write a belief',"err");return;}
+  inp.classList.remove("field-error");
+  const{data,error}=await sb.from("beliefs").insert({user_id:user.id,text,category,date:fmtDate()}).select().single();
+  if(error){if(!chkAuthErr(error))toast(error.message,"err");return;}
+  bels.unshift(data);document.getElementById("new-bel-text").value="";renderBeliefs();toast(t("saved"),"ok");
+}
+async function delBelief(el){
+  const bid=el.dataset.bid;
+  const{error}=await sb.from("beliefs").delete().eq("id",bid);
+  if(error){if(!chkAuthErr(error))toast(error.message,"err");return;}
+  bels=bels.filter(b=>b.id!==bid);renderBeliefs();
+}
+
+/* ============ STATEMENT & AUDIO — FIX: hipAudio as Audio(), not DOM element ============ */
+function renderStatement(){
+  const stmt=sh?.statement||"";
+  const audioUrl=sh?.audio_url||"";
+  const audioName=sh?.audio_name||"";
+  document.getElementById("v-statement").innerHTML=`
+    <div class="sv-header"><button class="btn-back" onclick="gv('v-mas')">‹</button><h2>${t("statement_title")}</h2></div>
+    <p style="font-size:14px;color:var(--mu);margin:0 0 16px;line-height:1.6;">${lang==='es'?'Tu statement es la declaración de quién eliges ser. Escríbelo, léelo cada día y escucha el audio de hipnosis para anclar esa identidad en tu mente subconsciente. La repetición consciente crea cambio real.':'Your statement is the declaration of who you choose to be. Write it, read it daily, and listen to the hypnosis audio to anchor that identity in your subconscious mind. Conscious repetition creates real change.'}</p>
+    <div class="card">
+      <textarea id="stmt-text" rows="6" placeholder="${t("statement_placeholder")}">${san(stmt)}</textarea>
+      <button class="btn-action" onclick="saveStatement()">${t("save")}</button>
+    </div>
+    <h3 style="font-family:var(--font-title);font-size:18px;margin:20px 0 12px;">🎧 ${t("audio_hipnosis")}</h3>
+    <div class="audio-player" id="hip-player">
+      ${audioUrl?`
+        <p class="text-mu mb-8" style="font-size:12px;">${san(audioName)}</p>
+        <audio id="hip-native" controls preload="auto" style="width:100%;margin:12px 0;border-radius:8px;height:42px;"></audio>
+        <p id="hip-error" style="display:none;color:var(--r);font-size:12px;margin-top:8px;"></p>
+      `:`<p class="text-mu">${lang==='es'?'Sube un audio para comenzar':'Upload audio to start'}</p>`}
+    </div>
+    <div class="card">
+      <label class="field-label">${t("upload_audio")}</label>
+      <input type="file" accept="audio/mpeg,audio/mp3,audio/*" id="hip-upload" onchange="uploadAudio()" style="color:var(--text);">
+    </div>
+  `;
+
+  // FIX: native <audio> element is for Statement view only
+  // Home view uses Audio_ manager with key 'hip' independently
+  if(audioUrl){
+    const audioEl=document.getElementById("hip-native");
+    if(audioEl){
+      let _retried=false;
+      audioEl.addEventListener("error",async()=>{
+        if(_retried)return;_retried=true;
+        try{
+          const u=new URL(audioUrl);
+          const pm=u.pathname.match(/\/object\/public\/hipnosis\/(.+)/);
+          if(pm){
+            const{data:sd}=await sb.storage.from("hipnosis").createSignedUrl(decodeURIComponent(pm[1]),86400);
+            if(sd?.signedUrl){audioEl.src=sd.signedUrl;audioEl.load();return;}
+          }
+        }catch(e){console.error("Signed URL fallback failed:",e);}
+        const errEl=document.getElementById("hip-error");
+        if(errEl){errEl.style.display="block";errEl.textContent="No se pudo cargar el audio.";}
+      },{once:true});
+      audioEl.src=audioUrl;
+      audioEl.load();
+    }
+  }
+}
+
+async function saveStatement(){
+  const text=document.getElementById("stmt-text").value.trim();
+  const{data,error}=await sb.from("statement_hipnosis").upsert({
+    user_id:user.id,statement:text,audio_url:sh?.audio_url||null,
+    audio_name:sh?.audio_name||null,updated_at:new Date().toISOString()
+  },{onConflict:"user_id"}).select().single();
+  if(error){if(!chkAuthErr(error))toast(error.message,"err");return;}
+  sh=data;toast(t("saved"),"ok");renderHome();
+}
+
+async function uploadAudio(){
+  const file=document.getElementById("hip-upload").files[0];
+  if(!file)return;
+  if(!file.type.includes("audio")&&!file.name.endsWith(".mp3")){toast(lang==='es'?"Solo archivos de audio":"Only audio files","err");return;}
+  toast(lang==='es'?"Subiendo audio...":"Uploading audio...","");
+  const safeName=file.name.replace(/[^a-zA-Z0-9._-]/g,'');
+  const path=`${user.id}/${Date.now()}_${safeName}`;
+  const{error:upErr}=await sb.storage.from("hipnosis").upload(path,file,{upsert:true,contentType:"audio/mpeg",cacheControl:"3600"});
+  if(upErr){toast("Error subida: "+upErr.message,"err");return;}
+  const{data:urlData}=sb.storage.from("hipnosis").getPublicUrl(path);
+  let audioUrl=urlData?.publicUrl||"";
+  // Verify public URL
+  let urlWorks=false;
+  try{const test=await fetch(audioUrl,{method:"HEAD"});urlWorks=test.ok;}catch(e){}
+  if(!urlWorks){
+    const{data:signedData,error:signedErr}=await sb.storage.from("hipnosis").createSignedUrl(path,31536000);
+    if(!signedErr&&signedData?.signedUrl)audioUrl=signedData.signedUrl;
+    else{toast("Error: no se pudo generar URL del audio","err");return;}
+  }
+  const{data,error}=await sb.from("statement_hipnosis").upsert({
+    user_id:user.id,audio_url:audioUrl,audio_name:file.name,
+    statement:sh?.statement||"",updated_at:new Date().toISOString()
+  },{onConflict:"user_id"}).select().single();
+  if(error){if(!chkAuthErr(error))toast(error.message,"err");return;}
+  sh=data;
+  // Reset audio manager for 'hip' key so it reloads with new URL
+  if(Audio_._store?.hip){Audio_._store.hip.pause();delete Audio_._store.hip;}
+  renderStatement();
+  toast(t("saved"),"ok");
+}
+
+/* ============ HISTORIAL ============ */
+function renderHistorial(){
+  document.getElementById("v-historial").innerHTML=`
+    <div class="sv-header"><button class="btn-back" onclick="gv('v-mas')">‹</button><h2>${t("historial_title")}</h2></div>
+    <p style="font-size:14px;color:var(--mu);margin:0 0 16px;line-height:1.6;">${lang==='es'?'Aquí está el registro de todas tus calibraciones. Ver tu historial te permite identificar patrones, reconocer tu evolución y entender en qué momentos tu actitud sube o baja. La conciencia de tu pasado alimenta tu presente.':'Here is the record of all your calibrations. Viewing your history lets you identify patterns, recognize your evolution, and understand when your attitude rises or falls. Awareness of your past fuels your present.'}</p>
+    ${cals.length?cals.map(c=>`
+      <div class="hist-item" onclick="this.querySelector('.hist-body').classList.toggle('open')">
+        <div class="hist-header">
+          <span class="hist-date">${san(c.date||"")} · ${t("week_label")} ${c.week}</span>
+          <span class="hist-coh" style="background:${attColor(c.coherence)}22;color:${attColor(c.coherence)}">${c.coherence}/10</span>
+        </div>
+        <div class="hist-body">
+          <p><strong>Q1:</strong> ${san(c.answer_q1||"")}</p>
+          <p><strong>Q2:</strong> ${san(c.answer_q2||"")}</p>
+          <p><strong>Q3:</strong> ${san(c.answer_q3||"")}</p>
+        </div>
+      </div>
+    `).join(""):`<p class="text-mu text-center">${t("no_calib")}</p>`}
+  `;
+}
+
+/* ============ MEDITACIÓN ============ */
+function renderMeditacion(){
+  document.getElementById("v-meditacion").innerHTML=`
+    <div class="sv-header"><button class="btn-back" onclick="gv('v-mas')">‹</button><h2>${t("meditation_title")}</h2></div>
+    <p style="font-size:14px;color:var(--mu);margin:0 0 16px;line-height:1.6;">${lang==='es'?'La meditación guiada MAAT es tu espacio de silencio y conexión interior. Practicarla con regularidad entrena tu mente para responder desde la calma y no desde el impulso. Unos minutos al día pueden transformar toda tu semana.':'The MAAT guided meditation is your space for silence and inner connection. Practicing it regularly trains your mind to respond from calm rather than impulse. A few minutes a day can transform your entire week.'}</p>
+    <div class="audio-player">
+      <p style="font-size:36px;margin-bottom:8px;">🧘</p>
+      <p class="text-mu mb-8">${t("meditation_title")}</p>
+      <button class="play-btn" id="med-play" onclick="toggleMed()">▶</button>
+      <div class="audio-progress" onclick="Audio_.seek('med',event.offsetX/this.offsetWidth)"><div class="fill" id="med-fill" style="width:0%"></div></div>
+      <div class="audio-controls">
+        <button onclick="Audio_.skip('med',-10)">-10s</button>
+        <span class="audio-time" id="med-time">0:00</span>
+        <button onclick="Audio_.skip('med',10)">+10s</button>
+      </div>
+    </div>
+  `;
+  const MED_URL="https://somosmaat.org/wp-content/uploads/2026/02/Meditation_Maat.mp3";
+  const a=Audio_.get('med',MED_URL);
+  if(!a.src)a.src=MED_URL;
+  Audio_.onTime('med',()=>{
+    const fill=document.getElementById("med-fill");
+    const time=document.getElementById("med-time");
+    if(!a.duration)return;
+    if(fill)fill.style.width=(a.currentTime/a.duration*100)+"%";
+    if(time){const m=Math.floor(a.currentTime/60);const s=Math.floor(a.currentTime%60);time.textContent=m+":"+(s<10?"0":"")+s;}
+  });
+  Audio_.onEnd('med',()=>{const btn=document.getElementById("med-play");if(btn)btn.textContent="▶";});
+}
+function toggleMed(){
+  Audio_.toggle('med',"https://somosmaat.org/wp-content/uploads/2026/02/Meditation_Maat.mp3",
+    ()=>{const btn=document.getElementById("med-play");if(btn)btn.textContent="⏸";},
+    ()=>{const btn=document.getElementById("med-play");if(btn)btn.textContent="▶";}
+  );
+}
+
+/* ============ LIBRO ============ */
+function renderLibro(){
+  document.getElementById("v-libro").innerHTML=`
+    <div class="sv-header"><button class="btn-back" onclick="gv('v-mas')">‹</button><h2>${t("book_title")}</h2></div>
+    <p style="font-size:14px;color:var(--mu);margin:0 0 16px;line-height:1.6;">${lang==='es'?'El libro MAAT es el fundamento conceptual de tu proceso. En él encontrarás el marco teórico detrás de cada herramienta, ejercicio y semana del programa. Leerlo te da contexto, profundidad y una comprensión más clara de por qué haces lo que haces.':'The MAAT book is the conceptual foundation of your process. In it you will find the theoretical framework behind every tool, exercise, and program week. Reading it gives you context, depth, and a clearer understanding of why you do what you do.'}</p>
+    <div class="card text-center"><p class="mb-8">📖</p><a href="https://somosmaat.org/wp-content/uploads/2025/12/001.-Preview_Maat_Libro_Espanol.pdf" target="_blank" style="color:var(--c);font-weight:500;">${lang==="es"?"Abrir libro en nueva pestaña":"Open book in new tab"}</a></div>
+  `;
+}
+
+/* ============ DAILY MAAT ============ */
+function renderDailyMaat(){
+  const isES=lang==="es";
+  document.getElementById("v-dailymaat").innerHTML=`
+    <div class="sv-header"><button class="btn-back" onclick="gv('v-mas')">‹</button><h2>Daily Maat</h2></div>
+    <div class="card" style="text-align:center;border-left:3px solid var(--o);">
+      <div style="font-size:40px;margin-bottom:12px;">☀️</div>
+      <h3 style="font-family:var(--font-title);font-size:20px;font-weight:700;margin-bottom:8px;">Daily Maat</h3>
+      <p style="color:var(--mu);font-size:14px;line-height:1.7;margin-bottom:20px;">${isES?'Daily Maat es una comunidad de reflexiones estoicas diarias. Cada día recibirás una reflexión que nutrirá tu proceso de calibración, coherencia y propósito.':'Daily Maat is a community of daily stoic reflections. Each day you will receive a reflection that will nourish your calibration, coherence and purpose process.'}</p>
+      <a href="https://chat.whatsapp.com/C6jZLOiDI8nBX5x0uWEQIJ?mode=gi_t" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;justify-content:center;gap:10px;padding:14px;background:#25D366;color:#fff;border-radius:var(--radius-sm);font-family:var(--font-title);font-size:15px;font-weight:600;text-decoration:none;margin-bottom:10px;">
+        <span style="font-size:20px;">💬</span> ${isES?'Unirme por WhatsApp':'Join via WhatsApp'}
+      </a>
+      <a href="https://www.instagram.com/channel/AbbcibCK3UQj4tzf/?igsh=MWdsY25sNjRuN2tjeg==" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;justify-content:center;gap:10px;padding:14px;background:linear-gradient(135deg,#833AB4,#FD1D1D,#FCAF45);color:#fff;border-radius:var(--radius-sm);font-family:var(--font-title);font-size:15px;font-weight:600;text-decoration:none;">
+        <span style="font-size:20px;">📸</span> ${isES?'Seguir en Instagram':'Follow on Instagram'}
+      </a>
+    </div>
+  `;
+}
+
+/* ============ PROFILE ============ */
+function openProfile(){
+  document.getElementById("prof-name").value=prof?.full_name||"";
+  document.getElementById("prof-week").value=hwk;
+  document.getElementById("prof-notif").value=notifHour;
+  document.getElementById("prof-lang").value=lang;
+  document.getElementById("prof-theme").value=theme;
+  document.getElementById("profile-sheet").classList.add("show");
+}
+function closeProfile(){document.getElementById("profile-sheet").classList.remove("show");}
+async function saveProfile(){
+  const name=document.getElementById("prof-name").value.trim();
+  const week=Math.min(16,Math.max(1,parseInt(document.getElementById("prof-week").value)||1));
+  const notif=Math.min(23,Math.max(0,parseInt(document.getElementById("prof-notif").value)||9));
+  const newLang=document.getElementById("prof-lang").value;
+  const newTheme=document.getElementById("prof-theme").value;
+  const btn=document.getElementById("btn-save-prof");
+  btn.disabled=true;btn.textContent=t("saving");
+  try{
+    const{error}=await sb.from("profiles").update({full_name:name,current_week:week,notification_hour:notif,preferred_lang:newLang}).eq("id",user.id);
+    if(error){if(!chkAuthErr(error))toast(error.message,"err");return;}
+    prof.full_name=name;prof.current_week=week;prof.notification_hour=notif;prof.preferred_lang=newLang;
+    hwk=week;notifHour=notif;
+    localStorage.setItem("maat-lang",newLang);
+    localStorage.setItem("maat-theme",newTheme);
+    if(newLang!==lang)setLang(newLang);
+    setTheme(newTheme);
+    scheduleNotifications();
+    closeProfile();
+    toast(t("saved"),"ok");
+    applyI18N();renderHome();
+  }catch(e){toast(e.message||"Error","err");}
+  finally{btn.disabled=false;btn.textContent=t("save");}
+}
+
+/* ============ SISTEMA DE NOTIFICACIONES ============ */
+async function requestNotifPermission(){
+  if(!("Notification" in window))return;
+  if(Notification.permission==="default"){
+    await Notification.requestPermission();
+  }
+}
+
+let _notifTimer=null;
+function scheduleNotifications(){
+  if(_notifTimer)clearInterval(_notifTimer);
+  if(!("Notification" in window)||Notification.permission!=="granted")return;
+  // Revisa cada minuto si es la hora configurada
+  _notifTimer=setInterval(()=>{
+    const now=new Date();
+    if(now.getHours()!==notifHour||now.getMinutes()!==0)return;
+    // ¿Ya calibró hoy? — compara ambos formatos (legacy "17 mar" + ISO)
+    if(!calibradoHoy()){
+      try{
+        new Notification(lang==="es"?"MAAT — Calibra tu día":"MAAT — Calibrate your day",{
+          body:lang==="es"
+            ?"Es tu momento de calibración. 3 preguntas · 2 minutos."
+            :"Time to calibrate. 3 questions · 2 minutes.",
+          icon:"https://somosmaat.org/wp-content/uploads/2026/02/logo_app.png",
+          tag:"maat-calib-daily",
+          requireInteraction:false
+        });
+      }catch(e){}
+    }
+    // Recordatorio semanal los domingos a las 20:00
+    if(now.getDay()===0&&now.getHours()===20&&now.getMinutes()===0){
+      try{
+        new Notification(lang==="es"?"MAAT — Resumen semanal":"MAAT — Weekly review",{
+          body:lang==="es"
+            ?"¿Evaluaste tu semana? Revisa tus hábitos antes de empezar la próxima."
+            :"Did you evaluate your week? Review your habits before starting the next one.",
+          icon:"https://somosmaat.org/wp-content/uploads/2026/02/logo_app.png",
+          tag:"maat-weekly-summary",
+          requireInteraction:false
+        });
+      }catch(e){}
+    }
+  },60000);
+}
+
+/* ============ NOTAS DEL MENTOR ============ */
+function renderMentorNotes(){
+  document.getElementById("v-mentor-notes").innerHTML=`
+    <div class="sv-header"><button class="btn-back" onclick="gv('v-mas')">‹</button><h2>${lang==='es'?'Notas de mi Mentor':'Mentor Notes'}</h2></div>
+    ${mentorNotes.length?mentorNotes.map(s=>`
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <span style="font-family:var(--font-title);font-size:14px;font-weight:600;">${san(s.session_type||"")} — ${san(s.session_date||"")}</span>
+          <span style="font-size:11px;color:var(--mu);">${lang==='es'?'Sem':'Week'} ${s.client_week||"?"}</span>
+        </div>
+        ${s.notes?`<p style="font-size:13px;color:var(--mu);line-height:1.6;margin-bottom:8px;">${san(s.notes)}</p>`:''}
+        ${s.next_plan?`<div style="padding:8px 12px;background:rgba(57,161,201,.06);border-left:3px solid var(--c);border-radius:0 var(--radius-sm) var(--radius-sm) 0;font-size:13px;color:var(--c);">➜ ${san(s.next_plan)}</div>`:''}
+      </div>
+    `).join(""):`<div class="text-center text-mu" style="padding:40px 0;"><p style="font-size:28px;margin-bottom:8px;">📋</p><p>${lang==='es'?'Tu mentor aún no ha registrado sesiones':'Your mentor has no sessions recorded yet'}</p></div>`}
+  `;
+}
+
+// Offline/online detection
+// offline/online listeners moved to OFFLINE QUEUE section above
+
+// PWA install prompt
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();
+  _pwaPrompt=e;
+  if(!localStorage.getItem("maat-pwa-dismissed")){
+    setTimeout(()=>document.getElementById("pwa-banner")?.classList.add("show"),3000);
+  }
+});
+function pwaInstall(){
+  if(!_pwaPrompt)return;
+  _pwaPrompt.prompt();
+  _pwaPrompt.userChoice.then(()=>{_pwaPrompt=null;pwaDismiss();});
+}
+function pwaDismiss(){
+  document.getElementById("pwa-banner")?.classList.remove("show");
+  localStorage.setItem("maat-pwa-dismissed","1");
+}
+
+// Pull to refresh
+(function initPullToRefresh(){
+  const el=document.querySelector('.main-content');
+  if(!el)return;
+  let startY=0,pulling=false,indicator=null;
+  el.addEventListener('touchstart',e=>{
+    if(el.scrollTop===0)startY=e.touches[0].clientY;
+  },{passive:true});
+  el.addEventListener('touchmove',e=>{
+    if(!startY)return;
+    const dy=e.touches[0].clientY-startY;
+    if(dy>50&&!pulling){
+      pulling=true;
+      if(!indicator){indicator=document.createElement('div');indicator.style.cssText='position:absolute;top:70px;left:50%;transform:translateX(-50%);font-size:20px;z-index:500;animation:spin .8s linear infinite;';indicator.textContent='↻';document.querySelector('.app-shell')?.appendChild(indicator);}
+    }
+  },{passive:true});
+  el.addEventListener('touchend',async()=>{
+    if(pulling){
+      pulling=false;startY=0;
+      await loadData();
+      renderHome();
+    }
+    if(indicator){indicator.remove();indicator=null;}
+    startY=0;
+  },{passive:true});
+})();
+
+/* ============ OFFLINE QUEUE + RETRY ============ */
+const _offlineQueue=[];
+function isOnline(){return navigator.onLine;}
+function queueMutation(table,action,payload){
+  _offlineQueue.push({table,action,payload,ts:Date.now()});
+  updateQueueBadge();
+  toast(lang==='es'?'Sin conexión — guardado para enviar después':'Offline — saved to send later','err');
+}
+function updateQueueBadge(){
+  const badge=document.getElementById("queue-badge");
+  if(!badge)return;
+  if(_offlineQueue.length>0){badge.textContent=(lang==='es'?'Pendientes: ':'Pending: ')+_offlineQueue.length;badge.classList.add("show");}
+  else badge.classList.remove("show");
+}
+async function flushQueue(){
+  if(!_offlineQueue.length||!isOnline())return;
+  const items=[..._offlineQueue];
+  _offlineQueue.length=0;
+  updateQueueBadge();
+  let failed=0;
+  for(const item of items){
+    try{
+      let result;
+      if(item.action==='insert')result=await sb.from(item.table).insert(item.payload);
+      else if(item.action==='upsert')result=await sb.from(item.table).upsert(item.payload.data,item.payload.opts);
+      else if(item.action==='update')result=await sb.from(item.table).update(item.payload.data).eq("id",item.payload.id);
+      if(result?.error){failed++;console.warn("Queue flush error:",result.error);}
+    }catch(e){failed++;console.warn("Queue flush exception:",e);}
+  }
+  if(failed>0)toast(lang==='es'?`${failed} cambio(s) no se pudieron sincronizar`:`${failed} change(s) failed to sync`,'err');
+  else if(items.length>0){toast(lang==='es'?'Cambios sincronizados':'Changes synced','ok');await loadData();renderHome();}
+}
+async function retryFetch(fn,retries=2,delay=1500){
+  for(let i=0;i<=retries;i++){
+    const result=await fn();
+    if(!result.error)return result;
+    if(i<retries&&!chkAuthErr(result.error))await new Promise(r=>setTimeout(r,delay*(i+1)));
+    else return result;
+  }
+}
+window.addEventListener('online',()=>{
+  document.getElementById("offline-banner")?.classList.remove("show");
+  flushQueue();
+});
+window.addEventListener('offline',()=>document.getElementById("offline-banner")?.classList.add("show"));
+
+/* ============ CHAT PERSISTENCE — server-side ============ */
+async function saveChatServer(){
+  if(!user||!chatHistory.length)return;
+  try{
+    await sb.from("chat_messages").upsert({
+      user_id:user.id,
+      messages:JSON.stringify(chatHistory.slice(-40)),
+      updated_at:new Date().toISOString()
+    },{onConflict:"user_id"});
+  }catch(e){console.warn("saveChatServer:",e);}
+}
+async function loadChatServer(){
+  if(!user)return;
+  try{
+    const{data}=await sb.from("chat_messages").select("messages").eq("user_id",user.id).single();
+    if(data?.messages){
+      const msgs=JSON.parse(data.messages);
+      if(msgs.length>chatHistory.length)chatHistory=msgs;
+    }
+  }catch(e){}// table might not exist yet — fail silently
+}
+
+/* ============ EXPORT PROGRESS — CSV download ============ */
+function exportProgress(){
+  if(!cals.length&&!bels.length){toast(lang==='es'?'No hay datos para exportar':'No data to export','err');return;}
+  let csv="";
+  // Calibrations
+  csv+="=== "+(lang==='es'?"CALIBRACIONES":"CALIBRATIONS")+" ===\n";
+  csv+=(lang==='es'?"Fecha,Semana,Actitud,Pregunta 1,Pregunta 2,Pregunta 3":"Date,Week,Attitude,Question 1,Question 2,Question 3")+"\n";
+  cals.forEach(c=>{
+    csv+=`"${c.date||""}",${c.week||""},${c.coherence||""},"${(c.answer_q1||"").replace(/"/g,'""')}","${(c.answer_q2||"").replace(/"/g,'""')}","${(c.answer_q3||"").replace(/"/g,'""')}"\n`;
+  });
+  // Habits summary
+  csv+="\n=== "+(lang==='es'?"HÁBITOS POR SEMANA":"HABITS BY WEEK")+" ===\n";
+  csv+=(lang==='es'?"Semana,Coherencia %,Hábitos":"Week,Coherence %,Habits")+"\n";
+  for(let w=1;w<=16;w++){
+    const habits=getHabits(w);
+    if(habits.length){
+      const coh=calcCoherence(w);
+      const names=habits.map(h=>h.name).join("; ");
+      csv+=`${w},${coh}%,"${names}"\n`;
+    }
+  }
+  // Beliefs
+  csv+="\n=== "+(lang==='es'?"CREENCIAS":"BELIEFS")+" ===\n";
+  csv+=(lang==='es'?"Texto,Categoría,Fecha":"Text,Category,Date")+"\n";
+  bels.forEach(b=>{
+    csv+=`"${(b.text||"").replace(/"/g,'""')}","${b.category||""}","${b.date||""}"\n`;
+  });
+  // Stats summary
+  csv+="\n=== "+(lang==='es'?"RESUMEN":"SUMMARY")+" ===\n";
+  csv+=(lang==='es'?"Métrica,Valor":"Metric,Value")+"\n";
+  csv+=`${lang==='es'?"Semana actual":"Current week"},${hwk}\n`;
+  csv+=`${lang==='es'?"Racha":"Streak"},${calcStreak()}\n`;
+  csv+=`${lang==='es'?"Actitud promedio":"Average attitude"},${calcAttitudeAvg()||"N/A"}\n`;
+  csv+=`${lang==='es'?"Semanas completadas":"Weeks completed"},${Object.values(wkp).filter(Boolean).length}/16\n`;
+  // Download
+  const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;a.download=`maat-progreso-${prof?.full_name||"user"}-${fmtDateISO()}.csv`;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast(lang==='es'?'Progreso exportado':'Progress exported','ok');
+}
+
+/* ============ BOOTSTRAP — FIX: no auth flash ============ */
+(async function boot(){
+  updateAuthUI();
+  setTheme(theme);
+  try{
+    const{data:{session}}=await sb.auth.getSession();
+    if(session?.user){
+      user=session.user;
+      await initApp();
+    }else{
+      document.getElementById("auth-screen").classList.add("visible");
+    }
+  }catch(e){
+    document.getElementById("auth-screen").classList.add("visible");
+  }finally{
+    document.getElementById("boot-loader").style.display="none";
+  }
+})();
+</script>
+</body>
+</html>
