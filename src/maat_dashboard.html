@@ -1029,7 +1029,10 @@ function renderHabits(){
           </div>
           <div class="habit-progress"><div class="fill" style="width:${pct}%;background:${isFulfilled?'var(--m)':'var(--o)'}"></div></div>
         </div>`;
-      }).join(""):`<p class="text-mu text-center" style="padding:20px;">${t("no_habits")}</p>`}
+      }).join(""):`<div style="text-align:center;padding:20px 0;">
+        <p class="text-mu" style="margin-bottom:12px;">${t("no_habits")}</p>
+        ${(()=>{const prev=getHabits(w-1);return w>1&&prev.length?`<button onclick="copyHabitsFromWeek(${w-1})" style="background:var(--bg2);border:1px dashed var(--c);color:var(--c);padding:10px 20px;border-radius:var(--radius-sm);font-size:13px;cursor:pointer;">📋 ${lang==='es'?'Copiar hábitos de semana '+(w-1):'Copy habits from week '+(w-1)}</button>`:''})()}
+      </div>`}
     </div>
     <div class="add-habit-form">
       <div class="row">
@@ -1156,7 +1159,42 @@ async function evaluateWeek(){
     const coherence=calcCoherence(_habViewWeek);
     toast(`${lang==='es'?'Coherencia':'Coherence'}: ${coherence}% — ${fulfilled}/${totalHabits} ${lang==='es'?'completos':'completed'}`,"ok");
     renderHabits();
+    // Ofrecer copiar hábitos a siguiente semana
+    const nextW=_habViewWeek+1;
+    if(nextW<=16&&!getHabits(nextW).length){
+      setTimeout(()=>{
+        const msg=lang==='es'
+          ?`¿Copiar estos ${habits.length} hábitos a la semana ${nextW}?`
+          :`Copy these ${habits.length} habits to week ${nextW}?`;
+        if(confirm(msg))copyHabitsFromWeek(_habViewWeek,nextW);
+      },600);
+    }
   }finally{btn.disabled=false;btn.textContent=lang==='es'?'Evaluar':'Evaluate';}
+}
+
+async function copyHabitsFromWeek(fromWeek,toWeek){
+  toWeek=toWeek||_habViewWeek;
+  const srcHabits=getHabits(fromWeek);
+  if(!srcHabits.length){toast(lang==='es'?'No hay hábitos en la semana '+fromWeek:'No habits found in week '+fromWeek,"err");return;}
+  // Clonar hábitos reseteando los días marcados
+  const cloned=srcHabits.map(h=>({name:h.name,frequency:h.frequency||7,days:[false,false,false,false,false,false,false]}));
+  if(!ht[toWeek])ht[toWeek]={habits:[],intention:"",learned:"",felt:"",belief:""};
+  ht[toWeek].habits=cloned;
+  // Guardar en Supabase
+  try{
+    const existing=ht[toWeek]||{};
+    const{data,error}=await sb.from("habit_tracker").upsert({
+      user_id:user.id,week:toWeek,habits:cloned,
+      intention:existing.intention||"",learned:existing.learned||"",
+      felt:existing.felt||"",belief:existing.belief||"",
+      updated_at:new Date().toISOString()
+    },{onConflict:"user_id,week"}).select().single();
+    if(error){if(!chkAuthErr(error))toast(error.message,"err");return;}
+    ht[toWeek]=data;
+    toast(lang==='es'?`✓ ${cloned.length} hábitos copiados a semana ${toWeek}`:`✓ ${cloned.length} habits copied to week ${toWeek}`,"ok");
+    _habViewWeek=toWeek;
+    renderHabits();
+  }catch(e){toast(e.message,"err");}
 }
 
 /* ============ COACH IA — FIX: usa aiCfg.system_prompt ============ */
