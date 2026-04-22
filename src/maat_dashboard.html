@@ -12,8 +12,8 @@
 <style>
 :root{
   --c:#39A1C9;--o:#EBA055;--m:#7DCD93;--v:#89608E;--r:#D76B6E;
-  --bg:#0d1117;--bg2:#161b22;--text:#e8eaf0;--mu:#a0a8b8;--mu2:#7b8494;
-  --bd:rgba(255,255,255,0.10);
+  --bg:#0d1117;--bg2:#161b22;--text:#e8eaf0;--mu:#b8c0cc;--mu2:#9aa0ae;
+  --bd:rgba(255,255,255,0.12);
   --phase1:#39A1C9;--phase2:#EBA055;--phase3:#7DCD93;--phase4:#89608E;
   --radius:14px;--radius-sm:8px;
   --font-title:'Saira Condensed',sans-serif;
@@ -68,9 +68,10 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);font-si
 
 /* NAV BAR */
 .nav-bar{height:var(--nav-h);display:flex;align-items:center;justify-content:space-around;background:var(--bg);border-top:1px solid var(--bd);position:fixed;bottom:0;left:0;right:0;z-index:100;padding-bottom:env(safe-area-inset-bottom,0);}
-.nav-item{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 12px;cursor:pointer;color:var(--mu2);transition:color .2s;background:none;border:none;font-family:var(--font-body);font-size:11px;touch-action:manipulation;}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 12px;cursor:pointer;color:var(--mu);transition:color .2s;background:none;border:none;font-family:var(--font-body);font-size:11px;touch-action:manipulation;}
 .nav-item svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
 .nav-item.active{color:var(--c);}
+.nav-item span{color:inherit;}
 
 /* CARDS */
 .card{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--radius);padding:16px;margin-bottom:12px;}
@@ -125,7 +126,7 @@ label.field-label{display:block;font-size:14px;color:var(--mu);margin-bottom:6px
 .calib-step-label{font-size:13px;color:var(--mu);margin-left:auto;}
 /* COACH CHIPS */
 .coach-chips{display:flex;flex-wrap:wrap;gap:8px;padding:12px 0;}
-.coach-chip{padding:8px 14px;border:1px solid var(--bd);border-radius:20px;font-size:13px;color:var(--mu);background:var(--bg2);cursor:pointer;transition:all .2s;touch-action:manipulation;}
+.coach-chip{padding:8px 14px;border:1px solid var(--bd);border-radius:20px;font-size:13px;color:var(--text);background:var(--bg2);cursor:pointer;transition:all .2s;touch-action:manipulation;}
 .coach-chip:hover{border-color:var(--c);color:var(--c);}
 /* HABIT CHECK ANIMATION */
 @keyframes habitPop{0%{transform:scale(1);}40%{transform:scale(1.35);}70%{transform:scale(.92);}100%{transform:scale(1);}}
@@ -152,7 +153,7 @@ label.field-label{display:block;font-size:14px;color:var(--mu);margin-bottom:6px
 .habit-name-text{font-weight:600;font-size:15px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .habit-freq{font-size:14px;color:var(--mu);background:var(--bg2);padding:2px 8px;border-radius:10px;white-space:nowrap;}
 .habit-days{display:flex;gap:4px;flex-wrap:nowrap;overflow-x:auto;}
-.habit-day{min-width:34px;width:34px;height:34px;border-radius:8px;border:1px solid var(--bd);background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--mu);cursor:pointer;transition:all .15s;flex-shrink:0;touch-action:manipulation;}
+.habit-day{min-width:34px;width:34px;height:34px;border-radius:8px;border:1px solid var(--bd);background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--text);cursor:pointer;transition:all .15s;flex-shrink:0;touch-action:manipulation;}
 .habit-day.checked{background:var(--m);color:#fff;border-color:var(--m);}
 .habit-progress{height:4px;border-radius:2px;background:var(--bd);margin-top:8px;overflow:hidden;}
 .habit-progress .fill{height:100%;border-radius:2px;transition:width .3s;}
@@ -188,7 +189,7 @@ label.field-label{display:block;font-size:14px;color:var(--mu);margin-bottom:6px
 .menu-item{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--radius);padding:20px 14px;text-align:center;cursor:pointer;transition:all .15s;touch-action:manipulation;}
 .menu-item:active{transform:scale(.97);}
 .menu-item .menu-icon{font-size:28px;margin-bottom:6px;}
-.menu-item .menu-label{font-family:var(--font-title);font-size:14px;font-weight:600;letter-spacing:.5px;}
+.menu-item .menu-label{font-family:var(--font-title);font-size:14px;font-weight:600;letter-spacing:.5px;color:var(--text);}
 
 /* PROGRESO */
 .phase-section{margin-bottom:20px;}
@@ -209,7 +210,7 @@ label.field-label{display:block;font-size:14px;color:var(--mu);margin-bottom:6px
 
 /* BELIEFS */
 .belief-filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
-.belief-filter{padding:6px 12px;border-radius:16px;border:1px solid var(--bd);background:var(--bg);color:var(--mu);font-size:12px;cursor:pointer;touch-action:manipulation;}
+.belief-filter{padding:6px 12px;border-radius:16px;border:1px solid var(--bd);background:var(--bg);color:var(--text);font-size:12px;cursor:pointer;touch-action:manipulation;}
 .belief-filter.active{background:var(--c);color:#fff;border-color:var(--c);}
 .belief-item{display:flex;align-items:flex-start;gap:10px;padding:12px;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--radius-sm);margin-bottom:8px;}
 .belief-cat-dot{width:10px;height:10px;border-radius:50%;margin-top:5px;flex-shrink:0;}
