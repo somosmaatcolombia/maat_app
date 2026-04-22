@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#0d1117">
-<title>MAAT — Portal del Mentor</title>
+<title>MAAT &#8212; Portal del Mentor</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@400;600;700&family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -33,7 +33,7 @@ a{color:var(--c);text-decoration:none;}
 #boot-loader .boot-dot:nth-child(3){animation-delay:.3s;background:var(--m);}
 @keyframes bootPulse{to{opacity:.2;transform:scale(.6);}}
 
-/* AUTH — hidden by default, .visible shows it */
+/* AUTH &#8212; hidden by default, .visible shows it */
 #auth-screen{display:none;flex-direction:column;align-items:center;justify-content:center;height:100vh;padding:24px;text-align:center;}
 #auth-screen.visible{display:flex;}
 #auth-screen .logo-auth{width:100px;margin-bottom:20px;border-radius:16px;}
@@ -150,7 +150,7 @@ a{color:var(--c);text-decoration:none;}
 .session-form textarea,.session-form input,.session-form select{width:100%;padding:10px 12px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-family:var(--font-body);font-size:16px;outline:none;resize:vertical;touch-action:manipulation;-webkit-appearance:none;}
 .session-form textarea{min-height:80px;}
 
-/* MODALS — centrado, compatible con Elementor */
+/* MODALS &#8212; centrado, compatible con Elementor */
 .sheet-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:99999;opacity:0;pointer-events:none;transition:opacity .3s;}
 .sheet-backdrop.show{opacity:1;pointer-events:auto;}
 .modal-overlay{position:fixed;inset:0;z-index:100000;display:none;align-items:center;justify-content:center;padding:16px;overflow-y:auto;}
@@ -234,15 +234,15 @@ a{color:var(--c);text-decoration:none;}
   <div class="boot-dot"></div><div class="boot-dot"></div><div class="boot-dot"></div>
 </div>
 
-<!-- AUTH — hidden by default, shown via .visible class -->
+<!-- AUTH &#8212; hidden by default, shown via .visible class -->
 <div id="auth-screen">
   <img src="https://somosmaat.org/wp-content/uploads/2026/02/logo_app.png" alt="MAAT" class="logo-auth" onerror="this.style.display='none'">
   <h1>MENTOR</h1>
   <p class="subtitle">Portal de Mentor</p>
   <div class="auth-box">
     <input type="email" id="auth-email" placeholder="Email" autocomplete="email">
-    <input type="password" id="auth-pass" placeholder="Contraseña" autocomplete="current-password">
-    <button class="btn-primary" id="auth-btn" onclick="doAuth()">INICIAR SESIÓN</button>
+    <input type="password" id="auth-pass" placeholder="Contrase&ntilde;a" autocomplete="current-password">
+    <button class="btn-primary" id="auth-btn" onclick="doAuth()">INICIAR SESI&Oacute;N</button>
     <p id="auth-error"></p>
   </div>
 </div>
@@ -271,12 +271,12 @@ a{color:var(--c);text-decoration:none;}
       </div>
       <div class="nav-link" data-view="sessions" onclick="goView('sessions')">
         <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-        Notas de Sesión
+        Notas de Sesi&oacute;n
       </div>
       <div class="nav-section">MI CUENTA</div>
       <div class="nav-link" data-view="mentor-config" onclick="goView('mentor-config')">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-        Mi Configuración
+        Mi Configuraci&oacute;n
       </div>
       <div class="nav-section admin-only">ADMIN</div>
       <div class="nav-link admin-only" data-view="admin-users" onclick="goView('admin-users')">
@@ -297,7 +297,7 @@ a{color:var(--c);text-decoration:none;}
   <div class="main-area">
     <div class="topbar">
       <div class="topbar-left">
-        <button class="hamburger" onclick="toggleSidebar()">☰</button>
+        <button class="hamburger" onclick="toggleSidebar()">&#9776;</button>
         <h2 id="topbar-title">Resumen</h2>
       </div>
       <div class="topbar-actions">
@@ -326,7 +326,7 @@ a{color:var(--c);text-decoration:none;}
     <div class="modal-handle" onclick="closeModal('modal-create')"></div>
     <h3>Crear Nuevo Cliente</h3>
     <div class="session-form">
-      <div><label>Nombre completo</label><input type="text" id="nc-name" placeholder="Juan Pérez"></div>
+      <div><label>Nombre completo</label><input type="text" id="nc-name" placeholder="Juan P&eacute;rez"></div>
       <div><label>Email</label><input type="email" id="nc-email" placeholder="juan@email.com"></div>
     </div>
     <div id="nc-result"></div>
@@ -336,13 +336,13 @@ a{color:var(--c);text-decoration:none;}
 <div class="modal-overlay" id="modal-session">
   <div class="modal">
     <div class="modal-handle" onclick="closeModal('modal-session')"></div>
-    <h3>Nueva Nota de Sesión</h3>
+    <h3>Nueva Nota de Sesi&oacute;n</h3>
     <div class="session-form">
       <div><label>Cliente</label><div id="ms-client" style="font-weight:600;padding:4px 0;color:var(--text);"></div></div>
-      <div><label>Tipo de sesión</label><select id="ms-type"><option value="1on1">1 on 1</option><option value="async">Async</option><option value="group">Grupo</option></select></div>
+      <div><label>Tipo de sesi&oacute;n</label><select id="ms-type"><option value="1on1">1 on 1</option><option value="async">Async</option><option value="group">Grupo</option></select></div>
       <div><label>Fecha</label><input type="date" id="ms-date"></div>
-      <div><label>Notas de la sesión</label><textarea id="ms-notes" rows="4" placeholder="Resumen de la sesión..."></textarea></div>
-      <div><label>Plan / tarea para el cliente</label><textarea id="ms-plan" rows="3" placeholder="¿Qué debe hacer el cliente antes de la próxima sesión?"></textarea></div>
+      <div><label>Notas de la sesi&oacute;n</label><textarea id="ms-notes" rows="4" placeholder="Resumen de la sesi&oacute;n..."></textarea></div>
+      <div><label>Plan / tarea para el cliente</label><textarea id="ms-plan" rows="3" placeholder="&iquest;Qu&eacute; debe hacer el cliente antes de la pr&oacute;xima sesi&oacute;n?"></textarea></div>
     </div>
     <input type="hidden" id="ms-client-id">
     <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modal-session')">Cancelar</button><button class="btn btn-c" id="ms-btn" onclick="saveSessionNote()">GUARDAR</button></div>
@@ -360,11 +360,11 @@ a{color:var(--c);text-decoration:none;}
     <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modal-role')">Cancelar</button><button class="btn btn-c" id="mr-btn" onclick="saveRole()">CONFIRMAR</button></div>
   </div>
 </div>
-<div id="offline-banner">📡 Sin conexión — revisando...</div>
+<div id="offline-banner">&#128225; Sin conexi&oacute;n &#8212; revisando...</div>
 <div id="pwa-banner">
-  <p>📲 Agrega MAAT Mentor a tu pantalla de inicio para una mejor experiencia</p>
+  <p>&#128242; Agrega MAAT Mentor a tu pantalla de inicio para una mejor experiencia</p>
   <button class="pwa-install" onclick="pwaInstall()">Instalar</button>
-  <button class="pwa-dismiss" onclick="pwaDismiss()">✕</button>
+  <button class="pwa-dismiss" onclick="pwaDismiss()">&#10005;</button>
 </div>
 <div id="toast"></div>
 
@@ -387,7 +387,7 @@ let _currentView="overview",_selectedClient=null;
 let theme=localStorage.getItem("maat-m-theme")||(window.matchMedia('(prefers-color-scheme:light)').matches?'light':'dark');
 let _pwaPrompt=null;
 
-const PHASE_NAMES=["GRATITUD","AMOR","INTENCIÓN","VOLUNTAD"];
+const PHASE_NAMES=["GRATITUD","AMOR","INTENCI\u00D3N","VOLUNTAD"];
 const PHASE_KEYS=["UNCOVER","REWRITE","REBUILD","INTEGRATE"];
 const PHASE_HEXES=["#39A1C9","#EBA055","#7DCD93","#89608E"];
 
@@ -396,7 +396,7 @@ const PHASE_HEXES=["#39A1C9","#EBA055","#7DCD93","#89608E"];
 /* ============================================ */
 function san(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");}
 function toast(msg,type){const el=document.getElementById("toast");el.textContent=msg;el.className=type||"";el.classList.add("show");setTimeout(()=>el.classList.remove("show"),2800);}
-function chkAuthErr(error){if(!error)return false;const msg=(error.message||"").toLowerCase();if(msg.includes("jwt")||msg.includes("expired")||msg.includes("not authenticated")){toast("Tu sesión expiró. Vuelve a iniciar sesión.","err");setTimeout(()=>doLogout(),2200);return true;}return false;}
+function chkAuthErr(error){if(!error)return false;const msg=(error.message||"").toLowerCase();if(msg.includes("jwt")||msg.includes("expired")||msg.includes("not authenticated")){toast("Tu sesi\u00F3n expir\u00F3. Vuelve a iniciar sesi\u00F3n.","err");setTimeout(()=>doLogout(),2200);return true;}return false;}
 function getPhase(w){return w<=4?1:w<=8?2:w<=12?3:4;}
 function getPhaseHex(p){return PHASE_HEXES[(p||1)-1];}
 function cohColor(v){return v>=70?"var(--m)":v>=40?"var(--o)":"var(--r)";}
@@ -436,7 +436,7 @@ function genPass(){const chars="ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz2
 /* and calcHabPct() exactly                     */
 /* ============================================ */
 
-/* Coherencia = promedio del % de cumplimiento de cada hábito */
+/* Coherencia = promedio del % de cumplimiento de cada h\u00E1bito */
 function calcCoherenceFromHabits(habitsData){
   let habits;
   try{habits=typeof habitsData==="string"?JSON.parse(habitsData):habitsData||[];}catch(e){return null;}
@@ -450,7 +450,7 @@ function calcCoherenceFromHabits(habitsData){
   return Math.round(sumPct/habits.length);
 }
 
-/* Hábitos % = días cumplidos / días esperados × 100 */
+/* H\u00E1bitos % = d\u00EDas cumplidos / d\u00EDas esperados \u00D7 100 */
 function calcHabPctFromHabits(habitsData){
   let habits;
   try{habits=typeof habitsData==="string"?JSON.parse(habitsData):habitsData||[];}catch(e){return null;}
@@ -464,7 +464,7 @@ function calcHabPctFromHabits(habitsData){
   return totalExpected?Math.round(totalDone/totalExpected*100):null;
 }
 
-/* Actitud promedio = avg de últimas N calibraciones */
+/* Actitud promedio = avg de \u00FAltimas N calibraciones */
 function calcAttAvgFromCals(clientCals,n){
   if(!clientCals||!clientCals.length)return null;
   const recent=clientCals.slice(0,n||7);
@@ -479,14 +479,14 @@ async function doAuth(){
   const pass=document.getElementById("auth-pass").value;
   const errEl=document.getElementById("auth-error");
   const btn=document.getElementById("auth-btn");
-  if(!email||!pass){errEl.textContent="Email y contraseña requeridos";return;}
+  if(!email||!pass){errEl.textContent="Email y contrase\u00F1a requeridos";return;}
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span>';errEl.textContent="";
   try{
     const{data,error}=await sb.auth.signInWithPassword({email,password:pass});
     if(error){errEl.textContent=error.message;return;}
     if(data.user){user=data.user;await initApp();}
   }catch(e){errEl.textContent=e.message;}
-  finally{btn.disabled=false;btn.textContent="INICIAR SESIÓN";}
+  finally{btn.disabled=false;btn.textContent="INICIAR SESI\u00D3N";}
 }
 
 async function doLogout(){
@@ -510,7 +510,7 @@ async function initApp(){
   if(myRole==="client"){
     document.getElementById("boot-loader").style.display="none";
     document.getElementById("auth-error").textContent="Esta cuenta no tiene acceso al portal del mentor.";
-    document.getElementById("auth-btn").disabled=false;document.getElementById("auth-btn").textContent="INICIAR SESIÓN";
+    document.getElementById("auth-btn").disabled=false;document.getElementById("auth-btn").textContent="INICIAR SESI\u00D3N";
     document.getElementById("auth-screen").classList.add("visible");
     await sb.auth.signOut();user=null;prof=null;return;
   }
@@ -577,7 +577,7 @@ function computeMetrics(){
 
     const progressPct=Math.round(clientWkp.length/16*100);
 
-    // Alertas: sin calibrar ≥3 días, coherencia <30%, hábitos <30%
+    // Alertas: sin calibrar \u22653 d\u00EDas, coherencia <30%, h\u00E1bitos <30%
     const hasAlert=
       (daysSince!==null&&daysSince>=3)||
       (coherence!==null&&coherence<30)||
@@ -606,7 +606,7 @@ function goView(viewId){
   const el=document.getElementById("v-"+viewId);if(el)el.classList.add("active");
   document.querySelectorAll(".nav-link").forEach(n=>{n.classList.toggle("active",n.dataset.view===viewId);});
   closeSidebar();
-  const titles={overview:"Resumen",clients:"Mis Clientes",profile:"Perfil del Cliente",alerts:"Alertas",sessions:"Notas de Sesión","mentor-config":"Mi Configuración","admin-users":"Usuarios","admin-prompt":"Coach IA Config"};
+  const titles={overview:"Resumen",clients:"Mis Clientes",profile:"Perfil del Cliente",alerts:"Alertas",sessions:"Notas de Sesi\u00F3n","mentor-config":"Mi Configuraci\u00F3n","admin-users":"Usuarios","admin-prompt":"Coach IA Config"};
   document.getElementById("topbar-title").textContent=titles[viewId]||"MAAT";
   if(viewId==="overview")renderOverview();
   else if(viewId==="clients")renderClients();
@@ -637,27 +637,27 @@ function renderOverview(){
   document.getElementById("v-overview").innerHTML=`
     <div class="stat-grid">
       <div class="stat-card"><div class="stat-val" style="color:var(--c)">${total}</div><div class="stat-label">Clientes Activos</div></div>
-      <div class="stat-card"><div class="stat-val" style="color:var(--r)">${alertCount}</div><div class="stat-label">Requieren Atención</div></div>
-      <div class="stat-card"><div class="stat-val" style="color:${avgCoh!==null?cohColor(avgCoh):'var(--mu)'}">${avgCoh!==null?avgCoh+'%':'—'}</div><div class="stat-label">Coherencia Promedio</div></div>
-      <div class="stat-card"><div class="stat-val" style="color:${avgAtt?attColor(parseFloat(avgAtt)):'var(--mu)'}">${avgAtt||'—'}</div><div class="stat-label">Actitud Promedio</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:var(--r)">${alertCount}</div><div class="stat-label">Requieren Atenci\u00F3n</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:${avgCoh!==null?cohColor(avgCoh):'var(--mu)'}">${avgCoh!==null?avgCoh+'%':'\u2014'}</div><div class="stat-label">Coherencia Promedio</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:${avgAtt?attColor(parseFloat(avgAtt)):'var(--mu)'}">${avgAtt||'\u2014'}</div><div class="stat-label">Actitud Promedio</div></div>
       <div class="stat-card"><div class="stat-val" style="color:var(--m)">${activeToday.size}</div><div class="stat-label">Activos Hoy</div></div>
     </div>
-    ${alerts.length?`<div class="card"><div class="card-title">⚠️ Alertas Recientes</div>
+    ${alerts.length?`<div class="card"><div class="card-title">\u26A0\uFE0F Alertas Recientes</div>
       ${alerts.map(([uid,m])=>{
         const reasons=[];
-        if(m.daysSince>=3)reasons.push("Sin calibrar "+m.daysSince+" días");
+        if(m.daysSince>=3)reasons.push("Sin calibrar "+m.daysSince+" d\u00EDas");
         if(m.coherence!==null&&m.coherence<30)reasons.push("Coherencia "+m.coherence+"%");
-        if(m.habPct!==null&&m.habPct<30)reasons.push("Hábitos "+m.habPct+"%");
-        return`<div class="alert-item" onclick="openProfile('${uid}')"><div class="alert-dot"></div><div class="alert-info"><div class="a-name">${san(m.name)}</div><div class="a-reason">${reasons.join(" · ")}</div></div><span class="badge badge-alert">Sem ${m.week}</span></div>`;
+        if(m.habPct!==null&&m.habPct<30)reasons.push("H\u00E1bitos "+m.habPct+"%");
+        return`<div class="alert-item" onclick="openProfile('${uid}')"><div class="alert-dot"></div><div class="alert-info"><div class="a-name">${san(m.name)}</div><div class="a-reason">${reasons.join(" \u00B7 ")}</div></div><span class="badge badge-alert">Sem ${m.week}</span></div>`;
       }).join("")}
     </div>`:""}
-    <div class="card"><div class="card-title">📋 Actividad Reciente</div>
+    <div class="card"><div class="card-title">\u{1F4CB} Actividad Reciente</div>
       ${recentCals.length?recentCals.map(c=>{const m=_clientMetrics[c.user_id];
         return`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd);">
           <div style="width:6px;height:6px;border-radius:50%;background:${attHex(c.coherence)}"></div>
-          <div style="flex:1;font-size:13px;"><strong>${san(m?.name||"")}</strong> — Actitud ${c.coherence}/10</div>
+          <div style="flex:1;font-size:13px;"><strong>${san(m?.name||"")}</strong> \u2014 Actitud ${c.coherence}/10</div>
           <span style="font-size:11px;color:var(--mu)">${san(c.date||"")}</span>
-        </div>`;}).join(""):`<div class="empty"><div class="icon">📭</div><p>Sin actividad reciente</p></div>`}
+        </div>`;}).join(""):`<div class="empty"><div class="icon">\u{1F4ED}</div><p>Sin actividad reciente</p></div>`}
     </div>
   `;
 }
@@ -670,14 +670,14 @@ async function reloadClients(){
   toast("Recargando...","");
   await loadData();
   renderClients();
-  toast("Datos actualizados ✓","ok");
+  toast("Datos actualizados \u2713","ok");
 }
 function renderClients(){
   const filtered=_allProfiles.filter(p=>!_clientSearch||(p.full_name||"").toLowerCase().includes(_clientSearch.toLowerCase()));
   document.getElementById("v-clients").innerHTML=`
     <div class="search-bar">
       <input type="text" placeholder="Buscar por nombre..." value="${san(_clientSearch)}" oninput="_clientSearch=this.value;renderClients()">
-      <button class="btn btn-outline" onclick="reloadClients()" title="Recargar">↻</button>
+      <button class="btn btn-outline" onclick="reloadClients()" title="Recargar">\u21BB</button>
       <button class="btn btn-c" onclick="openCreateModal()">+ Nuevo Cliente</button>
     </div>
     ${filtered.length?`<div class="clients-grid">${filtered.map(p=>{
@@ -687,24 +687,24 @@ function renderClients(){
         ${m.hasAlert?'<div class="cc-alert"></div>':""}
         <div class="cc-top">
           <div class="cc-avatar" style="background:${getPhaseHex(phase)}">${san((m.name||"?")[0].toUpperCase())}</div>
-          <div><div class="cc-name">${san(m.name)}</div><div class="cc-week">Semana ${m.week} · Fase ${phase}</div></div>
+          <div><div class="cc-name">${san(m.name)}</div><div class="cc-week">Semana ${m.week} \u00B7 Fase ${phase}</div></div>
         </div>
         <div class="cc-metrics">
-          <div class="cc-metric"><div class="val" style="color:${m.coherence!==null?cohColor(m.coherence):'var(--mu)'}">${m.coherence!==null?m.coherence+'%':'—'}</div><div class="lbl">Coherencia</div></div>
-          <div class="cc-metric"><div class="val" style="color:${m.habPct!==null&&m.habPct>=30?'var(--m)':'var(--r)'}">${m.habPct!==null?m.habPct+'%':'—'}</div><div class="lbl">Hábitos</div></div>
-          <div class="cc-metric"><div class="val" style="color:${m.attAvg?attColor(m.attAvg):'var(--mu)'}">${m.attAvg||'—'}</div><div class="lbl">Actitud</div></div>
+          <div class="cc-metric"><div class="val" style="color:${m.coherence!==null?cohColor(m.coherence):'var(--mu)'}">${m.coherence!==null?m.coherence+'%':'\u2014'}</div><div class="lbl">Coherencia</div></div>
+          <div class="cc-metric"><div class="val" style="color:${m.habPct!==null&&m.habPct>=30?'var(--m)':'var(--r)'}">${m.habPct!==null?m.habPct+'%':'\u2014'}</div><div class="lbl">H\u00E1bitos</div></div>
+          <div class="cc-metric"><div class="val" style="color:${m.attAvg?attColor(m.attAvg):'var(--mu)'}">${m.attAvg||'\u2014'}</div><div class="lbl">Actitud</div></div>
           <div class="cc-metric">
             <div class="mini-chart">${(m.attHist||[]).map(v=>`<div class="mini-bar" style="height:${v*10}%;background:${attHex(v)}"></div>`).join("")}</div>
-            <div class="lbl">14 días</div>
+            <div class="lbl">14 d\u00EDas</div>
           </div>
         </div>
-        <div class="cc-last">${m.daysSince!==null?'Última calibración hace '+m.daysSince+' día'+(m.daysSince!==1?'s':''):'Sin calibraciones'}</div>
+        <div class="cc-last">${m.daysSince!==null?'\u00DAltima calibraci\u00F3n hace '+m.daysSince+' d\u00EDa'+(m.daysSince!==1?'s':''):'Sin calibraciones'}</div>
         <div class="cc-actions">
           <button onclick="event.stopPropagation();openProfile('${p.id}')">Ver Perfil</button>
-          <button onclick="event.stopPropagation();openSessionModal('${p.id}','${san(m.name)}')">+ Sesión</button>
+          <button onclick="event.stopPropagation();openSessionModal('${p.id}','${san(m.name)}')">+ Sesi\u00F3n</button>
         </div>
       </div>`;
-    }).join("")}</div>`:`<div class="empty"><div class="icon">👥</div><p>No hay clientes${_clientSearch?" con ese nombre":""}</p></div>`}
+    }).join("")}</div>`:`<div class="empty"><div class="icon">\u{1F465}</div><p>No hay clientes${_clientSearch?" con ese nombre":""}</p></div>`}
   `;
 }
 
@@ -726,31 +726,31 @@ function renderProfile(){
 
   document.getElementById("topbar-title").textContent="Perfil del Cliente";
   document.getElementById("v-profile").innerHTML=`
-    <button class="btn btn-outline" onclick="goView('clients')" style="margin-bottom:16px;">‹ Volver a Clientes</button>
+    <button class="btn btn-outline" onclick="goView('clients')" style="margin-bottom:16px;">\u2039 Volver a Clientes</button>
     <div class="profile-header">
       <div class="p-avatar" style="background:${getPhaseHex(phase)}">${san((m.name||"?")[0].toUpperCase())}</div>
-      <div class="p-info"><h3>${san(m.name)}</h3><p>Semana ${m.week} · Fase ${phase}: ${PHASE_NAMES[phase-1]} ${m.hasAlert?'<span class="badge badge-alert">Requiere Atención</span>':''}</p></div>
+      <div class="p-info"><h3>${san(m.name)}</h3><p>Semana ${m.week} \u00B7 Fase ${phase}: ${PHASE_NAMES[phase-1]} ${m.hasAlert?'<span class="badge badge-alert">Requiere Atenci\u00F3n</span>':''}</p></div>
     </div>
     <div class="metrics-row">
-      <div class="metric-box"><div class="m-val" style="color:${m.coherence!==null?cohColor(m.coherence):'var(--mu)'}">${m.coherence!==null?m.coherence+'%':'—'}</div><div class="m-lbl">Coherencia</div></div>
-      <div class="metric-box"><div class="m-val" style="color:var(--m)">${m.habPct!==null?m.habPct+'%':'—'}</div><div class="m-lbl">Hábitos</div></div>
-      <div class="metric-box"><div class="m-val" style="color:${m.attAvg?attColor(m.attAvg):'var(--mu)'}">${m.attAvg||'—'}</div><div class="m-lbl">Actitud (7d)</div></div>
-      <div class="metric-box"><div class="m-val">${m.daysSince!==null?m.daysSince:'—'}</div><div class="m-lbl">Días sin calibrar</div></div>
+      <div class="metric-box"><div class="m-val" style="color:${m.coherence!==null?cohColor(m.coherence):'var(--mu)'}">${m.coherence!==null?m.coherence+'%':'\u2014'}</div><div class="m-lbl">Coherencia</div></div>
+      <div class="metric-box"><div class="m-val" style="color:var(--m)">${m.habPct!==null?m.habPct+'%':'\u2014'}</div><div class="m-lbl">H\u00E1bitos</div></div>
+      <div class="metric-box"><div class="m-val" style="color:${m.attAvg?attColor(m.attAvg):'var(--mu)'}">${m.attAvg||'\u2014'}</div><div class="m-lbl">Actitud (7d)</div></div>
+      <div class="metric-box"><div class="m-val">${m.daysSince!==null?m.daysSince:'\u2014'}</div><div class="m-lbl">D\u00EDas sin calibrar</div></div>
     </div>
     <div class="card">
-      <div class="card-title">📊 Actitud — últimos 14 días</div>
+      <div class="card-title">\u{1F4CA} Actitud \u2014 \u00FAltimos 14 d\u00EDas</div>
       <div style="display:flex;align-items:flex-end;gap:6px;height:80px;">
         ${(m.attHist||[]).map(v=>`<div style="flex:1;border-radius:3px 3px 0 0;background:${attHex(v)};height:${v*10}%;min-height:2px;"></div>`).join("")}
       </div>
     </div>
 
     <div class="card">
-      <div class="card-title">📈 Progreso de Mentoría — ${m.progressPct||0}%</div>
+      <div class="card-title">\u{1F4C8} Progreso de Mentor\u00EDa \u2014 ${m.progressPct||0}%</div>
       ${[1,2,3,4].map(ph=>{
         const startW=(ph-1)*4+1;
         const weeks=[startW,startW+1,startW+2,startW+3];
         return`<div class="phase-section-m">
-          <div class="phase-header-m" style="background:${PHASE_HEXES[ph-1]}22;color:${PHASE_HEXES[ph-1]};">◆ Fase ${ph}: ${PHASE_NAMES[ph-1]} — ${PHASE_KEYS[ph-1]}</div>
+          <div class="phase-header-m" style="background:${PHASE_HEXES[ph-1]}22;color:${PHASE_HEXES[ph-1]};">\u25C6 Fase ${ph}: ${PHASE_NAMES[ph-1]} \u2014 ${PHASE_KEYS[ph-1]}</div>
           ${weeks.map(w=>{
             const done=clientWkp[w];
             const isCurrent=w===(m.week||1);
@@ -758,8 +758,8 @@ function renderProfile(){
             return`<div class="phase-week-row">
               <div class="pw-dot" style="background:${done?'#7DCD93':isCurrent?'#39A1C9':'var(--mu2)'};"></div>
               <span style="font-weight:600;font-size:13px;">Sem ${w}</span>
-              <div class="pw-learning">${learning?san(learning.substring(0,60)):'<span style="color:var(--mu2)">—</span>'}</div>
-              ${done?'<span class="badge badge-ok">✓</span>':isCurrent?'<span class="badge badge-info">Actual</span>':''}
+              <div class="pw-learning">${learning?san(learning.substring(0,60)):'<span style="color:var(--mu2)">\u2014</span>'}</div>
+              ${done?'<span class="badge badge-ok">\u2713</span>':isCurrent?'<span class="badge badge-info">Actual</span>':''}
             </div>`;
           }).join("")}
         </div>`;
@@ -767,17 +767,17 @@ function renderProfile(){
     </div>
 
     <div style="display:flex;gap:8px;margin-bottom:16px;">
-      <button class="btn btn-c" onclick="openSessionModal('${uid}','${san(m.name)}')">+ Nueva Sesión</button>
-      <button class="btn btn-outline" id="btn-ai-summary" onclick="genAI('${uid}')">🤖 Resumen IA</button>
+      <button class="btn btn-c" onclick="openSessionModal('${uid}','${san(m.name)}')">+ Nueva Sesi\u00F3n</button>
+      <button class="btn btn-outline" id="btn-ai-summary" onclick="genAI('${uid}')">\u{1F916} Resumen IA</button>
     </div>
     <div id="ai-summary-result"></div>
 
     <div class="card">
-      <div class="card-title">📋 Últimas Calibraciones</div>
+      <div class="card-title">\u{1F4CB} \u00DAltimas Calibraciones</div>
       ${clientCals.length?clientCals.map(c=>`
         <div style="padding:8px 0;border-bottom:1px solid var(--bd);font-size:13px;">
           <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-            <strong>${san(c.date||"")} · Sem ${c.week}</strong>
+            <strong>${san(c.date||"")} \u00B7 Sem ${c.week}</strong>
             <span style="color:${attHex(c.coherence)};font-weight:600;">Actitud: ${c.coherence}/10</span>
           </div>
           <div style="color:var(--mu);font-size:12px;">
@@ -790,12 +790,12 @@ function renderProfile(){
     </div>
 
     <div class="card">
-      <div class="card-title">📝 Sesiones con este cliente</div>
+      <div class="card-title">\u{1F4DD} Sesiones con este cliente</div>
       ${clientSessions.length?clientSessions.map(s=>`
         <div style="padding:10px 0;border-bottom:1px solid var(--bd);font-size:13px;">
-          <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><strong>${s.session_type} — ${s.session_date}</strong><span class="badge badge-info">Sem ${s.client_week||"?"}</span></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><strong>${s.session_type} \u2014 ${s.session_date}</strong><span class="badge badge-info">Sem ${s.client_week||"?"}</span></div>
           <p style="color:var(--mu);">${san(s.notes||"Sin notas")}</p>
-          ${s.next_plan?`<p style="color:var(--c);font-size:12px;margin-top:4px;">➜ ${san(s.next_plan)}</p>`:""}
+          ${s.next_plan?`<p style="color:var(--c);font-size:12px;margin-top:4px;">\u279C ${san(s.next_plan)}</p>`:""}
         </div>
       `).join(""):`<p style="color:var(--mu);padding:12px 0;">Sin sesiones registradas</p>`}
     </div>
@@ -811,7 +811,7 @@ async function genAI(uid){
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Generando...';
   try{
     const session=await sb.auth.getSession();const token=session?.data?.session?.access_token;
-    if(!token){toast("Sesión expirada. Vuelve a iniciar sesión.","err");return;}
+    if(!token){toast("Sesi\u00F3n expirada. Vuelve a iniciar sesi\u00F3n.","err");return;}
     const res=await fetch(SU+"/functions/v1/maat-summary",{
       method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token,"apikey":SK},
       body:JSON.stringify({client_id:uid})
@@ -819,9 +819,9 @@ async function genAI(uid){
     const json=await res.json();
     if(!res.ok){throw new Error(json.error||'Error del servidor ('+res.status+')');}
     const summary=json.summary||json.content||json.message||"Sin respuesta";
-    result.innerHTML=`<div class="card" style="border-color:var(--c);"><div class="card-title">🤖 Resumen IA</div><p style="font-size:13px;line-height:1.6;white-space:pre-wrap;">${san(summary)}</p></div>`;
+    result.innerHTML=`<div class="card" style="border-color:var(--c);"><div class="card-title">\u{1F916} Resumen IA</div><p style="font-size:13px;line-height:1.6;white-space:pre-wrap;">${san(summary)}</p></div>`;
   }catch(e){result.innerHTML=`<div class="card" style="border-color:var(--r);color:var(--r);">Error: ${san(e.message)}</div>`;}
-  finally{btn.disabled=false;btn.innerHTML="🤖 Resumen IA";}
+  finally{btn.disabled=false;btn.innerHTML="\u{1F916} Resumen IA";}
 }
 
 /* ============================================ */
@@ -831,11 +831,11 @@ function renderAlerts(){
   const alerts=Object.entries(_clientMetrics).filter(([_,m])=>m.hasAlert);
   document.getElementById("v-alerts").innerHTML=alerts.length?alerts.map(([uid,m])=>{
     const reasons=[];
-    if(m.daysSince!==null&&m.daysSince>=3)reasons.push("⏰ Sin calibrar "+m.daysSince+" días");
-    if(m.coherence!==null&&m.coherence<30)reasons.push("📉 Coherencia: "+m.coherence+"%");
-    if(m.habPct!==null&&m.habPct<30)reasons.push("⚡ Hábitos: "+m.habPct+"%");
-    return`<div class="alert-item" onclick="openProfile('${uid}')"><div class="alert-dot"></div><div class="alert-info"><div class="a-name">${san(m.name)}</div><div class="a-reason">${reasons.join(" · ")}</div></div><span class="badge badge-alert">Sem ${m.week}</span></div>`;
-  }).join(""):`<div class="empty"><div class="icon">✅</div><p>Sin alertas — todos tus clientes están en buen camino</p></div>`;
+    if(m.daysSince!==null&&m.daysSince>=3)reasons.push("\u23F0 Sin calibrar "+m.daysSince+" d\u00EDas");
+    if(m.coherence!==null&&m.coherence<30)reasons.push("\u{1F4C9} Coherencia: "+m.coherence+"%");
+    if(m.habPct!==null&&m.habPct<30)reasons.push("\u26A1 H\u00E1bitos: "+m.habPct+"%");
+    return`<div class="alert-item" onclick="openProfile('${uid}')"><div class="alert-dot"></div><div class="alert-info"><div class="a-name">${san(m.name)}</div><div class="a-reason">${reasons.join(" \u00B7 ")}</div></div><span class="badge badge-alert">Sem ${m.week}</span></div>`;
+  }).join(""):`<div class="empty"><div class="icon">\u2705</div><p>Sin alertas \u2014 todos tus clientes est\u00E1n en buen camino</p></div>`;
 }
 
 /* ============================================ */
@@ -848,12 +848,12 @@ function renderSessions(){
   document.getElementById("v-sessions").innerHTML=groups.length?groups.map(([uid,g])=>`
     <div class="card"><div class="card-title" style="cursor:pointer;" onclick="openProfile('${uid}')">${san(g.name)}</div>
       ${g.sessions.map(s=>`<div style="padding:10px 0;border-bottom:1px solid var(--bd);font-size:13px;">
-        <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span><strong>${s.session_type}</strong> — ${s.session_date}</span><span class="badge badge-info">Sem ${s.client_week||"?"}</span></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span><strong>${s.session_type}</strong> \u2014 ${s.session_date}</span><span class="badge badge-info">Sem ${s.client_week||"?"}</span></div>
         <p style="color:var(--mu);">${san(s.notes||"")}</p>
-        ${s.next_plan?`<p style="color:var(--c);font-size:12px;margin-top:4px;">➜ ${san(s.next_plan)}</p>`:""}
+        ${s.next_plan?`<p style="color:var(--c);font-size:12px;margin-top:4px;">\u279C ${san(s.next_plan)}</p>`:""}
       </div>`).join("")}
     </div>
-  `).join(""):`<div class="empty"><div class="icon">📝</div><p>Sin notas de sesión registradas</p></div>`;
+  `).join(""):`<div class="empty"><div class="icon">\u{1F4DD}</div><p>Sin notas de sesi\u00F3n registradas</p></div>`;
 }
 
 function openSessionModal(clientId,clientName){
@@ -880,7 +880,7 @@ async function saveSessionNote(){
       client_coherence_avg:m.attAvg||null
     }).select().single();
     if(error){if(!chkAuthErr(error))toast(error.message,"err");return;}
-    _allSessions.unshift(data);closeModal("modal-session");toast("Sesión guardada ✓","ok");
+    _allSessions.unshift(data);closeModal("modal-session");toast("Sesi\u00F3n guardada \u2713","ok");
     if(_currentView==="profile")renderProfile();
     else if(_currentView==="sessions")renderSessions();
   }finally{btn.disabled=false;btn.textContent="GUARDAR";}
@@ -916,7 +916,7 @@ async function createClient(){
     if(profErr){toast("Perfil: "+profErr.message,"err");return;}
     const{error:mcErr}=await sb.from("mentor_clients").upsert({mentor_id:user.id,client_id:newUid,active:true},{onConflict:"mentor_id,client_id"});
     if(mcErr)console.warn("mentor_clients:",mcErr.message);
-    resultEl.innerHTML=`<div class="success-screen"><div class="icon">✅</div><h3>Cliente creado exitosamente</h3><div class="cred"><strong>Email:</strong> ${san(email)}<br><strong>Contraseña:</strong> ${san(password)}</div><p style="font-size:12px;color:var(--mu);">Guarda estas credenciales — la contraseña no se puede recuperar.</p></div>`;
+    resultEl.innerHTML=`<div class="success-screen"><div class="icon">\u2705</div><h3>Cliente creado exitosamente</h3><div class="cred"><strong>Email:</strong> ${san(email)}<br><strong>Contrase\u00F1a:</strong> ${san(password)}</div><p style="font-size:12px;color:var(--mu);">Guarda estas credenciales \u2014 la contrase\u00F1a no se puede recuperar.</p></div>`;
     await loadData();
     if(_currentView==="clients")setTimeout(()=>renderClients(),300);
   }catch(e){toast(e.message,"err");}
@@ -931,14 +931,14 @@ async function renderMentorConfig(){
   const currentWA=myProfile?.whatsapp_number||"";
   document.getElementById("v-mentor-config").innerHTML=`
     <div class="card">
-      <div class="card-title">Configuración del Mentor</div>
+      <div class="card-title">Configuraci\u00F3n del Mentor</div>
       <p style="font-size:13px;color:var(--mu);margin-bottom:16px;">Estos datos son visibles para tus clientes en la app.</p>
       <div style="margin-bottom:16px;">
-        <label style="display:block;font-size:12px;color:var(--mu);margin-bottom:4px;font-weight:600;">Número de contacto (WhatsApp)</label>
+        <label style="display:block;font-size:12px;color:var(--mu);margin-bottom:4px;font-weight:600;">N\u00FAmero de contacto (WhatsApp)</label>
         <input type="text" id="cfg-whatsapp" value="${san(currentWA)}" placeholder="573001234567" style="width:100%;padding:10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--text);font-size:14px;">
-        <p style="font-size:11px;color:var(--mu);margin-top:4px;">Formato internacional sin +, ej: 573001234567. Tus clientes verán un botón "Contactar al Mentor" en su app.</p>
+        <p style="font-size:11px;color:var(--mu);margin-top:4px;">Formato internacional sin +, ej: 573001234567. Tus clientes ver\u00E1n un bot\u00F3n "Contactar al Mentor" en su app.</p>
       </div>
-      <button class="btn btn-c" id="btn-save-mentor-cfg" onclick="saveMentorConfig()">GUARDAR CONFIGURACIÓN</button>
+      <button class="btn btn-c" id="btn-save-mentor-cfg" onclick="saveMentorConfig()">GUARDAR CONFIGURACI\u00D3N</button>
     </div>
   `;
 }
@@ -948,8 +948,8 @@ async function saveMentorConfig(){
   try{
     const{error}=await sb.from("profiles").update({whatsapp_number:wa}).eq("id",user.id);
     if(error){if(!chkAuthErr(error))toast(error.message,"err");return;}
-    toast("Configuración guardada ✓","ok");
-  }finally{btn.disabled=false;btn.textContent="GUARDAR CONFIGURACIÓN";}
+    toast("Configuraci\u00F3n guardada \u2713","ok");
+  }finally{btn.disabled=false;btn.textContent="GUARDAR CONFIGURACI\u00D3N";}
 }
 
 /* ============================================ */
@@ -958,9 +958,9 @@ async function saveMentorConfig(){
 function renderAdminUsers(){
   if(myRole!=="admin")return;
   document.getElementById("v-admin-users").innerHTML=`<div class="card"><table class="tbl">
-    <thead><tr><th>Nombre</th><th>ID</th><th>Rol</th><th>Semana</th><th>Acción</th></tr></thead>
+    <thead><tr><th>Nombre</th><th>ID</th><th>Rol</th><th>Semana</th><th>Acci\u00F3n</th></tr></thead>
     <tbody>${_allUsers.map(u=>`<tr>
-      <td><strong>${san(u.full_name||"—")}</strong></td>
+      <td><strong>${san(u.full_name||"\u2014")}</strong></td>
       <td style="font-family:monospace;font-size:11px;color:var(--mu)">${u.id.slice(0,8)}</td>
       <td><span class="badge ${u.role==='admin'?'badge-alert':u.role==='mentor'?'badge-info':'badge-ok'}">${u.role||"client"}</span></td>
       <td>${u.current_week||1}</td>
@@ -979,7 +979,7 @@ async function saveRole(){
     const{error}=await sb.from("profiles").update({role}).eq("id",uid);
     if(error){if(!chkAuthErr(error))toast(error.message,"err");return;}
     const u=_allUsers.find(x=>x.id===uid);if(u)u.role=role;
-    closeModal("modal-role");toast("Rol actualizado ✓","ok");renderAdminUsers();
+    closeModal("modal-role");toast("Rol actualizado \u2713","ok");renderAdminUsers();
   }finally{btn.disabled=false;btn.textContent="CONFIRMAR";}
 }
 
@@ -991,7 +991,7 @@ async function loadAIPrompt(){
   const{data}=await sb.from("ai_config").select("system_prompt").eq("id",1).single();
   document.getElementById("v-admin-prompt").innerHTML=`<div class="card">
     <div class="card-title">System Prompt del Coach MAAT IA</div>
-    <p style="font-size:12px;color:var(--mu);margin-bottom:12px;">Modelo: claude-opus-4-6 · Este prompt es enviado al coach en cada sesión del cliente.</p>
+    <p style="font-size:12px;color:var(--mu);margin-bottom:12px;">Modelo: claude-opus-4-6 \u00B7 Este prompt es enviado al coach en cada sesi\u00F3n del cliente.</p>
     <textarea class="prompt-editor" id="ai-prompt-editor">${san(data?.system_prompt||"")}</textarea>
     <button class="btn btn-c" style="margin-top:12px;" id="btn-save-prompt" onclick="saveAIPrompt()">GUARDAR PROMPT</button>
   </div>`;
@@ -1002,7 +1002,7 @@ async function saveAIPrompt(){
   try{
     const{error}=await sb.from("ai_config").update({system_prompt:prompt,updated_at:new Date().toISOString()}).eq("id",1);
     if(error){if(!chkAuthErr(error))toast(error.message,"err");return;}
-    toast("Prompt guardado ✓","ok");
+    toast("Prompt guardado \u2713","ok");
   }finally{btn.disabled=false;btn.textContent="GUARDAR PROMPT";}
 }
 
@@ -1029,7 +1029,7 @@ function pwaDismiss(){
 }
 
 /* ============================================ */
-/* BOOTSTRAP — sin flash de auth               */
+/* BOOTSTRAP \u2014 sin flash de auth               */
 /* ============================================ */
 (async function boot(){
   setTheme(theme);
