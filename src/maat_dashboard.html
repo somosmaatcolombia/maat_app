@@ -280,6 +280,13 @@ label.field-label{display:block;font-size:14px;color:var(--mu);margin-bottom:6px
 .btn-logout{background:var(--r) !important;}
 .spinner{display:inline-block;width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
+/* BOOK READER */
+#book-body h4{font-family:var(--font-title);font-size:1.1em;font-weight:700;margin:1.2em 0 .5em;color:var(--text);}
+#book-body p{margin-bottom:1em;color:var(--text);}
+#book-body ul,#book-body ol{margin:0 0 1em 1.4em;color:var(--text);}
+#book-body li{margin-bottom:.4em;}
+#book-body blockquote{border-left:3px solid var(--c);padding:10px 16px;margin:1.2em 0;background:var(--bg2);border-radius:0 var(--radius-sm) var(--radius-sm) 0;font-style:italic;color:var(--mu);}
+#book-body strong{color:var(--text);font-weight:600;}
 .hidden{display:none !important;}
 .mt-8{margin-top:8px;}.mt-16{margin-top:16px;}.mb-8{margin-bottom:8px;}.mb-16{margin-bottom:16px;}
 .text-center{text-align:center;}.text-mu{color:var(--mu);font-size:13px;}
@@ -1580,12 +1587,340 @@ function toggleMed(){
 }
 
 /* ============ LIBRO ============ */
+/* ============ LIBRO \u2014 LECTOR INTEGRADO ============ */
+const BOOK={
+  phases:[
+    {
+      id:1,color:"var(--phase1)",hex:"#39A1C9",
+      name_es:"FASE 1 \u2014 GRATITUD",name_en:"PHASE 1 \u2014 GRATITUDE",
+      keyword:"UNCOVER",weeks:"Semanas 1-4",
+      chapters:[
+        {
+          id:"1-1",
+          title_es:"El Punto de Partida",title_en:"The Starting Point",
+          time:5,
+          body_es:`<p>Antes de construir, necesitas ver. El primer paso del m\u00E9todo MAAT no es actuar, es <strong>descubrir</strong>. La mayor\u00EDa de las personas viven en piloto autom\u00E1tico: toman decisiones desde h\u00E1bitos inconscientes, reacciones heredadas y creencias que nunca eligieron.</p>
+<p>La Fase 1 interrumpe ese automatismo. Durante cuatro semanas, entrenas tu atenci\u00F3n para ver con claridad: qui\u00E9n eres hoy, qu\u00E9 est\u00E1s construyendo realmente, y desde qu\u00E9 estado interior est\u00E1s operando.</p>
+<h4>La pregunta fundamental</h4>
+<p>Todo comienza con una pregunta honesta: <em>\u00BFQui\u00E9n est\u00E1s siendo cuando nadie te ve?</em></p>
+<p>No qui\u00E9n quieres ser. No qui\u00E9n dices que eres. Qui\u00E9n eres en tus decisiones cotidianas, en c\u00F3mo tratas a las personas, en lo que toleras, en lo que evitas.</p>
+<blockquote>"El conocimiento de uno mismo es el principio de toda sabidur\u00EDa." \u2014 Arist\u00F3teles</blockquote>`,
+          body_en:`<p>Before building, you need to see. The first step of the MAAT method is not to act, it is to <strong>discover</strong>. Most people live on autopilot: making decisions from unconscious habits, inherited reactions, and beliefs they never chose.</p>
+<p>Phase 1 interrupts that automatism. For four weeks, you train your attention to see clearly: who you are today, what you are really building, and from what inner state you are operating.</p>
+<h4>The fundamental question</h4>
+<p>Everything begins with an honest question: <em>Who are you being when no one is watching?</em></p>
+<blockquote>"Self-knowledge is the beginning of all wisdom." \u2014 Aristotle</blockquote>`
+        },
+        {
+          id:"1-2",
+          title_es:"La Calibraci\u00F3n como Ritual",title_en:"Calibration as Ritual",
+          time:6,
+          body_es:`<p>Un piloto no sale a volar sin revisar sus instrumentos. Un cirujano no opera sin conocer el historial del paciente. Un atleta no compite sin conocer su estado f\u00EDsico. T\u00FA no puedes vivir tu mejor d\u00EDa sin saber desde d\u00F3nde lo est\u00E1s comenzando.</p>
+<p>La <strong>calibraci\u00F3n diaria</strong> es el ritual m\u00E1s poderoso del m\u00E9todo MAAT. Son tres preguntas, dos minutos, y un h\u00E1bito que transforma la manera en que abordas cada d\u00EDa.</p>
+<h4>Las tres preguntas</h4>
+<ol>
+<li><strong>\u00BFPor qu\u00E9 estoy genuinamente agradecido hoy?</strong> \u2014 La gratitud no es optimismo forzado. Es un acto cognitivo que entrena al cerebro a buscar recursos en lugar de amenazas.</li>
+<li><strong>\u00BFQu\u00E9 creencia va a liderar mi d\u00EDa?</strong> \u2014 Cada d\u00EDa opera desde una creencia dom\u00EDnante. Si no la eliges t\u00FA, la elige el entorno.</li>
+<li><strong>\u00BFQu\u00E9 estoy evitando enfrentar hoy?</strong> \u2014 La evitaci\u00F3n es la principal causa del estancamiento. Nombrarlo es el primer paso para resolverlo.</li>
+</ol>
+<p>El nivel de actitud que registras al final (1-10) no es una nota. Es un <em>termostato interior</em>: te dice desde qu\u00E9 energ\u00EDa est\u00E1s eligiendo operar.</p>`,
+          body_en:`<p>A pilot does not fly without checking instruments. A surgeon does not operate without knowing the patient's history. You cannot live your best day without knowing where you are starting from.</p>
+<p>The <strong>daily calibration</strong> is the most powerful ritual of the MAAT method. Three questions, two minutes, one habit that transforms how you approach every day.</p>
+<h4>The three questions</h4>
+<ol>
+<li><strong>What am I genuinely grateful for today?</strong> \u2014 Gratitude is not forced optimism. It is a cognitive act that trains the brain to seek resources instead of threats.</li>
+<li><strong>What belief will lead my day?</strong> \u2014 Every day operates from a dominant belief. If you do not choose it, your environment will.</li>
+<li><strong>What am I avoiding facing today?</strong> \u2014 Avoidance is the main cause of stagnation. Naming it is the first step to solving it.</li>
+</ol>`
+        },
+        {
+          id:"1-3",
+          title_es:"El Sistema de Creencias",title_en:"The Belief System",
+          time:7,
+          body_es:`<p>Tus creencias son el c\u00F3digo fuente de tu vida. Determinan lo que percibes como posible, lo que toleras, lo que persigues, y c\u00F3mo interpretas cada experiencia.</p>
+<p>El problema no es tener creencias limitantes \u2014 todos las tenemos. El problema es no verlas.</p>
+<h4>Las cinco categor\u00EDas</h4>
+<ul>
+<li><strong style="color:#D76B6E">Supervivencia</strong> \u2014 Creencias que operan desde el miedo. Protegen pero paralizan: "No soy suficiente", "El mundo es peligroso".</li>
+<li><strong style="color:#EBA055">Limitante</strong> \u2014 Creencias que reducen tu campo de acci\u00F3n: "Yo no sirvo para eso", "La gente como yo no llega tan lejos".</li>
+<li><strong style="color:#8892a4">Neutral</strong> \u2014 Creencias descriptivas sin carga emocional fuerte.</li>
+<li><strong style="color:#39A1C9">Elegida</strong> \u2014 Creencias que has decidido adoptar conscientemente como parte de tu identidad.</li>
+<li><strong style="color:#7DCD93">Expansiva</strong> \u2014 Creencias que abren posibilidades y multiplican tu energ\u00EDa: "Estoy hecho para esto", "Cada obst\u00E1culo me hace mejor".</li>
+</ul>
+<p>El ejercicio de esta fase es simple: empieza a <em>ver</em> tus creencias. Reg\u00EDstralas. Clasif\u00EDcalas. No las juzgues. El primer paso del cambio es la consciencia.</p>
+<blockquote>"El hombre no es perturbado por los eventos, sino por las opiniones que tiene sobre ellos." \u2014 Epicteto</blockquote>`,
+          body_en:`<p>Your beliefs are the source code of your life. They determine what you perceive as possible, what you tolerate, what you pursue, and how you interpret every experience.</p>
+<h4>The five categories</h4>
+<ul>
+<li><strong style="color:#D76B6E">Survival</strong> \u2014 Beliefs that operate from fear. They protect but paralyze.</li>
+<li><strong style="color:#EBA055">Limiting</strong> \u2014 Beliefs that reduce your field of action.</li>
+<li><strong style="color:#8892a4">Neutral</strong> \u2014 Descriptive beliefs without strong emotional charge.</li>
+<li><strong style="color:#39A1C9">Chosen</strong> \u2014 Beliefs you have consciously decided to adopt.</li>
+<li><strong style="color:#7DCD93">Expansive</strong> \u2014 Beliefs that open possibilities and multiply your energy.</li>
+</ul>
+<blockquote>"Man is not disturbed by events, but by the opinions he has about them." \u2014 Epictetus</blockquote>`
+        }
+      ]
+    },
+    {
+      id:2,color:"var(--phase2)",hex:"#EBA055",
+      name_es:"FASE 2 \u2014 AMOR",name_en:"PHASE 2 \u2014 LOVE",
+      keyword:"REWRITE",weeks:"Semanas 5-8",
+      chapters:[
+        {
+          id:"2-1",
+          title_es:"Reescribir la Historia",title_en:"Rewriting the Story",
+          time:6,
+          body_es:`<p>Si la Fase 1 fue sobre ver, la Fase 2 es sobre <strong>elegir cu\u00E1l historia sigues contando</strong>. Cada persona tiene una narrativa interna: el relato que se hace sobre qui\u00E9n es, qu\u00E9 merece, qu\u00E9 puede lograr.</p>
+<p>El <strong>amor</strong> en este contexto no es sentimentalismo. Es la decisi\u00F3n radical de relacionarte contigo mismo desde la elecci\u00F3n y no desde el juicio. Es el motor que hace sostenible cualquier transformaci\u00F3n.</p>
+<h4>Por qu\u00E9 el amor es el motor del alto rendimiento</h4>
+<p>La autocr\u00EDtica sin compasi\u00F3n no produce excelencia \u2014 produce agotamiento. Los profesionales de alto rendimiento que sostienen resultados en el tiempo no lo hacen a base de flagelarse. Lo hacen desde una relaci\u00F3n de alta exigencia y alta compasi\u00F3n consigo mismos.</p>
+<blockquote>"No puedes dar lo que no tienes. Y no puedes construir desde un lugar que desprecias." \u2014 M\u00E9todo MAAT</blockquote>`,
+          body_en:`<p>If Phase 1 was about seeing, Phase 2 is about <strong>choosing which story you keep telling</strong>. Every person has an internal narrative: the story they tell about who they are, what they deserve, what they can achieve.</p>
+<p><strong>Love</strong> in this context is not sentimentality. It is the radical decision to relate to yourself from choice, not judgment. It is the engine that makes any transformation sustainable.</p>
+<blockquote>"You cannot give what you do not have. And you cannot build from a place you despise." \u2014 MAAT Method</blockquote>`
+        },
+        {
+          id:"2-2",
+          title_es:"El Statement de Vida",title_en:"The Life Statement",
+          time:5,
+          body_es:`<p>Tu <strong>statement de vida</strong> no es un eslogan motivacional. Es una declaraci\u00F3n de identidad: qui\u00E9n eliges ser independientemente de las circunstancias.</p>
+<p>La diferencia entre un objetivo y un statement es fundamental. Un objetivo describe lo que quieres tener o hacer. Un statement describe qui\u00E9n eres. Y las personas act\u00FAan consistentemente con su identidad \u2014 no con sus metas.</p>
+<h4>C\u00F3mo construir tu statement</h4>
+<p>Un buen statement responde estas preguntas en una sola declaraci\u00F3n:</p>
+<ul>
+<li>\u00BFQui\u00E9n elijo ser?</li>
+<li>\u00BFDesde qu\u00E9 valores opero?</li>
+<li>\u00BFCu\u00E1l es mi contribuci\u00F3n al mundo?</li>
+</ul>
+<p>Ejemplo: <em>"Soy un l\u00EDder que transforma entornos desde la honestidad y la calma. Mi presencia eleva a los que me rodean. Construyo legado a trav\u00E9s de la coherencia."</em></p>
+<p>Escribir tu statement y leerlo cada d\u00EDa no es un ritual m\u00EDstico. Es <strong>programaci\u00F3n intencional</strong> de tu sistema de filtraci\u00F3n cognitiva.</p>`,
+          body_en:`<p>Your <strong>life statement</strong> is not a motivational slogan. It is an identity declaration: who you choose to be regardless of circumstances.</p>
+<p>The difference between a goal and a statement is fundamental. A goal describes what you want to have or do. A statement describes who you are. And people act consistently with their identity \u2014 not their goals.</p>
+<h4>How to build your statement</h4>
+<ul>
+<li>Who do I choose to be?</li>
+<li>From what values do I operate?</li>
+<li>What is my contribution to the world?</li>
+</ul>
+<p>Writing your statement and reading it daily is <strong>intentional programming</strong> of your cognitive filtering system.</p>`
+        }
+      ]
+    },
+    {
+      id:3,color:"var(--phase3)",hex:"#7DCD93",
+      name_es:"FASE 3 \u2014 INTENCI\u00D3N",name_en:"PHASE 3 \u2014 INTENTION",
+      keyword:"REBUILD",weeks:"Semanas 9-12",
+      chapters:[
+        {
+          id:"3-1",
+          title_es:"La Arquitectura de los H\u00E1bitos",title_en:"The Architecture of Habits",
+          time:7,
+          body_es:`<p>En la Fase 3, dejas de solo observar y reescribir. Empiezas a <strong>construir</strong>. Y la herramienta m\u00E1s poderosa para construir una identidad es el h\u00E1bito.</p>
+<p>Un h\u00E1bito no es simplemente una acci\u00F3n repetida. Es una declaraci\u00F3n de qui\u00E9n eres. Cada vez que haces ejercicio, est\u00E1s votando por la identidad de "persona que cuida su cuerpo". Cada vez que lees, est\u00E1s votando por "persona que aprende". Los h\u00E1bitos son votos de identidad acumulados.</p>
+<h4>Dise\u00F1ando h\u00E1bitos que se sostienen</h4>
+<p>La mayor\u00EDa de las personas fracasan con los h\u00E1bitos porque los dise\u00F1an mal. Los errores m\u00E1s comunes:</p>
+<ul>
+<li><strong>Demasiado grandes al inicio.</strong> Un h\u00E1bito de 2 minutos que se sostiene vale m\u00E1s que uno de 2 horas que se abandona.</li>
+<li><strong>Sin anclaje.</strong> Un h\u00E1bito necesita un disparador claro: \u00BFdesppu\u00E9s de qu\u00E9 lo haces?</li>
+<li><strong>Sin seguimiento.</strong> Lo que no se mide no existe. El \u00EDndice de coherencia en MAAT es tu sistema de seguimiento.</li>
+</ul>
+<h4>El \u00EDndice de coherencia</h4>
+<p>La coherencia no mide perfeccionismo. Mide la brecha entre qui\u00E9n dices que eres y c\u00F3mo vives. Un 70% de coherencia no es fracaso \u2014 es datos. Te dice qu\u00E9 ajustar, no por qu\u00E9 castigarte.</p>`,
+          body_en:`<p>In Phase 3, you stop just observing and rewriting. You start <strong>building</strong>. And the most powerful tool for building an identity is habit.</p>
+<p>A habit is not simply a repeated action. It is a declaration of who you are. Every time you exercise, you vote for the identity of "person who takes care of their body."</p>
+<h4>Designing habits that last</h4>
+<ul>
+<li><strong>Too big at the start.</strong> A 2-minute habit that holds is worth more than a 2-hour one that is abandoned.</li>
+<li><strong>No anchor.</strong> A habit needs a clear trigger: after what do you do it?</li>
+<li><strong>No tracking.</strong> What is not measured does not exist.</li>
+</ul>`
+        },
+        {
+          id:"3-2",
+          title_es:"Coherencia vs. Perfeccionismo",title_en:"Coherence vs. Perfectionism",
+          time:5,
+          body_es:`<p>El perfeccionismo es el enemigo disfrazado de excelencia. Parece que te ayuda a mejorar, pero en realidad paraliza. Exige que todo sea perfecto antes de empezar, y castiga cualquier desliz como un fracaso total.</p>
+<p>La <strong>coherencia</strong> opera de manera diferente. No pregunta "\u00BFfui perfecto?". Pregunta "\u00BFestuve alineado con qui\u00E9n quiero ser?"</p>
+<h4>La regla del nunca dos veces</h4>
+<p>James Clear lo expresa perfectamente: el primer error no te destruye. El segundo s\u00ED puede iniciar un patr\u00F3n. Si pierdes un d\u00EDa de h\u00E1bito, nunca pierdas dos seguidos. Esa es la regla m\u00E1s pr\u00E1ctica del sistema MAAT.</p>
+<p>La coherencia del 80% sostenida durante 16 semanas produce m\u00E1s resultados que la perfeccion del 100% durante 3 semanas y el abandono.</p>
+<blockquote>"No tienes que hacerlo perfecto. Tienes que hacerlo tuyo." \u2014 M\u00E9todo MAAT</blockquote>`,
+          body_en:`<p>Perfectionism is the enemy disguised as excellence. It seems to help you improve, but it actually paralyzes. It demands everything be perfect before starting, and punishes any slip as total failure.</p>
+<p><strong>Coherence</strong> operates differently. It does not ask "was I perfect?" It asks "was I aligned with who I want to be?"</p>
+<h4>The never-twice rule</h4>
+<p>If you miss one day of a habit, never miss two in a row. That is the most practical rule of the MAAT system.</p>
+<blockquote>"You do not have to do it perfectly. You have to make it yours." \u2014 MAAT Method</blockquote>`
+        }
+      ]
+    },
+    {
+      id:4,color:"var(--phase4)",hex:"#89608E",
+      name_es:"FASE 4 \u2014 VOLUNTAD",name_en:"PHASE 4 \u2014 WILL",
+      keyword:"INTEGRATE",weeks:"Semanas 13-16",
+      chapters:[
+        {
+          id:"4-1",
+          title_es:"No Fuerza \u2014 Coherencia",title_en:"Not Force \u2014 Coherence",
+          time:6,
+          body_es:`<p>Llegaste a la Fase 4. Has visto qui\u00E9n eres (UNCOVER), has reescrito tu historia (REWRITE), has construido nuevos h\u00E1bitos (REBUILD). Ahora viene lo m\u00E1s profundo: <strong>integrar todo en una forma de ser.</strong></p>
+<p>La voluntad que MAAT propone no es la fuerza de voluntad convencional \u2014 ese recurso limitado que se agota. Es algo diferente: la capacidad de operar desde tu identidad elegida incluso cuando el entorno presiona en otra direcci\u00F3n.</p>
+<h4>La diferencia entre fuerza y coherencia</h4>
+<p>La fuerza dice: "Debo hacer esto aunque no quiera."<br>La coherencia dice: "Hago esto porque es quien soy."</p>
+<p>Cuando un h\u00E1bito opera desde la identidad, ya no requiere fuerza de voluntad. Se convierte en una expresi\u00F3n natural de quien eres. Ese es el estado al que aspira la Fase 4.</p>
+<blockquote>"Primero formamos nuestros h\u00E1bitos, luego nuestros h\u00E1bitos nos forman a nosotros." \u2014 John Dryden</blockquote>`,
+          body_en:`<p>You have arrived at Phase 4. You have seen who you are (UNCOVER), rewritten your story (REWRITE), built new habits (REBUILD). Now comes the deepest part: <strong>integrating everything into a way of being.</strong></p>
+<h4>The difference between force and coherence</h4>
+<p>Force says: "I must do this even if I do not want to."<br>Coherence says: "I do this because it is who I am."</p>
+<p>When a habit operates from identity, it no longer requires willpower. It becomes a natural expression of who you are.</p>
+<blockquote>"First we form our habits, then our habits form us." \u2014 John Dryden</blockquote>`
+        },
+        {
+          id:"4-2",
+          title_es:"El Legado como Brujula",title_en:"Legacy as a Compass",
+          time:5,
+          body_es:`<p>La pregunta final del m\u00E9todo MAAT no es "\u00BFqu\u00E9 lograr\u00E9?" sino <strong>"\u00BFqu\u00E9 quiero que digan cuando ya no est\u00E9?"</strong></p>
+<p>El legado no es lo que dejas cuando mueres. Es lo que construyes cada d\u00EDa con la forma en que tratas a las personas, las decisiones que tomas, la integridad con la que operas.</p>
+<h4>Integraci\u00F3n final</h4>
+<p>Al completar las 16 semanas, tienes en tus manos un sistema completo:</p>
+<ul>
+<li>Un ritual diario de calibraci\u00F3n que mantiene tu mente orientada</li>
+<li>Un mapa de creencias que puedes actualizar conscientemente</li>
+<li>Un sistema de h\u00E1bitos alineado con tu identidad</li>
+<li>Un statement que te ancla cuando el entorno presiona</li>
+<li>Un \u00EDndice de coherencia que mide lo que realmente importa</li>
+</ul>
+<p>Esto no termina con la semana 16. Empieza aqu\u00ED.</p>
+<blockquote>"El viaje de mil millas comienza con un solo paso." \u2014 Lao-Tse</blockquote>`,
+          body_en:`<p>The final question of the MAAT method is not "what will I achieve?" but <strong>"what do I want them to say when I am gone?"</strong></p>
+<p>Legacy is not what you leave when you die. It is what you build every day with how you treat people, the decisions you make, the integrity with which you operate.</p>
+<h4>Final integration</h4>
+<p>Upon completing the 16 weeks, you have a complete system in your hands:</p>
+<ul>
+<li>A daily calibration ritual that keeps your mind oriented</li>
+<li>A belief map you can update consciously</li>
+<li>A habit system aligned with your identity</li>
+<li>A statement that anchors you when the environment pressures</li>
+<li>A coherence index that measures what truly matters</li>
+</ul>
+<blockquote>"A journey of a thousand miles begins with a single step." \u2014 Lao Tzu</blockquote>`
+        }
+      ]
+    }
+  ]
+};
+
+let _bookPhase=1,_bookChapter=null,_bookFontSize=16;
+
 function renderLibro(){
+  const readKey='maat-book-read-'+(user?.id||'x');
+  let readSet;
+  try{readSet=new Set(JSON.parse(localStorage.getItem(readKey)||'[]'));}catch(e){readSet=new Set();}
+
+  const ph=BOOK.phases.find(p=>p.id===_bookPhase)||BOOK.phases[0];
+  const totalChapters=BOOK.phases.reduce((s,p)=>s+p.chapters.length,0);
+  const readCount=readSet.size;
+
   document.getElementById("v-libro").innerHTML=`
-    <div class="sv-header"><button class="btn-back" onclick="gv('v-mas')">\u2039</button><h2>${t("book_title")}</h2></div>
-    <p style="font-size:14px;color:var(--mu);margin:0 0 16px;line-height:1.6;">${lang==='es'?'El libro MAAT es el fundamento conceptual de tu proceso. En \u00E9l encontrar\u00E1s el marco te\u00F3rico detr\u00E1s de cada herramienta, ejercicio y semana del programa. Leerlo te da contexto, profundidad y una comprensi\u00F3n m\u00E1s clara de por qu\u00E9 haces lo que haces.':'The MAAT book is the conceptual foundation of your process. In it you will find the theoretical framework behind every tool, exercise, and program week. Reading it gives you context, depth, and a clearer understanding of why you do what you do.'}</p>
-    <div class="card text-center"><p class="mb-8">\u{1F4D6}</p><a href="https://somosmaat.org/wp-content/uploads/2025/12/001.-Preview_Maat_Libro_Espanol.pdf" target="_blank" style="color:var(--c);font-weight:500;">${lang==="es"?"Abrir libro en nueva pesta\u00F1a":"Open book in new tab"}</a></div>
+    <div class="sv-header">
+      <button class="btn-back" onclick="gv('v-mas')">\u2039</button>
+      <h2>${lang==='es'?'Libro MAAT':'MAAT Book'}</h2>
+      <span style="margin-left:auto;font-size:12px;color:var(--mu);background:var(--bg2);padding:4px 10px;border-radius:12px;">${readCount}/${totalChapters} \u2713</span>
+    </div>
+
+    <!-- PHASE TABS -->
+    <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:16px;scrollbar-width:none;">
+      ${BOOK.phases.map(p=>`
+        <button onclick="_bookPhase=${p.id};renderLibro()" style="flex-shrink:0;padding:8px 14px;border-radius:20px;border:1px solid ${_bookPhase===p.id?p.hex:'var(--bd)'};background:${_bookPhase===p.id?p.hex+'22':'var(--bg2)'};color:${_bookPhase===p.id?p.hex:'var(--mu)'};font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:var(--font-title);letter-spacing:.5px;">
+          ${lang==='es'?p.name_es.split('\u2014')[1]?.trim()||p.name_es:p.name_en.split('\u2014')[1]?.trim()||p.name_en}
+        </button>
+      `).join('')}
+    </div>
+
+    <!-- PHASE HEADER -->
+    <div style="padding:16px;background:${ph.hex}18;border:1px solid ${ph.hex}44;border-radius:var(--radius);margin-bottom:16px;">
+      <div style="font-family:var(--font-title);font-size:11px;letter-spacing:2px;color:${ph.color};margin-bottom:4px;">${ph.keyword} \u00B7 ${ph.weeks}</div>
+      <div style="font-family:var(--font-title);font-size:20px;font-weight:700;color:${ph.color};">${lang==='es'?ph.name_es:ph.name_en}</div>
+    </div>
+
+    <!-- CHAPTER LIST -->
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      ${ph.chapters.map(ch=>{
+        const isRead=readSet.has(ch.id);
+        return`<div onclick="_bookChapter='${ch.id}';_bookPhase=${ph.id};openBookChapter()" style="background:var(--bg2);border:1px solid ${isRead?ph.hex+'66':'var(--bd)'};border-radius:var(--radius-sm);padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:all .15s;">
+          <div style="width:28px;height:28px;border-radius:50%;border:2px solid ${isRead?ph.hex:'var(--bd)'};background:${isRead?ph.hex+'22':'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0;color:${isRead?ph.hex:'var(--mu)'};font-size:14px;">${isRead?'\u2713':''}</div>
+          <div style="flex:1;">
+            <div style="font-weight:600;font-size:14px;margin-bottom:2px;">${lang==='es'?ch.title_es:ch.title_en}</div>
+            <div style="font-size:12px;color:var(--mu);">${ch.time} min \u00B7 ${isRead?(lang==='es'?'Le\u00EDdo':'Read'):(lang==='es'?'Sin leer':'Unread')}</div>
+          </div>
+          <span style="color:var(--mu);font-size:18px;">\u203A</span>
+        </div>`;
+      }).join('')}
+    </div>
   `;
+}
+
+function openBookChapter(){
+  const ph=BOOK.phases.find(p=>p.id===_bookPhase);
+  if(!ph)return;
+  const ch=ph.chapters.find(c=>c.id===_bookChapter);
+  if(!ch)return;
+  const readKey='maat-book-read-'+(user?.id||'x');
+  let readSet;
+  try{readSet=new Set(JSON.parse(localStorage.getItem(readKey)||'[]'));}catch(e){readSet=new Set();}
+  const isRead=readSet.has(ch.id);
+  const body=lang==='es'?ch.body_es:ch.body_en;
+  const allChapters=BOOK.phases.flatMap(p=>p.chapters.map(c=>({...c,phaseId:p.id})));
+  const idx=allChapters.findIndex(c=>c.id===ch.id);
+  const prev=allChapters[idx-1];
+  const next=allChapters[idx+1];
+
+  document.getElementById("v-libro").innerHTML=`
+    <!-- READING HEADER -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
+      <button style="background:none;border:none;color:var(--c);font-size:22px;cursor:pointer;padding:8px;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;" onclick="renderLibro()">\u2039</button>
+      <div style="flex:1;">
+        <div style="font-size:11px;color:${ph.color};font-family:var(--font-title);font-weight:600;letter-spacing:1px;">${lang==='es'?ph.name_es:ph.name_en}</div>
+        <div style="font-size:16px;font-weight:700;">${lang==='es'?ch.title_es:ch.title_en}</div>
+      </div>
+    </div>
+
+    <!-- FONT CONTROLS -->
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-bottom:20px;">
+      <span style="font-size:12px;color:var(--mu);">Aa</span>
+      <button onclick="_bookFontSize=Math.max(13,_bookFontSize-1);document.getElementById('book-body').style.fontSize=_bookFontSize+'px'" style="width:28px;height:28px;border:1px solid var(--bd);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer;font-size:16px;">-</button>
+      <button onclick="_bookFontSize=Math.min(22,_bookFontSize+1);document.getElementById('book-body').style.fontSize=_bookFontSize+'px'" style="width:28px;height:28px;border:1px solid var(--bd);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer;font-size:16px;">+</button>
+      <span style="font-size:12px;color:var(--mu);">${ch.time} min</span>
+    </div>
+
+    <!-- BOOK BODY -->
+    <div id="book-body" style="font-size:${_bookFontSize}px;line-height:1.85;color:var(--text);padding-bottom:24px;">
+      ${body}
+    </div>
+
+    <!-- MARK AS READ -->
+    <div style="padding:16px 0;border-top:1px solid var(--bd);margin-top:8px;display:flex;flex-direction:column;gap:10px;">
+      <button onclick="markChapterRead('${ch.id}')" style="width:100%;padding:14px;border:none;border-radius:var(--radius-sm);background:${isRead?'var(--bg2)':'var(--m)'};color:${isRead?'var(--mu)':'#fff'};font-family:var(--font-title);font-size:15px;font-weight:600;letter-spacing:1px;cursor:pointer;" id="btn-mark-read">
+        ${isRead?(lang==='es'?'\u2713 Le\u00EDdo':'\u2713 Read'):(lang==='es'?'Marcar como le\u00EDdo':'Mark as read')}
+      </button>
+      <div style="display:flex;gap:8px;">
+        ${prev?`<button onclick="_bookChapter='${prev.id}';_bookPhase=${prev.phaseId};openBookChapter()" style="flex:1;padding:10px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--bg2);color:var(--text);cursor:pointer;font-size:13px;">\u2190 ${lang==='es'?'Anterior':'Previous'}</button>`:'<div style="flex:1;"></div>'}
+        ${next?`<button onclick="_bookChapter='${next.id}';_bookPhase=${next.phaseId};openBookChapter()" style="flex:1;padding:10px;border:1px solid ${ph.hex};border-radius:var(--radius-sm);background:${ph.hex}22;color:${ph.color};cursor:pointer;font-size:13px;font-weight:600;">${lang==='es'?'Siguiente':'Next'} \u2192</button>`:'<div style="flex:1;"></div>'}
+      </div>
+    </div>
+  `;
+  document.querySelector('.main-content')?.scrollTo({top:0,behavior:'instant'});
+}
+
+function markChapterRead(chId){
+  const readKey='maat-book-read-'+(user?.id||'x');
+  let readSet;
+  try{readSet=new Set(JSON.parse(localStorage.getItem(readKey)||'[]'));}catch(e){readSet=new Set();}
+  readSet.add(chId);
+  try{localStorage.setItem(readKey,JSON.stringify([...readSet]));}catch(e){}
+  const btn=document.getElementById('btn-mark-read');
+  if(btn){btn.style.background='var(--bg2)';btn.style.color='var(--mu)';btn.textContent=lang==='es'?'\u2713 Le\u00EDdo':'\u2713 Read';}
+  toast(lang==='es'?'Cap\u00EDtulo marcado como le\u00EDdo \u2713':'Chapter marked as read \u2713','ok');
 }
 
 /* ============ DAILY MAAT ============ */
