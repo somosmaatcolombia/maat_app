@@ -281,6 +281,11 @@ label.field-label{display:block;font-size:14px;color:var(--mu);margin-bottom:6px
 .spinner{display:inline-block;width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
 /* BOOK READER */
+/* PDF FULLSCREEN */
+#v-pdf:fullscreen,#v-pdf:-webkit-full-screen{background:var(--bg);padding:16px;overflow-y:auto;}
+#v-pdf:fullscreen #pdf-container,#v-pdf:-webkit-full-screen #pdf-container{height:calc(100vh - 120px);overflow:auto;}
+#v-pdf:fullscreen #pdf-canvas,#v-pdf:-webkit-full-screen #pdf-canvas{max-width:100%;}
+/* BOOK READER */
 #book-body h4{font-family:var(--font-title);font-size:1.1em;font-weight:700;margin:1.2em 0 .5em;color:var(--text);}
 #book-body p{margin-bottom:1em;color:var(--text);}
 #book-body ul,#book-body ol{margin:0 0 1em 1.4em;color:var(--text);}
@@ -1945,6 +1950,7 @@ function renderPDF(){
       <div style="display:flex;align-items:center;gap:6px;">
         <button onclick="pdfZoom(-0.2)" style="width:34px;height:34px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--text);cursor:pointer;font-size:18px;">-</button>
         <button onclick="pdfZoom(0.2)" style="width:34px;height:34px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--text);cursor:pointer;font-size:18px;">+</button>
+        <button id="pdf-fs-btn" onclick="pdfToggleFullscreen()" title="${lang==='es'?'Pantalla completa':'Fullscreen'}" style="width:34px;height:34px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--text);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;">&#x26F6;</button>
         <a href="${PDF_URL}" download style="width:34px;height:34px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--text);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;text-decoration:none;">\u2193</a>
       </div>
     </div>
@@ -2054,6 +2060,33 @@ function updateThumbActive(num){
 function pdfPrev(){if(_pdfPage>1){pdfRenderPage(_pdfPage-1);updateThumbActive(_pdfPage-1);}}
 function pdfNext(){if(_pdfPage<_pdfTotal){pdfRenderPage(_pdfPage+1);updateThumbActive(_pdfPage+1);}}
 function pdfZoom(d){_pdfScale=Math.min(3,Math.max(0.6,_pdfScale+d));pdfRenderPage(_pdfPage);}
+function pdfToggleFullscreen(){
+  const el=document.getElementById('v-pdf');
+  if(!el)return;
+  const isFS=!!(document.fullscreenElement||document.webkitFullscreenElement||document.mozFullScreenElement);
+  if(!isFS){
+    const req=el.requestFullscreen||el.webkitRequestFullscreen||el.mozRequestFullScreen;
+    if(req)req.call(el);
+  }else{
+    const ex=document.exitFullscreen||document.webkitExitFullscreen||document.mozCancelFullScreen;
+    if(ex)ex.call(document);
+  }
+}
+// Actualiza icono y escala al entrar/salir de pantalla completa
+document.addEventListener('fullscreenchange',_pdfFSChange);
+document.addEventListener('webkitfullscreenchange',_pdfFSChange);
+function _pdfFSChange(){
+  const isFS=!!(document.fullscreenElement||document.webkitFullscreenElement);
+  const btn=document.getElementById('pdf-fs-btn');
+  if(btn)btn.innerHTML=isFS?'&#x2715;':'&#x26F6;';
+  const container=document.getElementById('pdf-container');
+  if(container){
+    container.style.height=isFS?'calc(100vh - 120px)':'auto';
+    container.style.overflow=isFS?'auto':'visible';
+  }
+  // Re-render para ajustar al nuevo ancho
+  setTimeout(()=>pdfRenderPage(_pdfPage),150);
+}
 function showPDFError(msg){
   const err=document.getElementById('pdf-error');
   const loading=document.getElementById('pdf-loading');
