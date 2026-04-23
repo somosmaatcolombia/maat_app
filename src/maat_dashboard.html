@@ -635,8 +635,10 @@ async function doAuth(){
 
 async function doLogout(){
   if(_realtimeSub){sb.removeChannel(_realtimeSub);_realtimeSub=null;}
+  if(_notifTimer){clearInterval(_notifTimer);_notifTimer=null;}
   await sb.auth.signOut();
-  user=null;prof=null;cals=[];bels=[];wkp={};ht={};sh=null;chatHistory=[];_appReady=false;
+  user=null;prof=null;cals=[];bels=[];wkp={};ht={};sh=null;chatHistory=[];
+  mentorNotes=[];mentorWhatsapp=null;aiCfg={};_appReady=false;
   document.getElementById("app").style.display="none";
   document.getElementById("auth-screen").classList.add("visible");
 }
@@ -801,32 +803,35 @@ async function loadData(){
 }
 
 /* ============ NAVIGATION ============ */
-function gv(viewId){
+const _mainViews=new Set(["v-home","v-calib","v-habitos","v-coach","v-mas"]);
+function nav(id){
   document.querySelector('.main-content')?.scrollTo({top:0,behavior:'instant'});
   document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
-  const el=document.getElementById(viewId);if(el)el.classList.add("active");
-  document.querySelectorAll(".nav-item").forEach(n=>{const isActive=n.dataset.view===viewId;n.classList.toggle("active",isActive);n.setAttribute("aria-current",isActive?"page":"false");});
-  if(viewId==="v-home")renderHome();
-  else if(viewId==="v-calib")renderCalib();
-  else if(viewId==="v-habitos"){_habViewWeek=hwk;renderHabits();}// FIX: reset view week on nav
-  else if(viewId==="v-coach")renderCoach();
-  else if(viewId==="v-mas")renderMas();
+  const el=document.getElementById(id);if(el)el.classList.add("active");
+  const isMain=_mainViews.has(id);
+  document.querySelectorAll(".nav-item").forEach(n=>{
+    const active=isMain&&n.dataset.view===id;
+    n.classList.toggle("active",active);
+    n.setAttribute("aria-current",active?"page":"false");
+  });
+  if(id==="v-home")renderHome();
+  else if(id==="v-calib")renderCalib();
+  else if(id==="v-habitos"){_habViewWeek=hwk;renderHabits();}
+  else if(id==="v-coach")renderCoach();
+  else if(id==="v-mas")renderMas();
+  else if(id==="v-progreso")renderProgress();
+  else if(id==="v-creencias")renderBeliefs();
+  else if(id==="v-statement")renderStatement();
+  else if(id==="v-libro")renderLibro();
+  else if(id==="v-pdf")renderPDF();
+  else if(id==="v-historial")renderHistorial();
+  else if(id==="v-meditacion")renderMeditacion();
+  else if(id==="v-dailymaat")renderDailyMaat();
+  else if(id==="v-mentor-notes")renderMentorNotes();
 }
-function gs(subId){
-  document.querySelector('.main-content')?.scrollTo({top:0,behavior:'instant'});
-  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
-  const el=document.getElementById(subId);if(el)el.classList.add("active");
-  document.querySelectorAll(".nav-item").forEach(n=>n.classList.remove("active"));
-  if(subId==="v-progreso")renderProgress();
-  else if(subId==="v-creencias")renderBeliefs();
-  else if(subId==="v-statement")renderStatement();
-  else if(subId==="v-libro")renderLibro();
-  else if(subId==="v-pdf")renderPDF();
-  else if(subId==="v-historial")renderHistorial();
-  else if(subId==="v-meditacion")renderMeditacion();
-  else if(subId==="v-dailymaat")renderDailyMaat();
-  else if(subId==="v-mentor-notes")renderMentorNotes();
-}
+// Aliases para retrocompatibilidad (eliminados en pr\u00F3xima limpieza)
+function gv(id){nav(id);}
+function gs(id){nav(id);}
 
 function applyI18N(){
   document.getElementById("nav-calib").textContent=t("calib_title");
@@ -1267,13 +1272,14 @@ async function sendMsg(){
     if(aiCfg?.system_prompt)body.system=aiCfg.system_prompt;
     const res=await fetch(SU+"/functions/v1/coach-maat",{
       method:"POST",
-      headers:{"Content-Type":"application/json","Authorization":"Bearer "+token,"apikey":SK},
+      headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},
       body:JSON.stringify(body)
     });
     const json=await res.json();
     if(!res.ok){throw new Error(json.error||'Error del servidor ('+res.status+')');}
     const reply=json.reply||json.content||json.message||"...";
     chatHistory.push({role:"assistant",content:reply});
+    if(chatHistory.length>100)chatHistory=chatHistory.slice(-100);
     try{localStorage.setItem("maat-chat-"+user?.id,JSON.stringify(chatHistory.slice(-20)));}catch(e){}
     saveChatServer();
     document.getElementById("typing")?.remove();
@@ -2222,14 +2228,6 @@ async function flushQueue(){
   }
   if(failed>0)toast(lang==='es'?`${failed} cambio(s) no se pudieron sincronizar`:`${failed} change(s) failed to sync`,'err');
   else if(items.length>0){toast(lang==='es'?'Cambios sincronizados':'Changes synced','ok');await loadData();renderHome();}
-}
-async function retryFetch(fn,retries=2,delay=1500){
-  for(let i=0;i<=retries;i++){
-    const result=await fn();
-    if(!result.error)return result;
-    if(i<retries&&!chkAuthErr(result.error))await new Promise(r=>setTimeout(r,delay*(i+1)));
-    else return result;
-  }
 }
 window.addEventListener('online',()=>{
   document.getElementById("offline-banner")?.classList.remove("show");
