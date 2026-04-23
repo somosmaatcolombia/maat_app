@@ -348,7 +348,8 @@ input:focus-visible,textarea:focus-visible,select:focus-visible{outline:none;bor
     <section id="v-progreso" class="view" aria-label="Progreso"></section>
     <section id="v-creencias" class="view" aria-label="Creencias"></section>
     <section id="v-statement" class="view" aria-label="Statement"></section>
-    <section id="v-libro" class="view" aria-label="Libro"></section>
+    <section id="v-libro" class="view" aria-label="El Proceso"></section>
+    <section id="v-pdf" class="view" aria-label="Libro PDF"></section>
     <section id="v-historial" class="view" aria-label="Historial"></section>
     <section id="v-meditacion" class="view" aria-label="Meditaci&oacute;n"></section>
     <section id="v-dailymaat" class="view" aria-label="Daily MAAT"></section>
@@ -440,7 +441,7 @@ const I18N={
     streak:"d\u00EDas seguidos",calib_title:"Calibraci\u00F3n",habits_title:"H\u00E1bitos",
     coach_title:"Coach MAAT IA",coach_placeholder:"Escribe tu mensaje...",
     menu_progress:"MI PROGRESO",menu_beliefs:"CREENCIAS",menu_statement:"MI STATEMENT",
-    menu_book:"LIBRO",menu_history:"HISTORIAL",menu_meditation:"MEDITACI\u00D3N",
+    menu_book:"EL PROCESO",menu_pdf:"LIBRO PDF",menu_history:"HISTORIAL",menu_meditation:"MEDITACI\u00D3N",
     greeting:"Hola,",week_label:"Semana",of:" de 16",
     progress_pct:"Progreso",coherence_pct:"Coherencia",habits_pct:"H\u00E1bitos",attitude_avg:"Actitud",
     phase:"Fase",cta_calib:"Calibra tu d\u00EDa",cta_calib_sub:"3 preguntas \u00B7 2 minutos",
@@ -473,7 +474,7 @@ const I18N={
     streak:"days in a row",calib_title:"Calibration",habits_title:"Habits",
     coach_title:"MAAT AI Coach",coach_placeholder:"Type your message...",
     menu_progress:"MY PROGRESS",menu_beliefs:"BELIEFS",menu_statement:"MY STATEMENT",
-    menu_book:"BOOK",menu_history:"HISTORY",menu_meditation:"MEDITATION",
+    menu_book:"THE PROCESS",menu_pdf:"BOOK PDF",menu_history:"HISTORY",menu_meditation:"MEDITATION",
     greeting:"Hello,",week_label:"Week",of:" of 16",
     progress_pct:"Progress",coherence_pct:"Coherence",habits_pct:"Habits",attitude_avg:"Attitude",
     phase:"Phase",cta_calib:"Calibrate your day",cta_calib_sub:"3 questions \u00B7 2 minutes",
@@ -815,6 +816,7 @@ function gs(subId){
   else if(subId==="v-creencias")renderBeliefs();
   else if(subId==="v-statement")renderStatement();
   else if(subId==="v-libro")renderLibro();
+  else if(subId==="v-pdf")renderPDF();
   else if(subId==="v-historial")renderHistorial();
   else if(subId==="v-meditacion")renderMeditacion();
   else if(subId==="v-dailymaat")renderDailyMaat();
@@ -1310,7 +1312,8 @@ function renderMas(){
       <div class="menu-item" onclick="gs('v-statement')"><div class="menu-icon">\u{1F4DD}</div><div class="menu-label">${t("menu_statement")}</div></div>
       <div class="menu-item" onclick="gs('v-historial')"><div class="menu-icon">\u{1F4CB}</div><div class="menu-label">${t("menu_history")}</div></div>
       <div class="menu-item" onclick="gs('v-meditacion')"><div class="menu-icon">\u{1F9D8}</div><div class="menu-label">${t("menu_meditation")}</div></div>
-      <div class="menu-item" onclick="gs('v-libro')"><div class="menu-icon">\u{1F4D6}</div><div class="menu-label">${t("menu_book")}</div></div>
+      <div class="menu-item" onclick="gs('v-libro')" style="border-color:var(--v);"><div class="menu-icon">\u{1F5FA}\uFE0F</div><div class="menu-label">${t("menu_book")}</div></div>
+      <div class="menu-item" onclick="gs('v-pdf')"><div class="menu-icon">\u{1F4D6}</div><div class="menu-label">${t("menu_pdf")}</div></div>
       <div class="menu-item" onclick="gs('v-dailymaat')" style="border-color:var(--o);"><div class="menu-icon">\u2600\uFE0F</div><div class="menu-label">DAILY MAAT</div></div>
       <div class="menu-item" onclick="contactMentor()" style="border-color:var(--m);background:var(--m)11;"><div class="menu-icon">\u{1F4AC}</div><div class="menu-label">${lang==='es'?'Contactar':'Contact'}</div></div>
       ${mentorNotes.length?`<div class="menu-item" onclick="gs('v-mentor-notes')" style="border-color:var(--c);"><div class="menu-icon">\u{1F4CB}</div><div class="menu-label">${lang==='es'?'NOTAS MENTOR':'MENTOR NOTES'}</div></div>`:''}
@@ -1921,6 +1924,144 @@ function markChapterRead(chId){
   const btn=document.getElementById('btn-mark-read');
   if(btn){btn.style.background='var(--bg2)';btn.style.color='var(--mu)';btn.textContent=lang==='es'?'\u2713 Le\u00EDdo':'\u2713 Read';}
   toast(lang==='es'?'Cap\u00EDtulo marcado como le\u00EDdo \u2713':'Chapter marked as read \u2713','ok');
+}
+
+/* ============ LECTOR PDF ============ */
+const PDF_URL='https://somosmaat.org/wp-content/uploads/2025/12/001.-Preview_Maat_Libro_Espanol.pdf';
+let _pdfDoc=null,_pdfPage=1,_pdfTotal=0,_pdfScale=1.4,_pdfRendering=false;
+
+function renderPDF(){
+  document.getElementById('v-pdf').innerHTML=`
+    <div class="sv-header">
+      <button class="btn-back" onclick="gs('v-mas')" style="background:none;border:none;color:var(--c);font-size:22px;cursor:pointer;padding:8px;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;">\u2039</button>
+      <h2>${lang==='es'?'Libro MAAT':'MAAT Book'}</h2>
+    </div>
+    <div id="pdf-toolbar" style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--radius-sm);padding:10px 14px;">
+      <div style="display:flex;align-items:center;gap:6px;">
+        <button id="pdf-prev" onclick="pdfPrev()" style="width:34px;height:34px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--text);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;">\u2190</button>
+        <span id="pdf-info" style="font-family:var(--font-title);font-size:14px;color:var(--mu);min-width:70px;text-align:center;">${lang==='es'?'Cargando...':'Loading...'}</span>
+        <button id="pdf-next" onclick="pdfNext()" style="width:34px;height:34px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--text);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;">\u2192</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <button onclick="pdfZoom(-0.2)" style="width:34px;height:34px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--text);cursor:pointer;font-size:18px;">-</button>
+        <button onclick="pdfZoom(0.2)" style="width:34px;height:34px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--text);cursor:pointer;font-size:18px;">+</button>
+        <a href="${PDF_URL}" download style="width:34px;height:34px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--text);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;text-decoration:none;">\u2193</a>
+      </div>
+    </div>
+    <div id="pdf-container" style="overflow-x:auto;background:var(--bg);border-radius:var(--radius-sm);border:1px solid var(--bd);min-height:300px;display:flex;align-items:center;justify-content:center;">
+      <div id="pdf-loading" style="padding:40px;text-align:center;">
+        <div style="display:flex;gap:8px;justify-content:center;margin-bottom:12px;">
+          <div style="width:10px;height:10px;border-radius:50%;background:var(--c);animation:bootPulse .8s infinite alternate;"></div>
+          <div style="width:10px;height:10px;border-radius:50%;background:var(--o);animation:bootPulse .8s .15s infinite alternate;"></div>
+          <div style="width:10px;height:10px;border-radius:50%;background:var(--m);animation:bootPulse .8s .3s infinite alternate;"></div>
+        </div>
+        <p style="color:var(--mu);font-size:13px;">${lang==='es'?'Cargando libro...':'Loading book...'}</p>
+      </div>
+      <canvas id="pdf-canvas" style="display:none;max-width:100%;border-radius:var(--radius-sm);box-shadow:0 4px 24px rgba(0,0,0,.4);"></canvas>
+    </div>
+    <div id="pdf-error" style="display:none;padding:20px;text-align:center;color:var(--r);font-size:14px;"></div>
+    <div id="pdf-thumb-row" style="display:flex;gap:8px;overflow-x:auto;padding:12px 0;scrollbar-width:none;"></div>
+  `;
+  _pdfPage=1;
+  loadPDFjs();
+}
+
+function loadPDFjs(){
+  if(window.pdfjsLib){initPDF();return;}
+  const s=document.createElement('script');
+  s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+  s.onload=()=>{
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    initPDF();
+  };
+  s.onerror=()=>showPDFError();
+  document.head.appendChild(s);
+}
+
+async function initPDF(){
+  try{
+    const loadingTask=pdfjsLib.getDocument({url:PDF_URL,cMapUrl:'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/',cMapPacked:true});
+    _pdfDoc=await loadingTask.promise;
+    _pdfTotal=_pdfDoc.numPages;
+    await pdfRenderPage(_pdfPage);
+    buildPDFThumbs();
+  }catch(e){showPDFError(e.message);}
+}
+
+async function pdfRenderPage(num){
+  if(!_pdfDoc||_pdfRendering)return;
+  _pdfRendering=true;
+  const canvas=document.getElementById('pdf-canvas');
+  const loading=document.getElementById('pdf-loading');
+  if(!canvas)return;
+  if(loading)loading.style.display='flex';
+  canvas.style.display='none';
+  try{
+    const page=await _pdfDoc.getPage(num);
+    const vw=document.getElementById('pdf-container')?.clientWidth||320;
+    const viewport=page.getViewport({scale:_pdfScale});
+    const autoScale=Math.min(_pdfScale,(vw-32)/viewport.width);
+    const vp=page.getViewport({scale:autoScale});
+    canvas.width=vp.width;
+    canvas.height=vp.height;
+    const ctx=canvas.getContext('2d');
+    await page.render({canvasContext:ctx,viewport:vp}).promise;
+    _pdfPage=num;
+    const info=document.getElementById('pdf-info');
+    if(info)info.textContent=(lang==='es'?'P\u00E1g ':'Page ')+num+' / '+_pdfTotal;
+    const prev=document.getElementById('pdf-prev');
+    const next=document.getElementById('pdf-next');
+    if(prev)prev.style.opacity=num<=1?'0.3':'1';
+    if(next)next.style.opacity=num>=_pdfTotal?'0.3':'1';
+  }catch(e){showPDFError(e.message);}
+  finally{
+    _pdfRendering=false;
+    if(loading)loading.style.display='none';
+    if(canvas)canvas.style.display='block';
+    document.getElementById('pdf-container')?.scrollTo({top:0,behavior:'smooth'});
+  }
+}
+
+async function buildPDFThumbs(){
+  if(!_pdfDoc)return;
+  const row=document.getElementById('pdf-thumb-row');
+  if(!row)return;
+  row.innerHTML='';
+  const maxThumbs=Math.min(_pdfTotal,20);
+  for(let i=1;i<=maxThumbs;i++){
+    const wrap=document.createElement('div');
+    wrap.style.cssText='flex-shrink:0;cursor:pointer;border-radius:6px;overflow:hidden;border:2px solid var(--bd);transition:border-color .2s;';
+    wrap.onclick=(()=>{const p=i;return()=>{pdfRenderPage(p);updateThumbActive(p);}})();
+    const c=document.createElement('canvas');
+    c.id='pdf-thumb-'+i;
+    c.style.cssText='display:block;width:60px;height:80px;';
+    wrap.appendChild(c);
+    row.appendChild(wrap);
+    const page=await _pdfDoc.getPage(i);
+    const vp=page.getViewport({scale:0.2});
+    c.width=vp.width;c.height=vp.height;
+    await page.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;
+  }
+  updateThumbActive(1);
+}
+
+function updateThumbActive(num){
+  document.querySelectorAll('#pdf-thumb-row>div').forEach((el,i)=>{
+    el.style.borderColor=i+1===num?'var(--c)':'var(--bd)';
+  });
+}
+
+function pdfPrev(){if(_pdfPage>1){pdfRenderPage(_pdfPage-1);updateThumbActive(_pdfPage-1);}}
+function pdfNext(){if(_pdfPage<_pdfTotal){pdfRenderPage(_pdfPage+1);updateThumbActive(_pdfPage+1);}}
+function pdfZoom(d){_pdfScale=Math.min(3,Math.max(0.6,_pdfScale+d));pdfRenderPage(_pdfPage);}
+function showPDFError(msg){
+  const err=document.getElementById('pdf-error');
+  const loading=document.getElementById('pdf-loading');
+  if(loading)loading.style.display='none';
+  if(err){
+    err.style.display='block';
+    err.innerHTML=`<p style="margin-bottom:12px;">${lang==='es'?'No se pudo cargar el PDF.':'Could not load the PDF.'}</p><a href="${PDF_URL}" target="_blank" style="color:var(--c);font-weight:500;">${lang==='es'?'Abrir en nueva pesta\u00F1a':'Open in new tab'} \u2192</a>`;
+  }
 }
 
 /* ============ DAILY MAAT ============ */
