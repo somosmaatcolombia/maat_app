@@ -1956,15 +1956,20 @@ function renderPDF(){
 }
 
 function loadAdobePDF(){
-  if(window.AdobeDC){initAdobePDF();return;}
+  // Caso 1: SDK ya listo (segunda visita a la vista)
+  if(window.AdobeDC){setTimeout(initAdobePDF,50);return;}
+  // Caso 2: Script ya en camino \u2014 solo agregar listener
+  if(window._adobeSDKLoading){
+    document.addEventListener('adobe_dc_view_sdk.ready',initAdobePDF,{once:true});
+    return;
+  }
+  // Caso 3: Primera carga del SDK
+  window._adobeSDKLoading=true;
+  document.addEventListener('adobe_dc_view_sdk.ready',initAdobePDF,{once:true});
   const s=document.createElement('script');
   s.src='https://acrobatservices.adobe.com/view-sdk/viewer.js';
-  s.onload=()=>{
-    // El SDK dispara el evento cuando est\u00e1 listo
-    if(window.AdobeDC){initAdobePDF();}
-    else{document.addEventListener('adobe_dc_view_sdk.ready',initAdobePDF,{once:true});}
-  };
   s.onerror=()=>{
+    window._adobeSDKLoading=false;
     const el=document.getElementById('adobe-pdf-loading');
     if(el)el.innerHTML=`<p style="color:var(--r);text-align:center;padding:20px;">${lang==='es'?'No se pudo cargar el lector.':'Could not load reader.'}<br><br><a href="${PDF_URL}" target="_blank" style="color:var(--c);">${lang==='es'?'Abrir PDF directamente \u2192':'Open PDF directly \u2192'}</a></p>`;
   };
@@ -1972,6 +1977,9 @@ function loadAdobePDF(){
 }
 
 function initAdobePDF(){
+  // Si el div ya no existe (usuario naveg\u00f3 a otra vista), salir
+  const viewDiv=document.getElementById('adobe-pdf-view');
+  if(!viewDiv)return;
   const loading=document.getElementById('adobe-pdf-loading');
   if(loading)loading.style.display='none';
   try{
@@ -1987,13 +1995,11 @@ function initAdobePDF(){
         showPageControls:true,
         showThumbnails:true,
         showBookmarks:false,
-        enableFormFilling:false,
-        showFullScreen:true
+        enableFormFilling:false
       }
     );
   }catch(e){
-    const el=document.getElementById('adobe-pdf-view');
-    if(el)el.innerHTML=`<div style="display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column;gap:12px;padding:20px;text-align:center;"><p style="color:var(--r);">${lang==='es'?'Error al iniciar el lector.':'Error starting reader.'}</p><p style="color:var(--mu);font-size:12px;">${e.message||''}</p><a href="${PDF_URL}" target="_blank" style="color:var(--c);">${lang==='es'?'Abrir PDF directamente \u2192':'Open PDF directly \u2192'}</a></div>`;
+    if(viewDiv)viewDiv.innerHTML=`<div style="display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column;gap:16px;padding:24px;text-align:center;"><p style="color:var(--r);font-weight:500;">${lang==='es'?'Error al iniciar el lector':'Error starting reader'}</p><p style="color:var(--mu);font-size:12px;max-width:280px;">${e.message||'Unknown error'}</p><a href="${PDF_URL}" target="_blank" style="color:var(--c);font-weight:500;">${lang==='es'?'Abrir PDF en nueva pesta\u00f1a \u2192':'Open PDF in new tab \u2192'}</a></div>`;
   }
 }
 
