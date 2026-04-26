@@ -359,6 +359,8 @@ input:focus-visible,textarea:focus-visible,select:focus-visible{outline:none;bor
     <section id="v-meditacion" class="view" aria-label="Meditaci&oacute;n"></section>
     <section id="v-dailymaat" class="view" aria-label="Daily MAAT"></section>
     <section id="v-mentor-notes" class="view" aria-label="Notas del mentor"></section>
+    <section id="v-biblioteca" class="view" aria-label="Biblioteca de Meditaciones"></section>
+    <section id="v-eventos" class="view" aria-label="Pr&oacute;ximos Eventos"></section>
   </main>
   <nav class="nav-bar" aria-label="Navegaci&oacute;n principal">
     <button class="nav-item active" data-view="v-home" onclick="gv('v-home')" aria-label="Home" aria-current="page">
@@ -433,6 +435,8 @@ let _habViewWeek=1;
 let mentorWhatsapp=null;
 let mentorNotes=[];
 let _belFilter="all";
+let meditations=[],events=[],myEventRegs=[];
+let _medCatFilter="all",_activeMedId=null;
 
 /* ============ i18n ============ */
 const I18N={
@@ -788,6 +792,9 @@ async function loadData(){
         sb.from("ai_config").select("system_prompt").eq("id",1).single(),
         sb.from("phase_reflections").select("*").eq("user_id",uid),
         sb.from("session_notes").select("session_type,session_date,notes,next_plan,client_week").eq("client_id",uid).order("created_at",{ascending:false}).limit(10),
+        sb.from("meditations").select("*").eq("is_active",true).order("sort_order"),
+        sb.from("events").select("*").eq("is_active",true).order("event_date",{ascending:true}),
+        sb.from("event_registrations").select("event_id,status").eq("user_id",uid),
       ]),timeout
     ]);
     if(results[0].status==="fulfilled"){const{data,error}=results[0].value;if(!error&&data){prof=data;hwk=prof.current_week||1;notifHour=prof.notification_hour||9;if(prof.preferred_lang&&prof.preferred_lang!==lang){lang=prof.preferred_lang;localStorage.setItem("maat-lang",lang);}}else if(error)chkAuthErr(error);}
@@ -798,6 +805,9 @@ async function loadData(){
     if(results[5].status==="fulfilled"){const{data}=results[5].value;if(data)sh=data;}
     if(results[6].status==="fulfilled"){const{data}=results[6].value;if(data)aiCfg=data;}
     if(results[8]?.status==="fulfilled"){const{data}=results[8].value;if(data)mentorNotes=data||[];}
+    if(results[9]?.status==="fulfilled"){const{data}=results[9].value;if(data)meditations=data||[];}
+    if(results[10]?.status==="fulfilled"){const{data}=results[10].value;if(data)events=data||[];}
+    if(results[11]?.status==="fulfilled"){const{data}=results[11].value;if(data)myEventRegs=data||[];}
   }catch(e){console.warn("loadData:",e.message);}
   finally{_loading=false;}
 }
@@ -828,6 +838,8 @@ function nav(id){
   else if(id==="v-meditacion")renderMeditacion();
   else if(id==="v-dailymaat")renderDailyMaat();
   else if(id==="v-mentor-notes")renderMentorNotes();
+  else if(id==="v-biblioteca")renderBibliotecaMed();
+  else if(id==="v-eventos")renderEventos();
 }
 // Aliases para retrocompatibilidad (eliminados en pr\u00F3xima limpieza)
 function gv(id){nav(id);}
@@ -844,18 +856,38 @@ function setLang(l){lang=l;localStorage.setItem("maat-lang",l);applyI18N();rende
 function setTheme(th){theme=th;localStorage.setItem("maat-theme",th);document.documentElement.setAttribute("data-theme",th);}
 
 /* ============ HOME ============ */
+function evtIcon(type){
+  const icons={webinar:'\u{1F4BB}',retiro:'\u{1F3D4}\uFE0F',taller:'\u{1F6E0}\uFE0F',encuentro:'\u{1F91D}','sesion-grupal':'\u{1F465}',ceremonia:'\u2728'};
+  return icons[type]||'\u{1F4C5}';
+}
+function evtTypeName(type){
+  const es={webinar:'Webinar',retiro:'Retiro',taller:'Taller',encuentro:'Encuentro','sesion-grupal':'Sesi\u00F3n Grupal',ceremonia:'Ceremonia'};
+  const en={webinar:'Webinar',retiro:'Retreat',taller:'Workshop',encuentro:'Meetup','sesion-grupal':'Group Session',ceremonia:'Ceremony'};
+  return (lang==='es'?es:en)[type]||type||'Evento';
+}
+
 function renderHome(){
+  const isGrad=!!(prof?.graduated);
   const phase=getPhase(hwk);
   const streak=calcStreak();
   const coherence=calcCoherence(hwk);
   const attAvg=calcAttitudeAvg();
   const completedWeeks=Object.values(wkp).filter(Boolean).length;
-  const progressPct=Math.round(completedWeeks/16*100);
+  const progressPct=isGrad?100:Math.round(completedWeeks/16*100);
   const lastCal=cals.length?cals[0]:null;
+  // Eventos pr\u00F3ximos para graduados
+  const now=new Date();
+  const upcomingEvents=isGrad?events.filter(e=>new Date(e.event_date)>now&&(e.visible_to==='all'||e.visible_to==='graduates')).slice(0,2):[];
 
   document.getElementById("v-home").innerHTML=`
     <p class="home-greeting">${t("greeting")} ${san(prof?.full_name||"")}</p>
-    <p class="home-week">${t("week_label")} ${hwk}${t("of")} \u00B7 ${t("phase")} ${phase}: ${t("phases")[phase-1]}</p>
+    ${isGrad
+      ?`<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <span style="background:linear-gradient(135deg,var(--o),var(--v));color:#fff;font-family:var(--font-title);font-size:12px;font-weight:700;letter-spacing:1px;padding:4px 10px;border-radius:20px;">\u{1F393} GRADUADO MAAT</span>
+          <span style="color:var(--mu);font-size:12px;">${lang==='es'?'Ciclo':'Cycle'} ${prof?.cycle||1}</span>
+        </div>`
+      :`<p class="home-week">${t("week_label")} ${hwk}${t("of")} \u00B7 ${t("phase")} ${phase}: ${t("phases")[phase-1]}</p>`
+    }
     ${streak>0?`<div class="streak-badge">\u{1F525} ${streak} ${t("streak")}</div>`:""}
     <div class="stat-row">
       <div class="stat-box"><div class="stat-val" style="color:var(--c)">${progressPct}%</div><div class="stat-label">${t("progress_pct")}</div></div>
@@ -869,6 +901,23 @@ function renderHome(){
     <div class="cta-calib" onclick="gv('v-calib')"><h3>${t("cta_calib")}</h3><p>${t("cta_calib_sub")}</p></div>
     ${(mentorNotes.length&&mentorNotes[0].next_plan)?'<div class="card" style="margin-top:16px;border-left:3px solid var(--c);"><div style="font-size:11px;color:var(--c);font-family:var(--font-title);font-weight:600;letter-spacing:1px;margin-bottom:6px;">\u{1F4CB} '+(lang==='es'?'TAREA DE TU MENTOR':'FROM YOUR MENTOR')+'</div><p style="font-size:14px;line-height:1.6;">'+san(mentorNotes[0].next_plan)+'</p><p style="font-size:11px;color:var(--mu);margin-top:6px;">'+san(mentorNotes[0].session_type||'')+' \u00B7 '+san(mentorNotes[0].session_date||'')+' \u00B7 '+(lang==='es'?'Sem':'Week')+' '+(mentorNotes[0].client_week||'?')+'</p></div>':''}
     ${lastCal?`<p class="last-calib">${t("last_calib")} <strong>${san(lastCal.date||"")}</strong> \u00B7 ${t("attitude_avg")}: <strong style="color:${attColor(lastCal.coherence)}">${lastCal.coherence}/10</strong></p>`:`<p class="last-calib text-mu">${t("no_calib")}</p>`}
+    ${upcomingEvents.length?`
+    <div class="card" style="margin-top:16px;border-left:3px solid var(--o);cursor:pointer;" onclick="nav('v-eventos')">
+      <div style="font-size:11px;color:var(--o);font-family:var(--font-title);font-weight:600;letter-spacing:1px;margin-bottom:10px;">\u{1F4C5} ${lang==='es'?'PR\u00D3XIMOS EVENTOS':'UPCOMING EVENTS'}</div>
+      ${upcomingEvents.map(e=>{
+        const d=new Date(e.event_date);
+        const ds=d.toLocaleDateString(lang==='es'?'es-CO':'en-US',{day:'numeric',month:'short'});
+        return`<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--bd);">
+          <div style="width:36px;height:36px;border-radius:8px;background:var(--o)22;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">${evtIcon(e.event_type)}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${san(lang==='es'?e.title_es:e.title_en||e.title_es)}</div>
+            <div style="font-size:11px;color:var(--mu);">${ds} \u00B7 ${san(e.location_name||'Online')}</div>
+          </div>
+          <div style="font-size:12px;color:var(--o);font-weight:600;flex-shrink:0;">${e.is_free?(lang==='es'?'Gratis':'Free'):'$'+e.price}</div>
+        </div>`;
+      }).join('')}
+      <p style="font-size:12px;color:var(--o);margin-top:10px;margin-bottom:0;text-align:right;">${lang==='es'?'Ver todos \u2192':'See all \u2192'}</p>
+    </div>`:''}
     <div class="card" style="margin-top:16px;border-left:3px solid var(--v);">
       <div style="font-size:11px;color:var(--v);font-family:var(--font-title);font-weight:600;letter-spacing:1px;margin-bottom:6px;">\u2726 MI STATEMENT</div>
       <p style="font-size:15px;line-height:1.7;font-style:italic;white-space:pre-wrap;">${sh?.statement?san(sh.statement):(lang==='es'?'\u00BFQui\u00E9n eres cuando nadie te ve?':'Who are you when nobody sees you?')}</p>
@@ -1323,9 +1372,11 @@ function renderMas(){
       <div class="menu-item" onclick="gs('v-statement')"><div class="menu-icon">\u{1F4DD}</div><div class="menu-label">${t("menu_statement")}</div></div>
       <div class="menu-item" onclick="gs('v-historial')"><div class="menu-icon">\u{1F4CB}</div><div class="menu-label">${t("menu_history")}</div></div>
       <div class="menu-item" onclick="gs('v-meditacion')"><div class="menu-icon">\u{1F9D8}</div><div class="menu-label">${t("menu_meditation")}</div></div>
+      <div class="menu-item" onclick="nav('v-biblioteca')"><div class="menu-icon">\u{1F3A7}</div><div class="menu-label">${lang==='es'?'BIBLIOTECA':'LIBRARY'}</div></div>
       <div class="menu-item" onclick="gs('v-libro')" style="border-color:var(--v);"><div class="menu-icon">\u{1F5FA}\uFE0F</div><div class="menu-label">${t("menu_book")}</div></div>
       <div class="menu-item" onclick="gs('v-pdf')"><div class="menu-icon">\u{1F4D6}</div><div class="menu-label">${t("menu_pdf")}</div></div>
       <div class="menu-item" onclick="gs('v-dailymaat')" style="border-color:var(--o);"><div class="menu-icon">\u2600\uFE0F</div><div class="menu-label">DAILY MAAT</div></div>
+      ${prof?.graduated?`<div class="menu-item" onclick="nav('v-eventos')" style="border-color:var(--o);background:var(--o)11;"><div class="menu-icon">\u{1F4C5}</div><div class="menu-label">${lang==='es'?'EVENTOS':'EVENTS'}</div></div>`:''}
       <div class="menu-item" onclick="contactMentor()" style="border-color:var(--m);background:var(--m)11;"><div class="menu-icon">\u{1F4AC}</div><div class="menu-label">${lang==='es'?'Contactar':'Contact'}</div></div>
       ${mentorNotes.length?`<div class="menu-item" onclick="gs('v-mentor-notes')" style="border-color:var(--c);"><div class="menu-icon">\u{1F4CB}</div><div class="menu-label">${lang==='es'?'NOTAS MENTOR':'MENTOR NOTES'}</div></div>`:''}
       <div class="menu-item" onclick="exportProgress()" style="border-color:var(--mu2);"><div class="menu-icon">\u{1F4E5}</div><div class="menu-label">${lang==='es'?'EXPORTAR':'EXPORT'}</div></div>
@@ -1567,7 +1618,7 @@ function renderHistorial(){
 /* ============ MEDITACI\u00D3N ============ */
 function renderMeditacion(){
   document.getElementById("v-meditacion").innerHTML=`
-    <div class="sv-header"><button class="btn-back" onclick="gv('v-mas')">\u2039</button><h2>${t("meditation_title")}</h2></div>
+    <div class="sv-header"><button class="btn-back" onclick="nav('v-mas')">\u2039</button><h2>${t("meditation_title")}</h2></div>
     <p style="font-size:14px;color:var(--mu);margin:0 0 16px;line-height:1.6;">${lang==='es'?'La meditaci\u00F3n guiada MAAT es tu espacio de silencio y conexi\u00F3n interior. Practicarla con regularidad entrena tu mente para responder desde la calma y no desde el impulso. Unos minutos al d\u00EDa pueden transformar toda tu semana.':'The MAAT guided meditation is your space for silence and inner connection. Practicing it regularly trains your mind to respond from calm rather than impulse. A few minutes a day can transform your entire week.'}</p>
     <div class="audio-player">
       <p style="font-size:36px;margin-bottom:8px;">\u{1F9D8}</p>
@@ -1580,6 +1631,15 @@ function renderMeditacion(){
         <button onclick="Audio_.skip('med',10)">+10s</button>
       </div>
     </div>
+    ${meditations.length?`
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--bd);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+        <span style="font-size:13px;font-weight:600;color:var(--text);">\u{1F3A7} ${lang==='es'?'Biblioteca de Meditaciones':'Meditation Library'}</span>
+        <span style="font-size:12px;color:var(--mu);">${meditations.length} ${lang==='es'?'audios':'audios'}</span>
+      </div>
+      <p style="font-size:12px;color:var(--mu);margin:0 0 10px;">${lang==='es'?'Meditaciones guiadas para cada etapa de tu proceso.':'Guided meditations for every stage of your journey.'}</p>
+      <button class="btn-action" style="width:100%;padding:12px;" onclick="nav('v-biblioteca')">${lang==='es'?'Explorar biblioteca \u2192':'Explore library \u2192'}</button>
+    </div>`:''}
   `;
   const MED_URL="https://somosmaat.org/wp-content/uploads/2026/02/Meditation_Maat.mp3";
   const a=Audio_.get('med',MED_URL);
@@ -1598,6 +1658,161 @@ function toggleMed(){
     ()=>{const btn=document.getElementById("med-play");if(btn)btn.textContent="\u23F8";},
     ()=>{const btn=document.getElementById("med-play");if(btn)btn.textContent="\u25B6";}
   );
+}
+
+/* ============ BIBLIOTECA DE MEDITACIONES ============ */
+const MED_CATS_ES={all:'Todas',respiracion:'Respiraci\u00f3n',visualizacion:'Visualizaci\u00f3n',sueno:'Sue\u00f1o',energia:'Energ\u00eda',gratitud:'Gratitud',enfoque:'Enfoque',cuerpo:'Cuerpo',general:'General'};
+const MED_CATS_EN={all:'All',respiracion:'Breathing',visualizacion:'Visualization',sueno:'Sleep',energia:'Energy',gratitud:'Gratitude',enfoque:'Focus',cuerpo:'Body',general:'General'};
+function medCatLabel(k){return(lang==='es'?MED_CATS_ES:MED_CATS_EN)[k]||k;}
+function fmtDuration(sec){if(!sec)return'';const m=Math.floor(sec/60),s=sec%60;return m+':'+(s<10?'0':'')+s;}
+
+function renderBibliotecaMed(){
+  const cats=['all',...new Set(meditations.map(m=>m.category).filter(Boolean))];
+  const filtered=_medCatFilter==='all'?meditations:meditations.filter(m=>m.category===_medCatFilter);
+  document.getElementById('v-biblioteca').innerHTML=`
+    <div class="sv-header">
+      <button class="btn-back" onclick="nav('v-mas')" style="background:none;border:none;color:var(--c);font-size:22px;cursor:pointer;padding:8px;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;">\u2039</button>
+      <h2>${lang==='es'?'Biblioteca':'Library'}</h2>
+    </div>
+    <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:12px;scrollbar-width:none;">
+      ${cats.map(c=>`<button onclick="_medCatFilter='${c}';renderBibliotecaMed();" style="flex-shrink:0;padding:6px 14px;border-radius:20px;border:1px solid ${_medCatFilter===c?'var(--c)':'var(--bd)'};background:${_medCatFilter===c?'var(--c)':'transparent'};color:${_medCatFilter===c?'#fff':'var(--mu)'};font-size:13px;cursor:pointer;white-space:nowrap;">${medCatLabel(c)}</button>`).join('')}
+    </div>
+    ${filtered.length===0?`<div style="text-align:center;padding:40px 20px;color:var(--mu);">${lang==='es'?'Sin meditaciones en esta categor\u00eda.':'No meditations in this category.'}</div>`:''}
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      ${filtered.map(med=>{
+        const isActive=_activeMedId===med.id;
+        const isReg=myEventRegs.some(r=>r.event_id===med.id);
+        return`<div style="background:var(--bg2);border:1px solid ${isActive?'var(--c)':'var(--bd)'};border-radius:var(--radius-sm);overflow:hidden;">
+          <div style="display:flex;align-items:center;gap:12px;padding:12px;cursor:pointer;" onclick="toggleMedLib('${med.id}','${san(med.audio_url)}')">
+            <div style="width:52px;height:52px;border-radius:10px;background:${isActive?'var(--c)':'var(--bg)'};border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;overflow:hidden;">
+              ${med.cover_url?`<img src="${san(med.cover_url)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.textContent='\u{1F9D8}'">`:'\u{1F9D8}'}
+            </div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${san(lang==='es'?med.title_es:med.title_en||med.title_es)}</div>
+              <div style="font-size:12px;color:var(--mu);">${medCatLabel(med.category||'general')}${med.duration_sec?' \u00B7 '+fmtDuration(med.duration_sec):''}</div>
+              ${med.description_es&&!isActive?`<div style="font-size:11px;color:var(--mu2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${san(lang==='es'?med.description_es:med.description_en||med.description_es)}</div>`:''}
+            </div>
+            <div style="font-size:22px;color:${isActive?'var(--c)':'var(--mu)'};flex-shrink:0;">${isActive?'\u23F8':'\u25B6'}</div>
+          </div>
+          ${isActive?`
+          <div style="padding:0 12px 12px;">
+            ${med.description_es?`<p style="font-size:13px;color:var(--mu);margin:0 0 10px;line-height:1.5;">${san(lang==='es'?med.description_es:med.description_en||med.description_es)}</p>`:''}
+            <div style="display:flex;align-items:center;gap:8px;">
+              <button onclick="Audio_.skip('ml-${med.id}',-10)" style="padding:6px 10px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--mu);font-size:12px;cursor:pointer;">-10s</button>
+              <div style="flex:1;height:6px;background:var(--bd);border-radius:3px;cursor:pointer;" onclick="Audio_.seek('ml-${med.id}',event.offsetX/this.offsetWidth)">
+                <div id="mlf-${med.id}" style="height:100%;width:0%;background:var(--c);border-radius:3px;transition:width .2s;"></div>
+              </div>
+              <span id="mlt-${med.id}" style="font-size:12px;color:var(--mu);min-width:36px;text-align:right;">0:00</span>
+              <button onclick="Audio_.skip('ml-${med.id}',10)" style="padding:6px 10px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--mu);font-size:12px;cursor:pointer;">+10s</button>
+            </div>
+          </div>`:''}
+        </div>`;
+      }).join('')}
+    </div>
+  `;
+}
+
+async function toggleMedLib(medId, url){
+  if(_activeMedId===medId){
+    Audio_.toggle('ml-'+medId,url,()=>{},()=>{});
+    return;
+  }
+  // Detener audio anterior
+  if(_activeMedId)Audio_.stop('ml-'+_activeMedId);
+  _activeMedId=medId;
+  renderBibliotecaMed();
+  // Iniciar audio
+  const a=Audio_.get('ml-'+medId,url);
+  if(!a.src)a.src=url;
+  Audio_.onTime('ml-'+medId,()=>{
+    const fill=document.getElementById('mlf-'+medId);
+    const time=document.getElementById('mlt-'+medId);
+    if(!a.duration)return;
+    if(fill)fill.style.width=(a.currentTime/a.duration*100)+'%';
+    if(time){const m=Math.floor(a.currentTime/60),s=Math.floor(a.currentTime%60);time.textContent=m+':'+(s<10?'0':'')+s;}
+    // Log completado si > 80%
+    if(a.duration&&(a.currentTime/a.duration)>0.8)logMeditation(medId,true,Math.round(a.currentTime));
+  });
+  Audio_.onEnd('ml-'+medId,()=>{logMeditation(medId,true,null);renderBibliotecaMed();_activeMedId=null;});
+  a.play().catch(()=>{});
+}
+
+async function logMeditation(medId,completed,durationSec){
+  if(!user||!medId)return;
+  // Solo loguear una vez por sesi\u00F3n (evitar duplicados)
+  const key='maat-med-log-'+medId+'-'+new Date().toDateString();
+  if(localStorage.getItem(key))return;
+  localStorage.setItem(key,'1');
+  await sb.from('meditation_logs').insert({user_id:user.id,meditation_id:medId,completed,duration_sec:durationSec});
+}
+
+/* ============ PR\u00D3XIMOS EVENTOS ============ */
+function renderEventos(){
+  const isGrad=!!(prof?.graduated);
+  const now=new Date();
+  const visible=events.filter(e=>new Date(e.event_date)>now&&(e.visible_to==='all'||(isGrad&&e.visible_to==='graduates')));
+  const past=events.filter(e=>new Date(e.event_date)<=now&&(e.visible_to==='all'||(isGrad&&e.visible_to==='graduates')));
+
+  document.getElementById('v-eventos').innerHTML=`
+    <div class="sv-header">
+      <button class="btn-back" onclick="nav('v-mas')" style="background:none;border:none;color:var(--c);font-size:22px;cursor:pointer;padding:8px;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;">\u2039</button>
+      <h2>${lang==='es'?'Eventos y Experiencias':'Events & Experiences'}</h2>
+    </div>
+    ${!isGrad?`<div style="background:var(--o)11;border:1px solid var(--o)44;border-radius:var(--radius-sm);padding:14px;margin-bottom:16px;font-size:13px;color:var(--o);">\u{1F393} ${lang==='es'?'Los eventos exclusivos para graduados se ver\u00e1n disponibles cuando completes las 16 semanas.':'Exclusive graduate events will be available when you complete 16 weeks.'}</div>`:''}
+    ${visible.length===0?`<div style="text-align:center;padding:40px 20px;">
+      <div style="font-size:48px;margin-bottom:12px;">\u{1F4C5}</div>
+      <p style="color:var(--mu);font-size:14px;">${lang==='es'?'No hay eventos pr\u00f3ximos por ahora.\u00a1Vuelve pronto!':'No upcoming events right now. Check back soon!'}</p>
+    </div>`:`
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      ${visible.map(e=>{
+        const d=new Date(e.event_date);
+        const ds=d.toLocaleDateString(lang==='es'?'es-CO':'en-US',{weekday:'short',day:'numeric',month:'long'});
+        const ts=d.toLocaleTimeString(lang==='es'?'es-CO':'en-US',{hour:'2-digit',minute:'2-digit'});
+        const isReg=myEventRegs.some(r=>r.event_id===e.id);
+        return`<div style="background:var(--bg2);border:1px solid var(--bd);border-radius:var(--radius-sm);overflow:hidden;">
+          ${e.cover_url?`<img src="${san(e.cover_url)}" style="width:100%;height:140px;object-fit:cover;" onerror="this.style.display='none'">`:''}
+          <div style="padding:14px;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+              <span style="background:var(--o)22;color:var(--o);font-size:11px;font-weight:600;padding:3px 8px;border-radius:10px;font-family:var(--font-title);">${evtIcon(e.event_type)} ${evtTypeName(e.event_type)}</span>
+              ${e.is_free?`<span style="background:var(--m)22;color:var(--m);font-size:11px;font-weight:600;padding:3px 8px;border-radius:10px;">${lang==='es'?'GRATUITO':'FREE'}</span>`:`<span style="color:var(--text);font-size:12px;font-weight:600;">$${e.price}</span>`}
+            </div>
+            <h3 style="font-family:var(--font-title);font-size:17px;margin:0 0 6px;color:var(--text);">${san(lang==='es'?e.title_es:e.title_en||e.title_es)}</h3>
+            ${e.description_es?`<p style="font-size:13px;color:var(--mu);line-height:1.5;margin:0 0 10px;">${san((lang==='es'?e.description_es:e.description_en||e.description_es).substring(0,160))}\u2026</p>`:''}
+            <div style="font-size:12px;color:var(--mu);margin-bottom:12px;">
+              <div>\u{1F4C5} ${ds} \u00B7 ${ts}</div>
+              <div>\u{1F4CD} ${san(e.location_name||'Online')}</div>
+            </div>
+            <div style="display:flex;gap:8px;">
+              ${isReg
+                ?`<button disabled style="flex:1;padding:11px;border-radius:var(--radius-sm);border:none;background:var(--m)22;color:var(--m);font-size:13px;font-weight:600;">\u2713 ${lang==='es'?'Registrado':'Registered'}</button>`
+                :`<button onclick="registerEvent('${e.id}')" style="flex:1;padding:11px;border-radius:var(--radius-sm);border:none;background:var(--o);color:#fff;font-size:13px;font-weight:600;cursor:pointer;">${lang==='es'?'Me interesa':'I\'m interested'}</button>`
+              }
+              ${e.registration_url?`<a href="${san(e.registration_url)}" target="_blank" style="flex:1;padding:11px;border-radius:var(--radius-sm);border:1px solid var(--bd);color:var(--text);font-size:13px;font-weight:600;text-decoration:none;text-align:center;">${lang==='es'?'Registrarse':'Register'} \u2197</a>`:''}
+            </div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`}
+    ${past.length?`
+    <div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--bd);">
+      <p style="font-size:12px;color:var(--mu2);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">${lang==='es'?'Eventos pasados':'Past events'}</p>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        ${past.map(e=>{ const d=new Date(e.event_date);return`<div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg2);border-radius:8px;opacity:.6;">
+          <span style="font-size:20px;">${evtIcon(e.event_type)}</span>
+          <div style="flex:1;"><div style="font-size:13px;font-weight:500;color:var(--text);">${san(lang==='es'?e.title_es:e.title_en||e.title_es)}</div><div style="font-size:11px;color:var(--mu);">${d.toLocaleDateString()}</div></div>
+        </div>`; }).join('')}
+      </div>
+    </div>`:''}
+  `;
+}
+
+async function registerEvent(eventId){
+  if(!user||!eventId)return;
+  const{error}=await sb.from('event_registrations').insert({event_id:eventId,user_id:user.id});
+  if(error){toast(lang==='es'?'Error al registrar':'Registration error','err');return;}
+  myEventRegs.push({event_id:eventId,status:'registered'});
+  toast(lang==='es'?'\u{1F389} \u00a1Registrado! Te notificaremos pronto.':'Registered! We\'ll notify you soon.','ok');
+  renderEventos();
 }
 
 /* ============ LIBRO ============ */

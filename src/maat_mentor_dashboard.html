@@ -273,6 +273,18 @@ a{color:var(--c);text-decoration:none;}
         <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
         Notas de Sesi&oacute;n
       </div>
+      <div class="nav-link" data-view="graduados" onclick="goView('graduados')">
+        <svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+        Graduados
+      </div>
+      <div class="nav-link" data-view="meditaciones" onclick="goView('meditaciones')">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+        Meditaciones
+      </div>
+      <div class="nav-link" data-view="eventos" onclick="goView('eventos')">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Eventos
+      </div>
       <div class="nav-section">MI CUENTA</div>
       <div class="nav-link" data-view="mentor-config" onclick="goView('mentor-config')">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
@@ -314,6 +326,9 @@ a{color:var(--c);text-decoration:none;}
       <div id="v-mentor-config" class="view"></div>
       <div id="v-admin-users" class="view"></div>
       <div id="v-admin-prompt" class="view"></div>
+      <div id="v-graduados" class="view"></div>
+      <div id="v-meditaciones" class="view"></div>
+      <div id="v-eventos" class="view"></div>
     </div>
   </div>
 </div>
@@ -606,7 +621,7 @@ function goView(viewId){
   const el=document.getElementById("v-"+viewId);if(el)el.classList.add("active");
   document.querySelectorAll(".nav-link").forEach(n=>{n.classList.toggle("active",n.dataset.view===viewId);});
   closeSidebar();
-  const titles={overview:"Resumen",clients:"Mis Clientes",profile:"Perfil del Cliente",alerts:"Alertas",sessions:"Notas de Sesi\u00F3n","mentor-config":"Mi Configuraci\u00F3n","admin-users":"Usuarios","admin-prompt":"Coach IA Config"};
+  const titles={overview:"Resumen",clients:"Mis Clientes",profile:"Perfil del Cliente",alerts:"Alertas",sessions:"Notas de Sesi\u00F3n","mentor-config":"Mi Configuraci\u00F3n","admin-users":"Usuarios","admin-prompt":"Coach IA Config",graduados:"Graduados",meditaciones:"Meditaciones",eventos:"Eventos"};
   document.getElementById("topbar-title").textContent=titles[viewId]||"MAAT";
   if(viewId==="overview")renderOverview();
   else if(viewId==="clients")renderClients();
@@ -615,6 +630,9 @@ function goView(viewId){
   else if(viewId==="mentor-config")renderMentorConfig();
   else if(viewId==="admin-users")renderAdminUsers();
   else if(viewId==="admin-prompt")loadAIPrompt();
+  else if(viewId==="graduados")renderGraduados();
+  else if(viewId==="meditaciones")renderMeditacionesAdmin();
+  else if(viewId==="eventos")renderEventosAdmin();
 }
 
 /* ============================================ */
@@ -729,7 +747,10 @@ function renderProfile(){
     <button class="btn btn-outline" onclick="goView('clients')" style="margin-bottom:16px;">\u2039 Volver a Clientes</button>
     <div class="profile-header">
       <div class="p-avatar" style="background:${getPhaseHex(phase)}">${san((m.name||"?")[0].toUpperCase())}</div>
-      <div class="p-info"><h3>${san(m.name)}</h3><p>Semana ${m.week} \u00B7 Fase ${phase}: ${PHASE_NAMES[phase-1]} ${m.hasAlert?'<span class="badge badge-alert">Requiere Atenci\u00F3n</span>':''}</p></div>
+      <div class="p-info">
+        <h3>${san(m.name)}${p.graduated?' <span class="badge" style="background:#89608E22;color:#89608E;font-size:10px;">\u{1F393} Graduado</span>':''}</h3>
+        <p>${p.graduated?`Graduado el ${p.graduated_at?new Date(p.graduated_at).toLocaleDateString('es-CO'):'\u2014'} \u00B7 Ciclo ${p.cycle||1}`:`Semana ${m.week} \u00B7 Fase ${phase}: ${PHASE_NAMES[phase-1]}`} ${m.hasAlert?'<span class="badge badge-alert">Requiere Atenci\u00F3n</span>':''}</p>
+      </div>
     </div>
     <div class="metrics-row">
       <div class="metric-box"><div class="m-val" style="color:${m.coherence!==null?cohColor(m.coherence):'var(--mu)'}">${m.coherence!==null?m.coherence+'%':'\u2014'}</div><div class="m-lbl">Coherencia</div></div>
@@ -766,9 +787,11 @@ function renderProfile(){
       }).join("")}
     </div>
 
-    <div style="display:flex;gap:8px;margin-bottom:16px;">
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
       <button class="btn btn-c" onclick="openSessionModal('${uid}','${san(m.name)}')">+ Nueva Sesi\u00F3n</button>
       <button class="btn btn-outline" id="btn-ai-summary" onclick="genAI('${uid}')">\u{1F916} Resumen IA</button>
+      ${!p.graduated&&(m.week||1)>=16?`<button class="btn" style="background:#89608E;color:#fff;border:none;" onclick="graduateClient('${uid}','${san(m.name)}')">\u{1F393} Graduar</button>`:''}
+      ${p.graduated?`<button class="btn btn-outline" onclick="newCycleClient('${uid}','${san(m.name)}')" style="color:var(--o);border-color:var(--o);">\u27F3 Nuevo Ciclo</button>`:''}
     </div>
     <div id="ai-summary-result"></div>
 
@@ -822,6 +845,67 @@ async function genAI(uid){
     result.innerHTML=`<div class="card" style="border-color:var(--c);"><div class="card-title">\u{1F916} Resumen IA</div><p style="font-size:13px;line-height:1.6;white-space:pre-wrap;">${san(summary)}</p></div>`;
   }catch(e){result.innerHTML=`<div class="card" style="border-color:var(--r);color:var(--r);">Error: ${san(e.message)}</div>`;}
   finally{btn.disabled=false;btn.innerHTML="\u{1F916} Resumen IA";}
+}
+
+/* ============================================ */
+/* GRADUADOS                                    */
+/* ============================================ */
+async function graduateClient(uid,name){
+  if(!confirm(`\u00BFGraduar a ${name}? Esto marcar\u00E1 su proceso de 16 semanas como completado y desbloquear\u00E1 el modo graduado en su app.`))return;
+  const{error}=await sb.from('profiles').update({graduated:true,graduated_at:new Date().toISOString()}).eq('id',uid);
+  if(error){toast('Error al graduar: '+error.message,'err');return;}
+  // Actualizar estado local
+  const p=_allProfiles.find(x=>x.id===uid);
+  if(p){p.graduated=true;p.graduated_at=new Date().toISOString();}
+  toast('\u{1F393} '+name+' graduado exitosamente!','ok');
+  renderProfile();
+}
+
+async function newCycleClient(uid,name){
+  if(!confirm(`\u00BFIniciar un nuevo ciclo para ${name}? Esto restablece las semanas a 1 y mantiene todo el historial del ciclo anterior.`))return;
+  const p=_allProfiles.find(x=>x.id===uid);
+  const newCycle=(p?.cycle||1)+1;
+  const{error}=await sb.from('profiles').update({graduated:false,graduated_at:null,current_week:1,cycle:newCycle}).eq('id',uid);
+  if(error){toast('Error al reiniciar ciclo: '+error.message,'err');return;}
+  if(p){p.graduated=false;p.graduated_at=null;p.current_week=1;p.cycle=newCycle;}
+  const m=_clientMetrics[uid];if(m){m.week=1;}
+  toast('\u27F3 Nuevo ciclo '+newCycle+' iniciado para '+name,'ok');
+  renderProfile();
+}
+
+function renderGraduados(){
+  const grads=_allProfiles.filter(p=>p.graduated);
+  document.getElementById('v-graduados').innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div>
+        <h3 style="margin:0 0 4px;">\u{1F393} Graduados MAAT</h3>
+        <p style="color:var(--mu);font-size:13px;margin:0;">${grads.length} graduado${grads.length!==1?'s':''}</p>
+      </div>
+    </div>
+    ${grads.length===0?`<div style="text-align:center;padding:60px 20px;color:var(--mu);">
+      <div style="font-size:48px;margin-bottom:12px;">\u{1F393}</div>
+      <p>A\u00FAn no hay graduados. Cuando un cliente complete las 16 semanas,<br>podr\u00E1s graduarlo desde su perfil.</p>
+    </div>`:`
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      ${grads.map(p=>{
+        const m=_clientMetrics[p.id]||{};
+        const gradDate=p.graduated_at?new Date(p.graduated_at).toLocaleDateString('es-CO'):'\u2014';
+        return`<div class="client-card" onclick="openProfile('${p.id}')" style="cursor:pointer;border-left:3px solid #89608E;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div class="c-avatar" style="background:#89608E;font-size:16px;">\u{1F393}</div>
+            <div style="flex:1;">
+              <div style="font-weight:600;color:var(--text);">${san(p.full_name||p.email)}</div>
+              <div style="font-size:12px;color:var(--mu);">Graduado ${gradDate} \u00B7 Ciclo ${p.cycle||1}</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:13px;font-weight:600;color:${m.coherence!==null?'var(--m)':'var(--mu)'};">${m.coherence!==null?m.coherence+'%':'\u2014'}</div>
+              <div style="font-size:11px;color:var(--mu);">coherencia</div>
+            </div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`}
+  `;
 }
 
 /* ============================================ */
@@ -1004,6 +1088,256 @@ async function saveAIPrompt(){
     if(error){if(!chkAuthErr(error))toast(error.message,"err");return;}
     toast("Prompt guardado \u2713","ok");
   }finally{btn.disabled=false;btn.textContent="GUARDAR PROMPT";}
+}
+
+/* ============================================ */
+/* MEDITACIONES \u2014 Gesti\u00F3n de cat\u00E1logo           */
+/* ============================================ */
+let _adminMeds=[],_adminEvents=[];
+const MED_CAT_OPTS=['general','respiracion','visualizacion','sueno','energia','gratitud','enfoque','cuerpo'];
+const MED_CAT_LABELS={general:'General',respiracion:'Respiraci\u00f3n',visualizacion:'Visualizaci\u00f3n',sueno:'Sue\u00f1o',energia:'Energ\u00eda',gratitud:'Gratitud',enfoque:'Enfoque',cuerpo:'Cuerpo'};
+
+async function renderMeditacionesAdmin(){
+  const{data,error}=await sb.from('meditations').select('*').order('sort_order');
+  if(error){toast('Error: '+error.message,'err');return;}
+  _adminMeds=data||[];
+  document.getElementById('v-meditaciones').innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div><h3 style="margin:0 0 4px;">\u{1F3A7} Biblioteca de Meditaciones</h3>
+        <p style="color:var(--mu);font-size:13px;margin:0;">${_adminMeds.length} meditaci\u00f3n${_adminMeds.length!==1?'es':''} en el cat\u00e1logo</p></div>
+      <button class="btn btn-c" onclick="document.getElementById('med-form-wrap').style.display='block';this.style.display='none'">+ Nueva</button>
+    </div>
+    <div id="med-form-wrap" style="display:none;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--radius-sm);padding:20px;margin-bottom:20px;">
+      <h4 style="margin:0 0 16px;font-family:var(--font-title);">Nueva Meditaci\u00f3n</h4>
+      <div class="session-form">
+        <div><label>T\u00edtulo (ES) *</label><input id="med-title-es" type="text" placeholder="Meditaci\u00f3n de Gratitud"></div>
+        <div><label>T\u00edtulo (EN)</label><input id="med-title-en" type="text" placeholder="Gratitude Meditation"></div>
+        <div><label>Descripci\u00f3n (ES)</label><textarea id="med-desc-es" rows="2" style="width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:6px;padding:8px;color:var(--text);font-size:13px;resize:vertical;" placeholder="Breve descripci\u00f3n de esta meditaci\u00f3n..."></textarea></div>
+        <div><label>Descripci\u00f3n (EN)</label><textarea id="med-desc-en" rows="2" style="width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:6px;padding:8px;color:var(--text);font-size:13px;resize:vertical;"></textarea></div>
+        <div><label>Categor\u00eda</label>
+          <select id="med-cat" style="width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:6px;padding:8px;color:var(--text);">
+            ${MED_CAT_OPTS.map(c=>`<option value="${c}">${MED_CAT_LABELS[c]}</option>`).join('')}
+          </select></div>
+        <div><label>Fase del proceso (opcional)</label>
+          <select id="med-phase" style="width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:6px;padding:8px;color:var(--text);">
+            <option value="">Todas las fases</option>
+            <option value="1">Fase 1 \u2014 Gratitud</option><option value="2">Fase 2 \u2014 Amor</option>
+            <option value="3">Fase 3 \u2014 Intenci\u00f3n</option><option value="4">Fase 4 \u2014 Voluntad</option>
+          </select></div>
+        <div><label>Orden de aparici\u00f3n</label><input id="med-order" type="number" value="${_adminMeds.length+1}" min="1" style="width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:6px;padding:8px;color:var(--text);"></div>
+        <div><label>Audio (MP3/M4A) *</label><input id="med-audio-file" type="file" accept="audio/*" style="color:var(--text);font-size:13px;"></div>
+        <div><label>Imagen de portada (opcional)</label><input id="med-cover-file" type="file" accept="image/*" style="color:var(--text);font-size:13px;"></div>
+        <div id="med-upload-progress" style="display:none;font-size:12px;color:var(--mu);padding:8px 0;">\u{1F4E4} Subiendo archivos...</div>
+      </div>
+      <div class="modal-actions" style="margin-top:16px;">
+        <button class="btn btn-outline" onclick="document.getElementById('med-form-wrap').style.display='none';renderMeditacionesAdmin()">Cancelar</button>
+        <button class="btn btn-c" id="btn-save-med" onclick="saveMeditation()">GUARDAR MEDITACI\u00d3N</button>
+      </div>
+    </div>
+    ${_adminMeds.length===0?`<div style="text-align:center;padding:40px;color:var(--mu);">Sin meditaciones. Crea la primera con el bot\u00f3n + Nueva.</div>`:''}
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      ${_adminMeds.map(med=>`
+        <div style="background:var(--bg2);border:1px solid var(--bd);border-radius:var(--radius-sm);padding:14px;display:flex;align-items:center;gap:12px;">
+          <div style="width:44px;height:44px;border-radius:8px;background:var(--bg);border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;overflow:hidden;">
+            ${med.cover_url?`<img src="${san(med.cover_url)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.textContent='\u{1F3A7}'">`:'\u{1F3A7}'}
+          </div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:600;font-size:14px;">${san(med.title_es)}</div>
+            <div style="font-size:12px;color:var(--mu);">${MED_CAT_LABELS[med.category]||med.category}${med.phase?' \u00b7 Fase '+med.phase:' \u00b7 Todas las fases'}${med.duration_sec?' \u00b7 '+Math.floor(med.duration_sec/60)+'min':''}</div>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button onclick="toggleMedActive('${med.id}',${!med.is_active})" style="padding:4px 10px;border-radius:6px;border:1px solid var(--bd);background:${med.is_active?'var(--m)22':'var(--bg)'};color:${med.is_active?'var(--m)':'var(--mu)'};font-size:11px;cursor:pointer;">${med.is_active?'Activa':'Inactiva'}</button>
+            <button onclick="deleteMeditation('${med.id}','${san(med.title_es)}')" style="padding:4px 10px;border-radius:6px;border:1px solid var(--r)44;color:var(--r);background:transparent;font-size:11px;cursor:pointer;">Eliminar</button>
+          </div>
+        </div>`).join('')}
+    </div>
+  `;
+}
+
+async function saveMeditation(){
+  const titleEs=document.getElementById('med-title-es').value.trim();
+  const audioFile=document.getElementById('med-audio-file').files[0];
+  if(!titleEs||!audioFile){toast('El t\u00edtulo y el audio son obligatorios','err');return;}
+  const btn=document.getElementById('btn-save-med');
+  const prog=document.getElementById('med-upload-progress');
+  btn.disabled=true;btn.textContent='Guardando...';prog.style.display='block';
+  try{
+    // 1. Subir audio a Supabase Storage
+    const ext=audioFile.name.split('.').pop();
+    const audioPath='audios/'+Date.now()+'-'+Math.random().toString(36).slice(2)+'.'+ext;
+    const{error:audioErr}=await sb.storage.from('maat-meditations').upload(audioPath,audioFile,{cacheControl:'31536000',upsert:false});
+    if(audioErr)throw new Error('Error subiendo audio: '+audioErr.message);
+    const{data:{publicUrl:audioUrl}}=sb.storage.from('maat-meditations').getPublicUrl(audioPath);
+    // 2. Subir imagen de portada (opcional)
+    let coverUrl=null;
+    const coverFile=document.getElementById('med-cover-file').files[0];
+    if(coverFile){
+      const cExt=coverFile.name.split('.').pop();
+      const coverPath='covers/'+Date.now()+'-'+Math.random().toString(36).slice(2)+'.'+cExt;
+      const{error:coverErr}=await sb.storage.from('maat-meditations').upload(coverPath,coverFile,{cacheControl:'31536000',upsert:false});
+      if(!coverErr){const{data:{publicUrl}}=sb.storage.from('maat-meditations').getPublicUrl(coverPath);coverUrl=publicUrl;}
+    }
+    // 3. Obtener duraci\u00F3n del audio
+    let durationSec=null;
+    try{
+      durationSec=await new Promise(res=>{const a=new Audio();a.preload='metadata';a.onloadedmetadata=()=>res(Math.round(a.duration));a.onerror=()=>res(null);a.src=URL.createObjectURL(audioFile);});
+    }catch(_){}
+    // 4. Insertar en tabla meditations
+    const{error:insertErr}=await sb.from('meditations').insert({
+      title_es:titleEs,
+      title_en:document.getElementById('med-title-en').value.trim()||null,
+      description_es:document.getElementById('med-desc-es').value.trim()||null,
+      description_en:document.getElementById('med-desc-en').value.trim()||null,
+      category:document.getElementById('med-cat').value,
+      phase:document.getElementById('med-phase').value||null,
+      sort_order:parseInt(document.getElementById('med-order').value)||_adminMeds.length+1,
+      audio_url:audioUrl,cover_url:coverUrl,duration_sec:durationSec,is_active:true
+    });
+    if(insertErr)throw new Error(insertErr.message);
+    toast('\u{1F3A7} Meditaci\u00f3n guardada y publicada \u2713','ok');
+    renderMeditacionesAdmin();
+  }catch(e){toast('Error: '+e.message,'err');}
+  finally{btn.disabled=false;btn.textContent='GUARDAR MEDITACI\u00d3N';prog.style.display='none';}
+}
+
+async function toggleMedActive(medId,isActive){
+  const{error}=await sb.from('meditations').update({is_active:isActive}).eq('id',medId);
+  if(error){toast('Error: '+error.message,'err');return;}
+  renderMeditacionesAdmin();
+}
+
+async function deleteMeditation(medId,title){
+  if(!confirm(`\u00bfEliminar "${title}"? Esta acci\u00f3n no se puede deshacer.`))return;
+  const{error}=await sb.from('meditations').delete().eq('id',medId);
+  if(error){toast('Error: '+error.message,'err');return;}
+  toast('Meditaci\u00f3n eliminada','ok');
+  renderMeditacionesAdmin();
+}
+
+/* ============================================ */
+/* EVENTOS \u2014 Gesti\u00F3n de eventos y experiencias  */
+/* ============================================ */
+const EVT_TYPES=['webinar','retiro','taller','encuentro','sesion-grupal','ceremonia'];
+const EVT_TYPE_LABELS={webinar:'Webinar',retiro:'Retiro',taller:'Taller',encuentro:'Encuentro','sesion-grupal':'Sesi\u00f3n Grupal',ceremonia:'Ceremonia'};
+
+async function renderEventosAdmin(){
+  const{data,error}=await sb.from('events').select('*').order('event_date',{ascending:true});
+  if(error){toast('Error: '+error.message,'err');return;}
+  _adminEvents=data||[];
+  const now=new Date();
+  const upcoming=_adminEvents.filter(e=>new Date(e.event_date)>=now);
+  const past=_adminEvents.filter(e=>new Date(e.event_date)<now);
+  document.getElementById('v-eventos').innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div><h3 style="margin:0 0 4px;">\u{1F4C5} Eventos y Experiencias</h3>
+        <p style="color:var(--mu);font-size:13px;margin:0;">${upcoming.length} pr\u00f3ximo${upcoming.length!==1?'s':''} \u00b7 ${past.length} pasado${past.length!==1?'s':''}</p></div>
+      <button class="btn btn-c" onclick="document.getElementById('evt-form-wrap').style.display='block';this.style.display='none'">+ Nuevo</button>
+    </div>
+    <div id="evt-form-wrap" style="display:none;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--radius-sm);padding:20px;margin-bottom:20px;">
+      <h4 style="margin:0 0 16px;font-family:var(--font-title);">Nuevo Evento</h4>
+      <div class="session-form">
+        <div><label>T\u00edtulo (ES) *</label><input id="evt-title-es" type="text" placeholder="Retiro MAAT 2026"></div>
+        <div><label>T\u00edtulo (EN)</label><input id="evt-title-en" type="text" placeholder="MAAT Retreat 2026"></div>
+        <div><label>Tipo de evento</label>
+          <select id="evt-type" style="width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:6px;padding:8px;color:var(--text);">
+            ${EVT_TYPES.map(t=>`<option value="${t}">${EVT_TYPE_LABELS[t]}</option>`).join('')}
+          </select></div>
+        <div><label>Fecha y hora *</label><input id="evt-date" type="datetime-local" style="width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:6px;padding:8px;color:var(--text);"></div>
+        <div><label>Fecha de fin (opcional)</label><input id="evt-end-date" type="datetime-local" style="width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:6px;padding:8px;color:var(--text);"></div>
+        <div><label>Lugar</label><input id="evt-location" type="text" placeholder="Online \u00b7 Zoom"></div>
+        <div><label>Link de acceso / Zoom / Maps</label><input id="evt-location-url" type="url" placeholder="https://zoom.us/j/..."></div>
+        <div><label>Descripci\u00f3n (ES)</label><textarea id="evt-desc-es" rows="3" style="width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:6px;padding:8px;color:var(--text);font-size:13px;resize:vertical;" placeholder="Describe el evento..."></textarea></div>
+        <div><label>URL de imagen de portada (opcional)</label><input id="evt-cover-url" type="url" placeholder="https://..."></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div><label>Precio (0 = gratuito)</label><input id="evt-price" type="number" min="0" value="0" style="width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:6px;padding:8px;color:var(--text);"></div>
+          <div><label>Visible para</label>
+            <select id="evt-visible" style="width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:6px;padding:8px;color:var(--text);">
+              <option value="graduates">Solo Graduados</option>
+              <option value="all">Todos los clientes</option>
+            </select></div>
+        </div>
+        <div><label>Link de registro externo (opcional)</label><input id="evt-reg-url" type="url" placeholder="https://forms.gle/..."></div>
+      </div>
+      <div class="modal-actions" style="margin-top:16px;">
+        <button class="btn btn-outline" onclick="document.getElementById('evt-form-wrap').style.display='none';renderEventosAdmin()">Cancelar</button>
+        <button class="btn btn-c" id="btn-save-evt" onclick="saveEvento()">CREAR EVENTO</button>
+      </div>
+    </div>
+    ${upcoming.length?`
+    <h4 style="font-family:var(--font-title);margin:0 0 12px;color:var(--text);">Pr\u00f3ximos eventos</h4>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px;">
+      ${upcoming.map(e=>evtAdminCard(e)).join('')}
+    </div>`:''}
+    ${past.length?`
+    <h4 style="font-family:var(--font-title);margin:0 0 12px;color:var(--mu2);">Eventos pasados</h4>
+    <div style="display:flex;flex-direction:column;gap:10px;opacity:.7;">
+      ${past.map(e=>evtAdminCard(e)).join('')}
+    </div>`:''}
+    ${_adminEvents.length===0?`<div style="text-align:center;padding:40px;color:var(--mu);">Sin eventos. Crea el primero con + Nuevo.</div>`:''}
+  `;
+}
+
+function evtAdminCard(e){
+  const d=new Date(e.event_date);
+  const ds=d.toLocaleDateString('es-CO',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+  const icons={webinar:'\u{1F4BB}',retiro:'\u{1F3D4}\uFE0F',taller:'\u{1F6E0}\uFE0F',encuentro:'\u{1F91D}','sesion-grupal':'\u{1F465}',ceremonia:'\u2728'};
+  return`<div style="background:var(--bg2);border:1px solid var(--bd);border-radius:var(--radius-sm);padding:14px;">
+    <div style="display:flex;align-items:flex-start;gap:12px;">
+      <div style="width:40px;height:40px;border-radius:8px;background:var(--o)22;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">${icons[e.event_type]||'\u{1F4C5}'}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:600;font-size:14px;margin-bottom:2px;">${san(e.title_es)}</div>
+        <div style="font-size:12px;color:var(--mu);">${ds} \u00b7 ${san(e.location_name||'Online')} \u00b7 ${e.visible_to==='graduates'?'Solo graduados':'Todos'} \u00b7 ${e.is_free||!e.price?'Gratuito':'$'+e.price}</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0;">
+        <button onclick="toggleEvtActive('${e.id}',${!e.is_active})" style="padding:4px 10px;border-radius:6px;border:1px solid var(--bd);background:${e.is_active?'var(--m)22':'var(--bg)'};color:${e.is_active?'var(--m)':'var(--mu)'};font-size:11px;cursor:pointer;">${e.is_active?'Activo':'Inactivo'}</button>
+        <button onclick="deleteEvento('${e.id}','${san(e.title_es)}')" style="padding:4px 10px;border-radius:6px;border:1px solid var(--r)44;color:var(--r);background:transparent;font-size:11px;cursor:pointer;">Eliminar</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+async function saveEvento(){
+  const titleEs=document.getElementById('evt-title-es').value.trim();
+  const evtDate=document.getElementById('evt-date').value;
+  if(!titleEs||!evtDate){toast('T\u00edtulo y fecha son obligatorios','err');return;}
+  const btn=document.getElementById('btn-save-evt');
+  btn.disabled=true;btn.textContent='Guardando...';
+  try{
+    const price=parseFloat(document.getElementById('evt-price').value)||0;
+    const{error}=await sb.from('events').insert({
+      title_es:titleEs,
+      title_en:document.getElementById('evt-title-en').value.trim()||null,
+      description_es:document.getElementById('evt-desc-es').value.trim()||null,
+      event_type:document.getElementById('evt-type').value,
+      event_date:new Date(evtDate).toISOString(),
+      end_date:document.getElementById('evt-end-date').value?new Date(document.getElementById('evt-end-date').value).toISOString():null,
+      location_name:document.getElementById('evt-location').value.trim()||null,
+      location_url:document.getElementById('evt-location-url').value.trim()||null,
+      cover_url:document.getElementById('evt-cover-url').value.trim()||null,
+      price,is_free:price===0,
+      registration_url:document.getElementById('evt-reg-url').value.trim()||null,
+      visible_to:document.getElementById('evt-visible').value,
+      is_active:true,created_by:user.id
+    });
+    if(error)throw new Error(error.message);
+    toast('\u{1F4C5} Evento creado y publicado \u2713','ok');
+    renderEventosAdmin();
+  }catch(e){toast('Error: '+e.message,'err');}
+  finally{btn.disabled=false;btn.textContent='CREAR EVENTO';}
+}
+
+async function toggleEvtActive(evtId,isActive){
+  const{error}=await sb.from('events').update({is_active:isActive}).eq('id',evtId);
+  if(error){toast('Error: '+error.message,'err');return;}
+  renderEventosAdmin();
+}
+
+async function deleteEvento(evtId,title){
+  if(!confirm(`\u00bfEliminar "${title}"?`))return;
+  const{error}=await sb.from('events').delete().eq('id',evtId);
+  if(error){toast('Error: '+error.message,'err');return;}
+  toast('Evento eliminado','ok');
+  renderEventosAdmin();
 }
 
 // Offline/online detection
