@@ -146,6 +146,18 @@ label.field-label{display:block;font-size:14px;color:var(--mu);margin-bottom:6px
 .last-calib{font-size:14px;color:var(--mu);margin-top:8px;}
 .last-calib strong{color:var(--text);}
 .phase-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-family:var(--font-title);font-size:14px;font-weight:600;letter-spacing:.5px;}
+/* Mapa de progreso "Tu viaje MAAT" */
+.journey-card{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--radius);padding:16px;margin-top:16px;}
+.journey-title{font-family:var(--font-title);font-size:12px;font-weight:600;letter-spacing:1px;color:var(--mu);margin-bottom:12px;text-transform:uppercase;}
+.journey-track{display:flex;gap:7px;margin-bottom:8px;}
+.journey-phase{display:flex;gap:3px;flex:1;}
+.journey-seg{flex:1;height:9px;border-radius:5px;transition:all .4s ease;}
+.journey-seg.current{animation:journeyPulse 1.8s ease-in-out infinite;}
+@keyframes journeyPulse{0%,100%{transform:scaleY(1);}50%{transform:scaleY(1.5);}}
+.journey-labels{display:flex;gap:7px;margin-bottom:14px;}
+.journey-plabel{flex:1;text-align:center;font-size:9px;color:var(--mu2);letter-spacing:.3px;transition:color .3s;}
+.journey-status{font-family:var(--font-title);font-size:17px;font-weight:600;margin-bottom:5px;}
+.journey-msg{font-size:13px;color:var(--mu);line-height:1.55;}
 
 /* HABITS */
 .habit-item{background:var(--bg);border:1px solid var(--bd);border-radius:var(--radius-sm);padding:12px;margin-bottom:8px;}
@@ -281,6 +293,20 @@ label.field-label{display:block;font-size:14px;color:var(--mu);margin-bottom:6px
 #achievement .ach-icon{font-size:48px;margin-bottom:8px;}
 #achievement .ach-title{font-family:var(--font-title);font-size:20px;font-weight:700;color:var(--m);margin-bottom:4px;}
 #achievement .ach-text{font-size:14px;color:var(--mu);}
+/* Cierre Peak-End post-calibracion */
+#calib-close{position:fixed;inset:0;background:var(--bg);z-index:450;display:none;flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center;opacity:0;transition:opacity .4s;}
+#calib-close.show{display:flex;opacity:1;}
+#calib-close .cc-inner{max-width:380px;animation:ccRise .5s cubic-bezier(.34,1.56,.64,1);}
+@keyframes ccRise{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+#calib-close .cc-icon{font-size:56px;margin-bottom:16px;}
+#calib-close .cc-head{font-family:var(--font-title);font-size:24px;font-weight:700;margin-bottom:12px;line-height:1.25;}
+#calib-close .cc-msg{font-size:15px;color:var(--mu);line-height:1.6;margin-bottom:20px;}
+#calib-close .cc-streak{display:inline-block;background:rgba(235,160,85,.15);color:var(--o);font-family:var(--font-title);font-size:14px;font-weight:600;padding:6px 16px;border-radius:20px;margin-bottom:24px;}
+#calib-close .cc-ach{background:var(--bg2);border:1px solid var(--m);border-radius:var(--radius);padding:14px 18px;margin-bottom:24px;display:flex;align-items:center;gap:12px;text-align:left;}
+#calib-close .cc-ach .cca-icon{font-size:32px;flex-shrink:0;}
+#calib-close .cc-ach .cca-t{font-family:var(--font-title);font-size:15px;font-weight:700;color:var(--m);}
+#calib-close .cc-ach .cca-d{font-size:12px;color:var(--mu);}
+#calib-close .cc-btn{background:var(--c);color:#fff;border:none;border-radius:var(--radius-sm);font-family:var(--font-title);font-size:15px;font-weight:600;letter-spacing:.5px;padding:13px 40px;cursor:pointer;touch-action:manipulation;}
 
 /* PROFILE SHEET */
 .sheet-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;opacity:0;transition:opacity .3s;}
@@ -378,6 +404,7 @@ input:focus-visible,textarea:focus-visible,select:focus-visible{outline:none;bor
     <section id="v-mentor-notes" class="view" aria-label="Notas del mentor"></section>
     <section id="v-biblioteca" class="view" aria-label="Biblioteca de Meditaciones"></section>
     <section id="v-eventos" class="view" aria-label="Pr&oacute;ximos Eventos"></section>
+    <section id="v-logros" class="view" aria-label="Logros"></section>
   </main>
   <nav class="nav-bar" aria-label="Navegaci&oacute;n principal">
     <button class="nav-item active" data-view="v-home" onclick="gv('v-home')" aria-label="Home" aria-current="page">
@@ -428,6 +455,7 @@ input:focus-visible,textarea:focus-visible,select:focus-visible{outline:none;bor
 </div>
 <div id="onboarding-overlay"></div>
 <div id="achievement"><div class="ach-icon"></div><div class="ach-title"></div><div class="ach-text"></div></div>
+<div id="calib-close"><div class="cc-inner"></div></div>
 <div id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -454,6 +482,7 @@ let mentorWhatsapp=null;
 let mentorNotes=[];
 let _belFilter="all";
 let meditations=[],events=[],myEventRegs=[];
+let communityPulse=null;
 let _medCatFilter="all",_activeMedId=null;
 
 /* ============ i18n ============ */
@@ -790,36 +819,138 @@ function showAchievement(icon,title,text){
   el.classList.add("show");
   setTimeout(()=>el.classList.remove("show"),3500);
 }
-function checkAchievements(){
+// Catalogo de logros con lenguaje de IDENTIDAD ("eres alguien que...")
+const ACHIEVEMENTS=[
+  {id:"first-calib",icon:"\u{1F3AF}",es:{t:"Diste el primer paso",d:"Empezaste tu viaje. Eres de los que actuan."},en:{t:"You took the first step",d:"You began your journey. You're someone who acts."}},
+  {id:"first-coach",icon:"\u{1F9E0}",es:{t:"No caminas solo",d:"Buscaste apoyo. Pedir ayuda es fortaleza."},en:{t:"You don't walk alone",d:"You reached out. Asking for help is strength."}},
+  {id:"first-belief",icon:"\u{1F4AD}",es:{t:"Mirando hacia adentro",d:"Registraste tu primera creencia. Te observas."},en:{t:"Looking inward",d:"You logged your first belief. You observe yourself."}},
+  {id:"streak-3",icon:"\u{1F525}",es:{t:"Constancia naciente",d:"3 dias seguidos. Asi empiezan los habitos."},en:{t:"Emerging consistency",d:"3 days straight. This is how habits begin."}},
+  {id:"streak-7",icon:"\u{1F525}",es:{t:"Una semana firme",d:"7 dias sin fallar. Eres alguien constante."},en:{t:"A solid week",d:"7 days without missing. You're consistent."}},
+  {id:"streak-14",icon:"\u{1F525}",es:{t:"Dos semanas imparable",d:"14 dias. Esto ya es parte de quien eres."},en:{t:"Two weeks unstoppable",d:"14 days. This is part of who you are now."}},
+  {id:"streak-21",icon:"\u2728",es:{t:"Habito forjado",d:"21 dias. Te convertiste en alguien constante."},en:{t:"Habit forged",d:"21 days. You became a consistent person."}},
+  {id:"streak-30",icon:"\u{1F451}",es:{t:"Maestria de la constancia",d:"30 dias. Pocos llegan aqui. Tu si."},en:{t:"Mastery of consistency",d:"30 days. Few get here. You did."}},
+  {id:"phase-1",icon:"\u25C6",es:{t:"Fundacion construida",d:"Completaste la Fase 1: Gratitud."},en:{t:"Foundation built",d:"You completed Phase 1: Gratitude."}},
+  {id:"phase-2",icon:"\u25C6",es:{t:"Cruzaste el umbral",d:"Completaste la Fase 2: Amor, el corazon del proceso."},en:{t:"You crossed the threshold",d:"You completed Phase 2: Love, the heart of the process."}},
+  {id:"phase-3",icon:"\u25C6",es:{t:"Nueva direccion",d:"Completaste la Fase 3: Intencion."},en:{t:"New direction",d:"You completed Phase 3: Intention."}},
+  {id:"phase-4",icon:"\u25C6",es:{t:"Integracion total",d:"Completaste la Fase 4: Voluntad."},en:{t:"Full integration",d:"You completed Phase 4: Will."}},
+  {id:"halfway",icon:"\u26F0\uFE0F",es:{t:"A mitad del camino",d:"Llegaste a la semana 8. El tramo mas dificil, superado."},en:{t:"Halfway there",d:"You reached week 8. The hardest stretch, behind you."}},
+  {id:"graduate",icon:"\u{1F393}",es:{t:"Graduado MAAT",d:"Completaste las 16 semanas. Eres tu nueva version."},en:{t:"MAAT Graduate",d:"You completed the 16 weeks. You are your new self."}}
+];
+
+// Devuelve los IDs de logros que el usuario YA cumple (segun el estado actual)
+function earnedAchievements(){
   const streak=calcStreak();
+  const ids=[];
+  if(cals.length>=1)ids.push("first-calib");
+  if(chatHistory.length>0)ids.push("first-coach");
+  if(bels.length>0)ids.push("first-belief");
+  [3,7,14,21,30].forEach(n=>{if(streak>=n)ids.push("streak-"+n);});
+  [1,2,3,4].forEach(p=>{const s=(p-1)*4+1;if([s,s+1,s+2,s+3].every(w=>wkp[w]))ids.push("phase-"+p);});
+  if((prof?.current_week||hwk)>=8||wkp[8])ids.push("halfway");
+  if(prof?.graduated)ids.push("graduate");
+  return ids;
+}
+
+// Marca logros nuevos. Devuelve los recien obtenidos. Con {silent:true} no muestra popups.
+function checkAchievements(opts){
+  if(!user)return[];
+  const earned=earnedAchievements();
   const shownKey="maat-ach-"+user.id;
   const shown=JSON.parse(localStorage.getItem(shownKey)||"{}");
-  // Streak milestones
-  [3,7,14,21,30].forEach(n=>{
-    if(streak>=n&&!shown["streak-"+n]){
-      shown["streak-"+n]=true;
-      const titles_es={"3":"\u00A13 d\u00EDas seguidos!","7":"\u00A1Una semana completa!","14":"\u00A12 semanas imparable!","21":"\u00A121 d\u00EDas \u2014 Nuevo h\u00E1bito!","30":"\u00A130 d\u00EDas \u2014 Leyenda!"};
-      const titles_en={"3":"3-day streak!","7":"Full week!","14":"2 weeks unstoppable!","21":"21 days \u2014 New habit!","30":"30 days \u2014 Legend!"};
-      setTimeout(()=>showAchievement("\u{1F525}",lang==='es'?titles_es[n]:titles_en[n],lang==='es'?`Llevas ${n} d\u00EDas calibrando sin parar`:`${n} days calibrating non-stop`),1200);
+  const newly=earned.filter(id=>!shown[id]);
+  newly.forEach((id,i)=>{
+    shown[id]=true;
+    if(!opts||!opts.silent){
+      const a=ACHIEVEMENTS.find(x=>x.id===id);
+      if(a)setTimeout(()=>showAchievement(a.icon,lang==='es'?a.es.t:a.en.t,lang==='es'?a.es.d:a.en.d),1000+i*1600);
     }
   });
-  // Phase completion
-  [1,2,3,4].forEach(p=>{
-    const startW=(p-1)*4+1;const endW=p*4;
-    const allDone=[startW,startW+1,startW+2,endW].every(w=>wkp[w]);
-    if(allDone&&!shown["phase-"+p]){
-      shown["phase-"+p]=true;
-      const names_es=["GRATITUD","AMOR","INTENCI\u00D3N","VOLUNTAD"];
-      const names_en=["GRATITUDE","LOVE","INTENTION","WILL"];
-      setTimeout(()=>showAchievement("\u25C6",lang==='es'?`\u00A1Fase ${p} completada!`:`Phase ${p} complete!`,lang==='es'?`Dominaste ${names_es[p-1]}`:`You mastered ${names_en[p-1]}`),1500);
-    }
-  });
-  // First calibration
-  if(cals.length===1&&!shown["first-calib"]){
-    shown["first-calib"]=true;
-    setTimeout(()=>showAchievement("\u{1F3AF}",lang==='es'?"\u00A1Primera calibraci\u00F3n!":"First calibration!",lang==='es'?"El viaje de 16 semanas comienza hoy":"The 16-week journey starts today"),800);
-  }
   localStorage.setItem(shownKey,JSON.stringify(shown));
+  return newly;
+}
+
+// ============ CIERRE PEAK-END POST-CALIBRACION ============
+// Mensaje variable segun actitud (recompensa variable del Hook Model) + racha + logro nuevo.
+function showCalibClose(coh){
+  const newly=checkAchievements({silent:true});// marca logros sin popup; los mostramos aqui
+  const ach=newly.length?ACHIEVEMENTS.find(x=>x.id===newly[0]):null;
+  const streak=calcStreak();
+  const es=lang==='es';
+  // Pools por nivel de actitud
+  const high=es?[
+    {h:"Hoy llegas con fuerza",m:"Esa energia es tuya. Usala para algo que te importe de verdad."},
+    {h:"Que buen punto de partida",m:"Cuando te sientes asi, es el momento de dar un paso valiente."},
+    {h:"Tu actitud esta alta",m:"Aprovecha este impulso. No todos los dias se sienten asi."}
+  ]:[
+    {h:"You arrive with strength today",m:"That energy is yours. Use it for something that truly matters."},
+    {h:"What a great starting point",m:"When you feel like this, it's time to take a bold step."},
+    {h:"Your attitude is high",m:"Ride this momentum. Not every day feels like this."}
+  ];
+  const mid=es?[
+    {h:"Reconocer donde estas ya es consciencia",m:"No tienes que estar al 100%. Solo presente. Y lo estas."},
+    {h:"Un dia mas, un paso mas",m:"El progreso no es lineal. Lo importante es que volviste."},
+    {h:"Estas aqui, y eso cuenta",m:"La constancia pesa mas que la intensidad."}
+  ]:[
+    {h:"Acknowledging where you are is awareness",m:"You don't have to be at 100%. Just present. And you are."},
+    {h:"One more day, one more step",m:"Progress isn't linear. What matters is you came back."},
+    {h:"You're here, and that counts",m:"Consistency weighs more than intensity."}
+  ];
+  const low=es?[
+    {h:"Hoy es dificil, y aun asi te presentaste",m:"Eso es exactamente lo que importa. Se gentil contigo hoy."},
+    {h:"Nombrar lo dificil ya es valiente",m:"No estas solo en esto. Manana es otra oportunidad."},
+    {h:"Gracias por mostrarte tal como estas",m:"Los dias bajos tambien son parte del camino. Respira."}
+  ]:[
+    {h:"Today is hard, and you still showed up",m:"That's exactly what matters. Be gentle with yourself today."},
+    {h:"Naming the hard is already brave",m:"You're not alone in this. Tomorrow is another chance."},
+    {h:"Thank you for showing up as you are",m:"Low days are part of the path too. Breathe."}
+  ];
+  const pool=coh>=8?high:coh>=5?mid:low;
+  const pick=pool[Math.floor(Math.random()*pool.length)];
+  const icon=coh>=8?"\u2728":coh>=5?"\u{1F331}":"\u{1F90D}";
+  const el=document.getElementById("calib-close");
+  el.querySelector(".cc-inner").innerHTML=`
+    <div class="cc-icon">${icon}</div>
+    <div class="cc-head">${san(pick.h)}</div>
+    <div class="cc-msg">${san(pick.m)}</div>
+    ${streak>1?`<div class="cc-streak">\u{1F525} ${streak} ${es?'dias seguidos':'days in a row'}</div>`:''}
+    ${ach?`<div class="cc-ach"><div class="cca-icon">${ach.icon}</div><div><div class="cca-t">${es?ach.es.t:ach.en.t}</div><div class="cca-d">${es?ach.es.d:ach.en.d}</div></div></div>`:''}
+    <div><button class="cc-btn" onclick="closeCalibClose()">${es?'Continuar':'Continue'}</button></div>
+  `;
+  el.classList.add("show");
+  // Auto-cierre de respaldo
+  clearTimeout(window._ccTimer);
+  window._ccTimer=setTimeout(()=>closeCalibClose(),6000);
+}
+function closeCalibClose(){
+  clearTimeout(window._ccTimer);
+  document.getElementById("calib-close").classList.remove("show");
+  gv("v-home");
+}
+
+// Vista coleccionable de Logros (refuerza identidad: ver lo conseguido)
+function renderLogros(){
+  const earned=new Set(earnedAchievements());
+  const es=lang==='es';
+  const total=ACHIEVEMENTS.length;
+  const got=ACHIEVEMENTS.filter(a=>earned.has(a.id)).length;
+  document.getElementById("v-logros").innerHTML=`
+    <div class="sv-header"><button class="btn-back" onclick="gv('v-mas')">\u2039</button><h2>${es?'Mis Logros':'My Achievements'}</h2></div>
+    <p style="font-size:14px;color:var(--mu);margin:0 0 8px;line-height:1.6;">${es?'Cada logro refleja quien estas eligiendo ser, dia a dia.':'Each achievement reflects who you are choosing to become, day by day.'}</p>
+    <div style="font-family:var(--font-title);font-size:15px;font-weight:600;color:var(--c);margin-bottom:16px;">${got} / ${total} ${es?'desbloqueados':'unlocked'}</div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      ${ACHIEVEMENTS.map(a=>{
+        const has=earned.has(a.id);
+        return`<div style="display:flex;align-items:center;gap:14px;padding:14px;background:var(--bg2);border:1px solid ${has?'var(--m)':'var(--bd)'};border-radius:var(--radius-sm);${has?'':'opacity:.5;'}">
+          <div style="font-size:32px;flex-shrink:0;filter:${has?'none':'grayscale(1)'};">${has?a.icon:'\u{1F512}'}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-family:var(--font-title);font-size:15px;font-weight:700;color:${has?'var(--m)':'var(--mu)'};">${es?a.es.t:a.en.t}</div>
+            <div style="font-size:12px;color:var(--mu);line-height:1.4;">${has?(es?a.es.d:a.en.d):(es?'Aun por desbloquear':'Not unlocked yet')}</div>
+          </div>
+          ${has?'<div style="color:var(--m);font-size:18px;flex-shrink:0;">\u2713</div>':''}
+        </div>`;
+      }).join("")}
+    </div>
+  `;
 }
 
 /* ============ INIT & LOAD ============ */
@@ -899,6 +1030,7 @@ async function loadDataSecondary(){
       sb.from("meditations").select("*").eq("is_active",true).order("sort_order"),
       sb.from("events").select("*").eq("is_active",true).order("event_date",{ascending:true}),
       sb.from("event_registrations").select("event_id,status").eq("user_id",uid),
+      sb.rpc("get_community_pulse"),
     ]);
     if(results[0]?.status==="fulfilled"){const{data,error}=results[0].value;if(!error)bels=data||[];}
     if(results[1]?.status==="fulfilled"){const{data}=results[1].value;if(data)sh=data;}
@@ -907,6 +1039,7 @@ async function loadDataSecondary(){
     if(results[5]?.status==="fulfilled"){const{data}=results[5].value;if(data)meditations=data||[];}
     if(results[6]?.status==="fulfilled"){const{data}=results[6].value;if(data)events=data||[];}
     if(results[7]?.status==="fulfilled"){const{data}=results[7].value;if(data)myEventRegs=data||[];}
+    if(results[8]?.status==="fulfilled"){const{data}=results[8].value;if(data)communityPulse=data;}
   }catch(e){console.warn("loadDataSecondary:",e.message);}
 }
 
@@ -936,6 +1069,7 @@ function nav(id){
   else if(id==="v-habitos"){_habViewWeek=hwk;renderHabits();}
   else if(id==="v-coach")renderCoach();
   else if(id==="v-mas")renderMas();
+  else if(id==="v-logros")renderLogros();
   else if(id==="v-progreso")renderProgress();
   else if(id==="v-creencias")renderBeliefs();
   else if(id==="v-statement")renderStatement();
@@ -971,6 +1105,85 @@ function evtTypeName(type){
   const es={webinar:'Webinar',retiro:'Retiro',taller:'Taller',encuentro:'Encuentro','sesion-grupal':'Sesi\u00F3n Grupal',ceremonia:'Ceremonia'};
   const en={webinar:'Webinar',retiro:'Retreat',taller:'Workshop',encuentro:'Meetup','sesion-grupal':'Group Session',ceremonia:'Ceremony'};
   return (lang==='es'?es:en)[type]||type||'Evento';
+}
+
+// Mensaje motivacional contextual segun la semana. Refuerza especialmente
+// el "valle" (semanas 6-9), donde el diagnostico mostro mas abandono.
+function journeyMessage(w){
+  const es=lang==='es';
+  if(w<=2)  return es?"Apenas comienzas. Cada calibracion construye el cimiento de todo lo que viene.":"You're just starting. Each calibration builds the foundation for everything ahead.";
+  if(w<=4)  return es?"Estas despertando la conciencia. Lo que descubres ahora cambia el resto del camino.":"You're awakening awareness. What you discover now changes the rest of the journey.";
+  if(w<=6)  return es?"Entras al corazon del proceso. Aqui es donde la transformacion de verdad se forja.":"You're entering the heart of the process. This is where real transformation is forged.";
+  if(w<=9)  return es?"Estas en el tramo mas profundo del viaje. Si llegaste hasta aqui, tienes lo que se necesita. No sueltes ahora.":"You're in the deepest part of the journey. If you made it here, you have what it takes. Don't let go now.";
+  if(w<=12) return es?"Cruzaste el umbral mas dificil. Ahora construyes tu nueva direccion con intencion.":"You crossed the hardest threshold. Now you build your new direction with intention.";
+  if(w<=14) return es?"La recta final. Estas integrando tu nueva version como forma de vida.":"The home stretch. You're integrating your new self as a way of life.";
+  return es?"Ultimas semanas. Estas a punto de completar una transformacion que pocos terminan.":"Final weeks. You're about to complete a transformation few ever finish.";
+}
+
+function journeyCard(){
+  const isGrad=!!(prof?.graduated);
+  const phaseHex=["#39A1C9","#EBA055","#7DCD93","#89608E"];
+  const phaseNames=t("phases");
+  const curPhase=getPhase(hwk);
+  let track="";
+  for(let p=1;p<=4;p++){
+    let segs="";
+    for(let i=0;i<4;i++){
+      const w=(p-1)*4+i+1;
+      const done=isGrad||wkp[w];
+      const current=!isGrad&&w===hwk;
+      const style=current
+        ?`background:${phaseHex[p-1]};box-shadow:0 0 8px ${phaseHex[p-1]};`
+        :done?`background:${phaseHex[p-1]};`
+        :`background:var(--bd);opacity:.55;`;
+      segs+=`<div class="journey-seg${current?' current':''}" style="${style}"></div>`;
+    }
+    track+=`<div class="journey-phase">${segs}</div>`;
+  }
+  let labels="";
+  for(let p=1;p<=4;p++){
+    const active=isGrad||curPhase===p;
+    labels+=`<div class="journey-plabel" style="${active?'color:'+phaseHex[p-1]+';font-weight:700;':''}">${phaseNames[p-1]}</div>`;
+  }
+  let status,msg;
+  if(isGrad){
+    status=lang==='es'?'Viaje completado \u{1F393}':'Journey completed \u{1F393}';
+    msg=lang==='es'?'Completaste las 16 semanas. Tu transformacion es ahora tu nueva base.':'You completed the 16 weeks. Your transformation is now your new foundation.';
+  }else{
+    status=`${t("week_label")} ${hwk} ${lang==='es'?'de 16':'of 16'} \u00B7 ${phaseNames[curPhase-1]}`;
+    msg=journeyMessage(hwk);
+  }
+  const statusColor=isGrad?'var(--o)':phaseHex[curPhase-1];
+  return `<div class="journey-card">
+    <div class="journey-title">${lang==='es'?'Tu viaje MAAT':'Your MAAT journey'}</div>
+    <div class="journey-track">${track}</div>
+    <div class="journey-labels">${labels}</div>
+    <div class="journey-status" style="color:${statusColor};">${status}</div>
+    <div class="journey-msg">${san(msg)}</div>
+  </div>`;
+}
+
+// Capa social ligera: pulso de comunidad con copy adaptativo (Relatedness/pertenencia)
+function communityCard(){
+  if(!communityPulse)return"";
+  const p=communityPulse;
+  const members=p.members||0;
+  if(members<=1)return"";// sin comunidad real todavia, no mostrar
+  const es=lang==='es';
+  const today=p.today||0,week=p.week||0;
+  let line;
+  if(today>=3)line=es?`${today} personas ya calibraron hoy`:`${today} people already calibrated today`;
+  else if(week>=3)line=es?`${week} personas calibraron esta semana`:`${week} people calibrated this week`;
+  else line=es?`${members} personas en transformacion contigo`:`${members} people transforming alongside you`;
+  return `<div class="card" style="margin-top:16px;border-left:3px solid var(--v);background:linear-gradient(135deg,rgba(137,96,142,.08),transparent);">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div style="font-size:26px;flex-shrink:0;">\u{1F331}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:2px;">${es?'Comunidad MAAT':'MAAT Community'}</div>
+        <div style="font-size:12px;color:var(--mu);line-height:1.5;">${san(line)}. ${es?'No caminas solo.':'You are not walking alone.'}</div>
+      </div>
+    </div>
+  </div>`;
 }
 
 function renderHome(){
@@ -1018,9 +1231,7 @@ function renderHome(){
       <div class="stat-box"><div class="stat-val" style="color:${attAvg?attColor(parseFloat(attAvg)):'var(--mu)'}">${attAvg||"\u2014"}</div><div class="stat-label">${t("attitude_avg")}</div></div>
     </div>
     ${cals.length===0?`<div class="onboarding-card"><h3>${lang==='es'?'\u00A1Bienvenido a MAAT! \u{1F44B}':'Welcome to MAAT! \u{1F44B}'}</h3><p>${lang==='es'?'Tu primer paso es calibrar tu d\u00EDa. Toma solo 30 segundos y es el inicio de todo tu proceso.':'Your first step is to calibrate your day. It takes just 30 seconds and is the start of your whole journey.'}</p><button class="btn-action" style="width:auto;padding:10px 24px;margin:0;" onclick="gv(\'v-calib\')">${lang==='es'?'Hacer mi primera calibraci\u00F3n \u2192':'Do my first calibration \u2192'}</button></div>`:''}
-    <div class="phase-badge" style="background:${getPhaseColor(phase)}22;color:${getPhaseColor(phase)};border:1px solid ${getPhaseColor(phase)}44;">
-      \u25C6 ${t("phases")[phase-1]} \u2014 ${t("phase_names")[phase-1]}
-    </div>
+    ${journeyCard()}
     <div class="cta-calib" onclick="gv('v-calib')"><h3>${t("cta_calib")}</h3><p>${t("cta_calib_sub")}</p></div>
     <div class="card" style="margin-top:16px;border-left:3px solid var(--m);cursor:pointer;background:linear-gradient(135deg,rgba(125,205,147,.08),transparent);" onclick="gv('v-coach')">
       <div style="display:flex;align-items:center;gap:12px;">
@@ -1032,6 +1243,7 @@ function renderHome(){
         <div style="font-size:20px;color:var(--m);flex-shrink:0;">\u2192</div>
       </div>
     </div>
+    ${communityCard()}
     ${(mentorNotes.length&&mentorNotes[0].next_plan)?'<div class="card" style="margin-top:16px;border-left:3px solid var(--c);"><div style="font-size:11px;color:var(--c);font-family:var(--font-title);font-weight:600;letter-spacing:1px;margin-bottom:6px;">\u{1F4CB} '+(lang==='es'?'TAREA DE TU MENTOR':'FROM YOUR MENTOR')+'</div><p style="font-size:14px;line-height:1.6;">'+san(mentorNotes[0].next_plan)+'</p><p style="font-size:11px;color:var(--mu);margin-top:6px;">'+san(mentorNotes[0].session_type||'')+' \u00B7 '+san(mentorNotes[0].session_date||'')+' \u00B7 '+(lang==='es'?'Sem':'Week')+' '+(mentorNotes[0].client_week||'?')+'</p></div>':''}
     ${lastCal?`<p class="last-calib">${t("last_calib")} <strong>${san(lastCal.date||"")}</strong> \u00B7 ${t("attitude_avg")}: <strong style="color:${attColor(lastCal.coherence)}">${lastCal.coherence}/10</strong></p>`:`<p class="last-calib text-mu">${t("no_calib")}</p>`}
     ${upcomingEvents.length?`
@@ -1160,9 +1372,7 @@ async function saveCalibExpress(){
     cals.unshift(data);
     _calibStep=0;_calibAnswers={};
     track("calib_done",{week:hwk,coherence:coh,mode:"express"});
-    toast(t("saved"),"ok");
-    checkAchievements();
-    setTimeout(()=>gv("v-home"),800);
+    showCalibClose(coh);
   }finally{btn.disabled=false;btn.textContent=t("btn_save_calib");}
 }
 function renderCalibStep(){
@@ -1236,9 +1446,7 @@ async function saveCalib(){
     cals.unshift(data);
     _calibStep=0;_calibAnswers={};
     track("calib_done",{week:hwk,coherence:coh,mode:"deep"});
-    toast(t("saved"),"ok");
-    checkAchievements();
-    setTimeout(()=>gv("v-home"),800);
+    showCalibClose(coh);
   }finally{btn.disabled=false;btn.textContent=t("btn_save_calib");}
 }
 
@@ -1629,6 +1837,7 @@ function renderMas(){
     <h2 style="font-family:var(--font-title);font-size:24px;font-weight:600;margin-bottom:16px;">${lang==="es"?"M\u00E1s":"More"}</h2>
     <div class="menu-grid">
       <div class="menu-item" onclick="gs('v-progreso')"><div class="menu-icon">\u{1F4CA}</div><div class="menu-label">${t("menu_progress")}</div></div>
+      <div class="menu-item" onclick="nav('v-logros')"><div class="menu-icon">\u{1F3C6}</div><div class="menu-label">${lang==='es'?'MIS LOGROS':'ACHIEVEMENTS'}</div></div>
       <div class="menu-item" onclick="gs('v-creencias')"><div class="menu-icon">\u{1F9EC}</div><div class="menu-label">${t("menu_beliefs")}</div></div>
       <div class="menu-item" onclick="gs('v-statement')"><div class="menu-icon">\u{1F4DD}</div><div class="menu-label">${t("menu_statement")}</div></div>
       <div class="menu-item" onclick="gs('v-historial')"><div class="menu-icon">\u{1F4CB}</div><div class="menu-label">${t("menu_history")}</div></div>
