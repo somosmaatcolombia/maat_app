@@ -292,6 +292,10 @@ dialog.m-dialog[open]{display:flex;align-items:flex-start;justify-content:center
         Mi Configuraci&oacute;n
       </div>
       <div class="nav-section admin-only">ADMIN</div>
+      <div class="nav-link admin-only" data-view="traccion" onclick="goView('traccion')">
+        <svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg>
+        Traccion
+      </div>
       <div class="nav-link admin-only" data-view="admin-users" onclick="goView('admin-users')">
         <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         Usuarios
@@ -325,6 +329,7 @@ dialog.m-dialog[open]{display:flex;align-items:flex-start;justify-content:center
       <div id="v-alerts" class="view"></div>
       <div id="v-sessions" class="view"></div>
       <div id="v-mentor-config" class="view"></div>
+      <div id="v-traccion" class="view"></div>
       <div id="v-admin-users" class="view"></div>
       <div id="v-admin-prompt" class="view"></div>
       <div id="v-graduados" class="view"></div>
@@ -630,7 +635,7 @@ function goView(viewId){
   const el=document.getElementById("v-"+viewId);if(el)el.classList.add("active");
   document.querySelectorAll(".nav-link").forEach(n=>{n.classList.toggle("active",n.dataset.view===viewId);});
   closeSidebar();
-  const titles={overview:"Resumen",clients:"Mis Clientes",profile:"Perfil del Cliente",alerts:"Alertas",sessions:"Notas de Sesi\u00F3n","mentor-config":"Mi Configuraci\u00F3n","admin-users":"Usuarios","admin-prompt":"Coach IA Config",graduados:"Graduados",meditaciones:"Meditaciones",eventos:"Eventos"};
+  const titles={overview:"Resumen",clients:"Mis Clientes",profile:"Perfil del Cliente",alerts:"Alertas",sessions:"Notas de Sesi\u00F3n","mentor-config":"Mi Configuraci\u00F3n","admin-users":"Usuarios","admin-prompt":"Coach IA Config",graduados:"Graduados",meditaciones:"Meditaciones",eventos:"Eventos",traccion:"Traccion / Metricas"};
   document.getElementById("topbar-title").textContent=titles[viewId]||"MAAT";
   if(viewId==="overview")renderOverview();
   else if(viewId==="clients")renderClients();
@@ -642,6 +647,7 @@ function goView(viewId){
   else if(viewId==="graduados")renderGraduados();
   else if(viewId==="meditaciones")renderMeditacionesAdmin();
   else if(viewId==="eventos")renderEventosAdmin();
+  else if(viewId==="traccion")renderTraccion();
 }
 
 /* ============================================ */
@@ -1068,6 +1074,91 @@ async function saveMentorConfig(){
     if(error){if(!chkAuthErr(error))toast(error.message,"err");return;}
     toast("Configuraci\u00F3n guardada \u2713","ok");
   }finally{btn.disabled=false;btn.textContent="GUARDAR CONFIGURACI\u00D3N";}
+}
+
+/* ============================================ */
+/* ADMIN: TRACCION / METRICAS (dashboard inversion) */
+/* ============================================ */
+async function renderTraccion(){
+  if(myRole!=="admin"&&myRole!=="mentor")return;
+  const el=document.getElementById("v-traccion");
+  el.innerHTML='<div class="card"><p style="color:var(--mu);">Cargando metricas...</p></div>';
+  let m=null,series=[];
+  try{
+    const r1=await sb.rpc("get_traction_metrics");
+    const r2=await sb.rpc("get_daily_activity",{days:30});
+    m=r1.data;series=r2.data||[];
+  }catch(e){}
+  if(!m){el.innerHTML='<div class="card"><p style="color:var(--r);">No se pudieron cargar las metricas. Ejecuta sql/maat_traction_metrics.sql en Supabase.</p></div>';return;}
+  const pct=(a,b)=>b?Math.round(a/b*100):0;
+  const activationRate=pct(m.activated_7d,m.total_clients);
+  const consistencyRate=pct(m.consistent_users,m.total_clients);
+  const coachAdoption=pct(m.coach_users,m.total_clients);
+  const wauRate=pct(m.active_7d,m.total_clients);
+  // Funnel por fase (desde _allProfiles que ya esta cargado)
+  const phaseCount=[0,0,0,0];let grad=0;
+  _allProfiles.forEach(p=>{
+    if(p.graduated){grad++;return;}
+    const w=p.current_week||1;const ph=w<=4?0:w<=8?1:w<=12?2:3;phaseCount[ph]++;
+  });
+  const phaseNames=["Fase 1: Gratitud","Fase 2: Amor","Fase 3: Intencion","Fase 4: Voluntad"];
+  const phaseHex=["#39A1C9","#EBA055","#7DCD93","#89608E"];
+  const maxPhase=Math.max(1,...phaseCount,grad);
+  // Grafico de actividad diaria
+  const maxU=Math.max(1,...series.map(d=>d.users||0));
+  const bars=series.length?series.map(d=>{
+    const h=Math.round((d.users||0)/maxU*100);
+    const dd=new Date(d.day);const lbl=dd.getDate();
+    return`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0;">
+      <div style="width:100%;background:var(--c);border-radius:3px 3px 0 0;height:${Math.max(2,h)}%;min-height:2px;" title="${d.day}: ${d.users}"></div>
+    </div>`;
+  }).join(""):'<p style="color:var(--mu);">Sin datos aun</p>';
+
+  el.innerHTML=`
+    <p style="font-size:13px;color:var(--mu);margin:0 0 16px;line-height:1.6;">Metricas agregadas de traccion y compromiso. Util para inversion y para medir el impacto de las mejoras.</p>
+
+    <div class="card" style="border-left:3px solid var(--m);">
+      <div class="card-title">\u2B50 Metrica Norte \u2014 Constancia</div>
+      <div style="display:flex;align-items:baseline;gap:12px;">
+        <div style="font-family:var(--font-title);font-size:40px;font-weight:700;color:var(--m);">${consistencyRate}%</div>
+        <div style="font-size:13px;color:var(--mu);">${m.consistent_users} de ${m.total_clients} usuarios calibran 4+ dias/semana</div>
+      </div>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-val" style="color:var(--c)">${m.total_clients}</div><div class="stat-label">Clientes totales</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:var(--c)">${m.active_today}</div><div class="stat-label">Activos hoy (DAU)</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:var(--c)">${m.active_7d}</div><div class="stat-label">Activos 7d (WAU) \u00B7 ${wauRate}%</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:var(--c)">${m.active_30d}</div><div class="stat-label">Activos 30d (MAU)</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:var(--m)">${activationRate}%</div><div class="stat-label">Activacion (calibran en 7d)</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:${m.never_activated>0?'var(--r)':'var(--m)'}">${m.never_activated}</div><div class="stat-label">Nunca activaron</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:var(--o)">${coachAdoption}%</div><div class="stat-label">Adopcion del Coach IA</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:var(--v)">${m.graduated}</div><div class="stat-label">Graduados</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:var(--c)">${m.new_30d}</div><div class="stat-label">Nuevos (30d)</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:var(--c)">${m.cal_total}</div><div class="stat-label">Calibraciones totales</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">\u{1F4C8} Usuarios activos por dia (ultimos 30 dias)</div>
+      <div style="display:flex;align-items:flex-end;gap:2px;height:140px;padding-top:8px;">${bars}</div>
+      <p style="font-size:11px;color:var(--mu2);margin-top:8px;">Pico: ${maxU} usuarios/dia. La tendencia muestra si el uso crece o decae.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">\u{1F4CA} Distribucion por fase del proceso</div>
+      ${phaseNames.map((nm,i)=>`
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          <div style="width:120px;font-size:12px;color:var(--mu);flex-shrink:0;">${nm}</div>
+          <div style="flex:1;background:var(--bg);border-radius:4px;height:18px;overflow:hidden;"><div style="height:100%;width:${pct(phaseCount[i],maxPhase)}%;background:${phaseHex[i]};border-radius:4px;"></div></div>
+          <div style="width:28px;text-align:right;font-size:13px;font-weight:600;">${phaseCount[i]}</div>
+        </div>`).join("")}
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:120px;font-size:12px;color:var(--mu);flex-shrink:0;">\u{1F393} Graduados</div>
+        <div style="flex:1;background:var(--bg);border-radius:4px;height:18px;overflow:hidden;"><div style="height:100%;width:${pct(grad,maxPhase)}%;background:linear-gradient(90deg,var(--o),var(--v));border-radius:4px;"></div></div>
+        <div style="width:28px;text-align:right;font-size:13px;font-weight:600;">${grad}</div>
+      </div>
+    </div>
+  `;
 }
 
 /* ============================================ */
