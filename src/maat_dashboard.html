@@ -172,9 +172,26 @@ label.field-label{display:block;font-size:14px;color:var(--mu);margin-bottom:6px
 /* COACH */
 .chat-container{display:flex;flex-direction:column;height:calc(100vh - var(--topbar-h) - var(--nav-h) - 32px);}
 .chat-messages{flex:1;overflow-y:auto;padding:8px 0;display:flex;flex-direction:column;gap:8px;}
-.chat-msg{max-width:85%;padding:10px 14px;border-radius:14px;font-size:15px;line-height:1.5;word-wrap:break-word;}
-.chat-msg.user{align-self:flex-end;background:var(--c);color:#fff;border-bottom-right-radius:4px;}
+.chat-msg{max-width:85%;padding:10px 14px;border-radius:14px;font-size:15px;line-height:1.55;word-wrap:break-word;overflow-wrap:break-word;}
+.chat-msg.user{align-self:flex-end;background:var(--c);color:#fff;border-bottom-right-radius:4px;white-space:pre-wrap;}
 .chat-msg.assistant{align-self:flex-start;background:var(--bg2);border:1px solid var(--bd);border-bottom-left-radius:4px;color:var(--text);}
+/* Estilo de markdown renderizado dentro de las burbujas del coach */
+.chat-msg.assistant p{margin:0 0 10px;}
+.chat-msg.assistant p:last-child{margin-bottom:0;}
+.chat-msg.assistant strong{color:var(--c);font-weight:700;}
+.chat-msg.assistant em{font-style:italic;color:var(--text);}
+.chat-msg.assistant h3,.chat-msg.assistant h4{font-family:var(--font-title);color:var(--text);margin:14px 0 6px;letter-spacing:.3px;line-height:1.3;}
+.chat-msg.assistant h3{font-size:16px;}
+.chat-msg.assistant h4{font-size:14px;}
+.chat-msg.assistant h3:first-child,.chat-msg.assistant h4:first-child{margin-top:0;}
+.chat-msg.assistant ul,.chat-msg.assistant ol{margin:6px 0 10px;padding-left:22px;}
+.chat-msg.assistant li{margin-bottom:4px;}
+.chat-msg.assistant li:last-child{margin-bottom:0;}
+.chat-msg.assistant code{background:rgba(0,0,0,.25);padding:2px 6px;border-radius:4px;font-family:'SF Mono',Menlo,Consolas,monospace;font-size:13px;}
+.chat-msg.assistant pre{background:rgba(0,0,0,.25);padding:10px;border-radius:6px;overflow-x:auto;margin:8px 0;}
+.chat-msg.assistant pre code{background:none;padding:0;}
+.chat-msg.assistant hr{border:none;border-top:1px solid var(--bd);margin:12px 0;}
+.chat-msg.assistant blockquote{border-left:3px solid var(--c);padding-left:10px;margin:6px 0;color:var(--mu);}
 .chat-input-row{display:flex;gap:8px;padding-top:8px;border-top:1px solid var(--bd);margin-top:8px;}
 .chat-input-row input{flex:1;padding:12px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--bg2);color:var(--text);font-family:var(--font-body);font-size:15px;outline:none;}
 .chat-input-row button{padding:12px 16px;background:var(--c);color:#fff;border:none;border-radius:var(--radius-sm);cursor:pointer;font-size:16px;touch-action:manipulation;}
@@ -424,7 +441,7 @@ const sb=supabase.createClient(SU,SK);
 let user=null,prof=null,cals=[],bels=[],wkp={},ht={},sh=null,aiCfg={};
 let hwk=1,notifHour=9;
 let chatHistory=[],chatLocked=false;
-let _calibStep=0,_calibAnswers={};
+let _calibStep=0,_calibAnswers={},_calibMode='express';
 let _pwaPrompt=null;
 let lang=localStorage.getItem("maat-lang")||"es";
 let theme=localStorage.getItem("maat-theme")||(window.matchMedia('(prefers-color-scheme:light)').matches?'light':'dark');
@@ -432,6 +449,7 @@ let _appReady=false,_loading=false;
 let wkLearning={};
 // FIX: separate habits view week from global hwk
 let _habViewWeek=1;
+let _habitSaveTimer=null;
 let mentorWhatsapp=null;
 let mentorNotes=[];
 let _belFilter="all";
@@ -453,7 +471,7 @@ const I18N={
     menu_book:"EL PROCESO",menu_pdf:"LIBRO PDF",menu_history:"HISTORIAL",menu_meditation:"MEDITACI\u00D3N",
     greeting:"Hola,",week_label:"Semana",of:" de 16",
     progress_pct:"Progreso",coherence_pct:"Coherencia",habits_pct:"H\u00E1bitos",attitude_avg:"Actitud",
-    phase:"Fase",cta_calib:"Calibra tu d\u00EDa",cta_calib_sub:"3 preguntas \u00B7 2 minutos",
+    phase:"Fase",cta_calib:"Calibra tu d\u00EDa",cta_calib_sub:"Solo 30 segundos \u00B7 elige tu actitud",
     last_calib:"\u00DAltima calibraci\u00F3n:",no_calib:"Sin calibraciones a\u00FAn",
     saving:"GUARDANDO...",saved:"Guardado \u2713",error_fields:"Completa las 3 preguntas",
     add_habit:"Nombre del h\u00E1bito",freq_label:"Frecuencia semanal",
@@ -486,7 +504,7 @@ const I18N={
     menu_book:"THE PROCESS",menu_pdf:"BOOK PDF",menu_history:"HISTORY",menu_meditation:"MEDITATION",
     greeting:"Hello,",week_label:"Week",of:" of 16",
     progress_pct:"Progress",coherence_pct:"Coherence",habits_pct:"Habits",attitude_avg:"Attitude",
-    phase:"Phase",cta_calib:"Calibrate your day",cta_calib_sub:"3 questions \u00B7 2 minutes",
+    phase:"Phase",cta_calib:"Calibrate your day",cta_calib_sub:"Just 30 seconds \u00B7 choose your attitude",
     last_calib:"Last calibration:",no_calib:"No calibrations yet",
     saving:"SAVING...",saved:"Saved \u2713",error_fields:"Complete all 3 questions",
     add_habit:"Habit name",freq_label:"Weekly frequency",
@@ -511,6 +529,57 @@ function t(k){return(I18N[lang]||I18N.es)[k]||k;}
 
 /* ============ UTILITIES ============ */
 function san(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");}
+
+// \u2500\u2500 Instrumentaci\u00F3n Fase 0: registro de eventos de uso \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+// Fire-and-forget. Nunca bloquea la UI ni rompe nada si falla.
+function track(event,meta){
+  try{
+    if(!user?.id)return;
+    sb.from("usage_events").insert({user_id:user.id,event,meta:meta||null});
+  }catch(_){/* silencioso */}
+}
+
+// Renderizador minimalista de Markdown -> HTML seguro (para mensajes del coach)
+function mdRender(text){
+  if(!text)return"";
+  // 1) Escapar HTML primero
+  let s=String(text).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  // 2) Bloques de c\u00F3digo triple ``` (preservar contenido)
+  const codeBlocks=[];
+  s=s.replace(/```([\s\S]*?)```/g,(m,c)=>{codeBlocks.push(c);return"\uE000CODE"+(codeBlocks.length-1)+"\uE000";});
+  // 3) Encabezados (### \u2192 h4, ## \u2192 h3)
+  s=s.replace(/^###\s+(.+)$/gm,'<h4>$1</h4>');
+  s=s.replace(/^##\s+(.+)$/gm,'<h3>$1</h3>');
+  s=s.replace(/^#\s+(.+)$/gm,'<h3>$1</h3>');
+  // 4) Separadores horizontales --- \u00F3 ***
+  s=s.replace(/^[-*]{3,}\s*$/gm,'<hr>');
+  // 5) Negrita ** y __
+  s=s.replace(/\*\*([^*\n]+?)\*\*/g,'<strong>$1</strong>');
+  s=s.replace(/__([^_\n]+?)__/g,'<strong>$1</strong>');
+  // 6) Asteriscos simples \u2192 tambi\u00E9n negrita (la IA los usa as\u00ED)
+  s=s.replace(/(?<![*\w])\*([^*\n]+?)\*(?!\w)/g,'<strong>$1</strong>');
+  // 7) Listas con - o * (agrupa l\u00EDneas consecutivas)
+  s=s.replace(/(?:^[-*]\s+.+(?:\n|$))+/gm,(block)=>{
+    const items=block.trim().split('\n').map(l=>l.replace(/^[-*]\s+/,''));
+    return'<ul>'+items.map(i=>`<li>${i}</li>`).join('')+'</ul>';
+  });
+  // 8) Listas numeradas
+  s=s.replace(/(?:^\d+\.\s+.+(?:\n|$))+/gm,(block)=>{
+    const items=block.trim().split('\n').map(l=>l.replace(/^\d+\.\s+/,''));
+    return'<ol>'+items.map(i=>`<li>${i}</li>`).join('')+'</ol>';
+  });
+  // 9) Inline code `xx`
+  s=s.replace(/`([^`\n]+)`/g,'<code>$1</code>');
+  // 10) P\u00E1rrafos: separar por doble salto, l\u00EDneas simples \u2192 <br>
+  s=s.split(/\n{2,}/).map(p=>{
+    p=p.trim();if(!p)return"";
+    if(/^<(h[1-6]|ul|ol|pre|blockquote|hr)/.test(p))return p;
+    return'<p>'+p.replace(/\n/g,'<br>')+'</p>';
+  }).join('');
+  // 11) Restaurar bloques de c\u00F3digo
+  s=s.replace(/\uE000CODE(\d+)\uE000/g,(m,i)=>`<pre><code>${codeBlocks[parseInt(i)]}</code></pre>`);
+  return s;
+}
 function toast(msg,type){const el=document.getElementById("toast");el.textContent=msg;el.className=type||"";el.classList.add("show");setTimeout(()=>el.classList.remove("show"),2800);}
 function chkAuthErr(error){if(!error)return false;const msg=(error.message||"").toLowerCase();if(msg.includes("jwt")||msg.includes("expired")||msg.includes("not authenticated")){toast(t("session_expired"),"err");setTimeout(()=>doLogout(),2200);return true;}return false;}
 function fmtDate(){const d=new Date();const m=lang==="es"?["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"]:["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];return d.getDate()+" "+m[d.getMonth()];}
@@ -680,10 +749,10 @@ function skelHistory(){
 /* ============ ONBOARDING \u2014 first-time users ============ */
 let _obStep=0;
 const OB_STEPS=[
-  {icon:"\u{1F9ED}",title_es:"Bienvenido a MAAT",title_en:"Welcome to MAAT",text_es:"Un sistema de 16 semanas que integra neurociencia, filosof\u00EDa y metacognici\u00F3n para transformar tu vida profesional.",text_en:"A 16-week system integrating neuroscience, philosophy, and metacognition to transform your professional life."},
-  {icon:"\u{1F4CA}",title_es:"Calibraci\u00F3n Diaria",title_en:"Daily Calibration",text_es:"Cada d\u00EDa responder\u00E1s 3 preguntas poderosas y evaluar\u00E1s tu actitud. Solo toma 2 minutos y es la base de todo tu progreso.",text_en:"Each day you'll answer 3 powerful questions and rate your attitude. It only takes 2 minutes and is the foundation of all your progress."},
-  {icon:"\u2705",title_es:"H\u00E1bitos Semanales",title_en:"Weekly Habits",text_es:"Programa los h\u00E1bitos que construyen la versi\u00F3n de ti que quieres ser. Marca tus d\u00EDas y mide tu coherencia.",text_en:"Program the habits that build the version of yourself you want to be. Check your days and measure your coherence."},
-  {icon:"\u{1F916}",title_es:"Tu Coach IA",title_en:"Your AI Coach",text_es:"Tienes un coach de IA disponible 24/7 para guiarte con preguntas, reflexiones y apoyo personalizado.",text_en:"You have an AI coach available 24/7 to guide you with questions, reflections, and personalized support."}
+  {icon:"\uD83E\uDDED",title_es:"Bienvenido a MAAT",title_en:"Welcome to MAAT",text_es:"No es un curso m\u00E1s. Es un proceso de 16 semanas para reconectar con tu sentido, tu energ\u00EDa y tu prop\u00F3sito. Hecho para personas exigentes como t\u00FA.",text_en:"This isn't just another course. It's a 16-week process to reconnect with your meaning, energy and purpose. Made for demanding people like you."},
+  {icon:"\u26A1",title_es:"Calibrar toma 30 segundos",title_en:"Calibrating takes 30 seconds",text_es:"Cada d\u00EDa eliges conscientemente la actitud con la que vas a vivir. Un gesto peque\u00F1o que, repetido, lo cambia todo. Es el coraz\u00F3n del m\u00E9todo.",text_en:"Each day you consciously choose the attitude you'll live with. A small gesture that, repeated, changes everything. It's the heart of the method."},
+  {icon:"\u2705",title_es:"H\u00E1bitos que te construyen",title_en:"Habits that build you",text_es:"Programa las acciones que construyen la versi\u00F3n de ti que quieres ser. Marca tus d\u00EDas y observa c\u00F3mo creces semana a semana.",text_en:"Program the actions that build the version of yourself you want to be. Check your days and watch yourself grow week by week."},
+  {icon:"\uD83E\uDD16",title_es:"Nunca est\u00E1s solo",title_en:"You're never alone",text_es:"Tienes un Coach con IA disponible 24/7 para acompa\u00F1arte con preguntas, reflexiones y apoyo personalizado en cada paso.",text_en:"You have an AI Coach available 24/7 to accompany you with questions, reflections and personalized support every step."}
 ];
 function showOnboarding(){
   _obStep=0;
@@ -758,64 +827,102 @@ async function initApp(){
   document.getElementById("auth-screen").classList.remove("visible");
   document.getElementById("app").style.display="flex";
   setTheme(theme);
-  // Show skeleton while loading
   document.getElementById("v-home").innerHTML=skelHome();
   document.getElementById("v-home").classList.add("active");
-  await loadData();
-  _habViewWeek=hwk;// sync habits view to current week
-  await loadMentorContact();
-  setupRealtime();
-  await loadChatServer();
-  await requestNotifPermission();
-  scheduleNotifications();
-  _appReady=true;
+
+  // \u2500\u2500 FASE 1: solo los datos que necesita el home \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+  await loadDataCritical();
+  // \u2500\u2500 CONTROL DE ACCESO: bloquear si el mentor desactiv\u00F3 al usuario \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+  if(prof && prof.active===false){
+    const msg=prof.graduated
+      ?(lang==='es'?'Tu acceso a la comunidad de graduados est\u00E1 temporalmente desactivado. Por favor contacta a tu mentor.':'Your access to the graduates community has been temporarily disabled. Please contact your mentor.')
+      :(lang==='es'?'Tu cuenta est\u00E1 desactivada. Por favor contacta a tu mentor.':'Your account has been disabled. Please contact your mentor.');
+    await sb.auth.signOut();
+    user=null;prof=null;
+    document.getElementById("app").style.display="none";
+    document.getElementById("auth-screen").classList.add("visible");
+    document.getElementById("auth-error").textContent=msg;
+    return;
+  }
+  _habViewWeek=hwk;
   applyI18N();
-  // Onboarding for first-time users
-  if(!localStorage.getItem("maat-onboarded")&&cals.length===0){showOnboarding();}
-  gv("v-home");
-  checkAchievements();
+  track("app_open",{week:hwk,graduated:!!prof?.graduated});
+  gv("v-home"); // render inmediato con datos cr\u00EDticos
+
+  // \u2500\u2500 FASE 2: resto de datos en background, sin bloquear UI \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+  Promise.allSettled([loadDataSecondary(),loadMentorContact(),loadChatServer()])
+    .then(()=>{
+      setupRealtime();
+      scheduleNotifications();
+      _appReady=true;
+      if(document.getElementById("v-home")?.classList.contains("active"))renderHome();
+      if(!localStorage.getItem("maat-onboarded")&&cals.length===0)showOnboarding();
+      checkAchievements();
+    });
+
+  // Permiso de notificaciones: nunca bloquea el render
+  requestNotifPermission().catch(()=>{});
 }
 
-async function loadData(){
-  if(_loading)return;_loading=true;
+// Fase 1 \u2014 4 queries esenciales para renderizar el home
+async function loadDataCritical(){
+  if(!user)return;
   const uid=user.id;
-  const timeout=new Promise((_,rej)=>setTimeout(()=>rej(new Error("timeout")),12000));
+  const timeout=new Promise((_,rej)=>setTimeout(()=>rej(new Error("timeout")),8000));
   try{
     const results=await Promise.race([
       Promise.allSettled([
         sb.from("profiles").select("*").eq("id",uid).single(),
-        sb.from("calibrations").select("*").eq("user_id",uid).order("created_at",{ascending:false}).limit(200),
-        sb.from("beliefs").select("*").eq("user_id",uid).order("created_at",{ascending:false}),
+        sb.from("calibrations").select("*").eq("user_id",uid).order("created_at",{ascending:false}).limit(60),
         sb.from("week_progress").select("*").eq("user_id",uid),
         sb.from("habit_tracker").select("*").eq("user_id",uid),
-        sb.from("statement_hipnosis").select("*").eq("user_id",uid).single(),
-        sb.from("ai_config").select("system_prompt").eq("id",1).single(),
-        sb.from("phase_reflections").select("*").eq("user_id",uid),
-        sb.from("session_notes").select("session_type,session_date,notes,next_plan,client_week").eq("client_id",uid).order("created_at",{ascending:false}).limit(10),
-        sb.from("meditations").select("*").eq("is_active",true).order("sort_order"),
-        sb.from("events").select("*").eq("is_active",true).order("event_date",{ascending:true}),
-        sb.from("event_registrations").select("event_id,status").eq("user_id",uid),
       ]),timeout
     ]);
-    if(results[0].status==="fulfilled"){const{data,error}=results[0].value;if(!error&&data){prof=data;hwk=prof.current_week||1;notifHour=prof.notification_hour||9;if(prof.preferred_lang&&prof.preferred_lang!==lang){lang=prof.preferred_lang;localStorage.setItem("maat-lang",lang);}}else if(error)chkAuthErr(error);}
-    if(results[1].status==="fulfilled"){const{data,error}=results[1].value;if(!error)cals=data||[];else chkAuthErr(error);}
-    if(results[2].status==="fulfilled"){const{data,error}=results[2].value;if(!error)bels=data||[];else chkAuthErr(error);}
-    if(results[3].status==="fulfilled"){const{data,error}=results[3].value;if(!error&&data){wkp={};data.forEach(r=>{wkp[r.week]=r.completed;});}else if(error)chkAuthErr(error);}
-    if(results[4].status==="fulfilled"){const{data,error}=results[4].value;if(!error&&data){ht={};wkLearning={};data.forEach(r=>{ht[r.week]=r;if(r.learned)wkLearning[r.week]=r.learned;});}else if(error)chkAuthErr(error);}
-    if(results[5].status==="fulfilled"){const{data}=results[5].value;if(data)sh=data;}
-    if(results[6].status==="fulfilled"){const{data}=results[6].value;if(data)aiCfg=data;}
-    if(results[8]?.status==="fulfilled"){const{data}=results[8].value;if(data)mentorNotes=data||[];}
-    if(results[9]?.status==="fulfilled"){const{data}=results[9].value;if(data)meditations=data||[];}
-    if(results[10]?.status==="fulfilled"){const{data}=results[10].value;if(data)events=data||[];}
-    if(results[11]?.status==="fulfilled"){const{data}=results[11].value;if(data)myEventRegs=data||[];}
-  }catch(e){console.warn("loadData:",e.message);}
-  finally{_loading=false;}
+    if(results[0]?.status==="fulfilled"){const{data,error}=results[0].value;if(!error&&data){prof=data;hwk=prof.current_week||1;notifHour=prof.notification_hour||9;if(prof.preferred_lang&&prof.preferred_lang!==lang){lang=prof.preferred_lang;localStorage.setItem("maat-lang",lang);}}else if(error)chkAuthErr(error);}
+    if(results[1]?.status==="fulfilled"){const{data,error}=results[1].value;if(!error)cals=data||[];else chkAuthErr(error);}
+    if(results[2]?.status==="fulfilled"){const{data,error}=results[2].value;if(!error&&data){wkp={};data.forEach(r=>{wkp[r.week]=r.completed;});}else if(error)chkAuthErr(error);}
+    if(results[3]?.status==="fulfilled"){const{data,error}=results[3].value;if(!error&&data){ht={};wkLearning={};data.forEach(r=>{ht[r.week]=r;if(r.learned)wkLearning[r.week]=r.learned;});}else if(error)chkAuthErr(error);}
+  }catch(e){console.warn("loadDataCritical:",e.message);}
+}
+
+// Fase 2 \u2014 datos secundarios (no bloquean el primer render)
+async function loadDataSecondary(){
+  if(!user)return;
+  const uid=user.id;
+  try{
+    const results=await Promise.allSettled([
+      sb.from("beliefs").select("*").eq("user_id",uid).order("created_at",{ascending:false}),
+      sb.from("statement_hipnosis").select("*").eq("user_id",uid).single(),
+      sb.from("ai_config").select("system_prompt").eq("id",1).single(),
+      sb.from("phase_reflections").select("*").eq("user_id",uid),
+      sb.from("session_notes").select("session_type,session_date,notes,next_plan,client_week").eq("client_id",uid).order("created_at",{ascending:false}).limit(10),
+      sb.from("meditations").select("*").eq("is_active",true).order("sort_order"),
+      sb.from("events").select("*").eq("is_active",true).order("event_date",{ascending:true}),
+      sb.from("event_registrations").select("event_id,status").eq("user_id",uid),
+    ]);
+    if(results[0]?.status==="fulfilled"){const{data,error}=results[0].value;if(!error)bels=data||[];}
+    if(results[1]?.status==="fulfilled"){const{data}=results[1].value;if(data)sh=data;}
+    if(results[2]?.status==="fulfilled"){const{data}=results[2].value;if(data)aiCfg=data;}
+    if(results[4]?.status==="fulfilled"){const{data}=results[4].value;if(data)mentorNotes=data||[];}
+    if(results[5]?.status==="fulfilled"){const{data}=results[5].value;if(data)meditations=data||[];}
+    if(results[6]?.status==="fulfilled"){const{data}=results[6].value;if(data)events=data||[];}
+    if(results[7]?.status==="fulfilled"){const{data}=results[7].value;if(data)myEventRegs=data||[];}
+  }catch(e){console.warn("loadDataSecondary:",e.message);}
+}
+
+// Recarga completa para reconexi\u00F3n / sync offline (mantiene compatibilidad)
+async function loadData(){
+  if(_loading)return;_loading=true;
+  try{
+    await Promise.allSettled([loadDataCritical(),loadDataSecondary(),loadMentorContact()]);
+  }finally{_loading=false;}
 }
 
 /* ============ NAVIGATION ============ */
 const _mainViews=new Set(["v-home","v-calib","v-habitos","v-coach","v-mas"]);
 function nav(id){
   document.querySelector('.main-content')?.scrollTo({top:0,behavior:'instant'});
+  if(_appReady)track("view_enter",{view:id});
   document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
   const el=document.getElementById(id);if(el)el.classList.add("active");
   const isMain=_mainViews.has(id);
@@ -878,6 +985,22 @@ function renderHome(){
   // Eventos pr\u00F3ximos para graduados
   const now=new Date();
   const upcomingEvents=isGrad?events.filter(e=>new Date(e.event_date)>now&&(e.visible_to==='all'||e.visible_to==='graduates')).slice(0,2):[];
+  // Hook contextual del Coach IA segun la fase del proceso
+  const _coachHooksES=[
+    "\u00BFQu\u00E9 est\u00E1s descubriendo sobre ti esta semana?",
+    "\u00BFQu\u00E9 creencia te gustar\u00EDa empezar a reescribir?",
+    "\u00BFHacia d\u00F3nde quieres dirigir tu energ\u00EDa hoy?",
+    "\u00BFC\u00F3mo est\u00E1s integrando tu nueva versi\u00F3n?"
+  ];
+  const _coachHooksEN=[
+    "What are you discovering about yourself this week?",
+    "What belief would you like to start rewriting?",
+    "Where do you want to direct your energy today?",
+    "How are you integrating your new self?"
+  ];
+  const coachHook=isGrad
+    ?(lang==='es'?"Tu coach sigue aqu\u00ED para acompa\u00F1arte. \u00BFDe qu\u00E9 quieres hablar?":"Your coach is still here for you. What would you like to talk about?")
+    :(lang==='es'?_coachHooksES:_coachHooksEN)[phase-1];
 
   document.getElementById("v-home").innerHTML=`
     <p class="home-greeting">${t("greeting")} ${san(prof?.full_name||"")}</p>
@@ -894,11 +1017,21 @@ function renderHome(){
       <div class="stat-box"><div class="coh-ring-wrap"><svg width="56" height="56"><circle cx="28" cy="28" r="22" fill="none" stroke="var(--bd)" stroke-width="4"/><circle cx="28" cy="28" r="22" fill="none" stroke="${cohColor(coherence)}" stroke-width="4" stroke-dasharray="${Math.round(2*Math.PI*22)}" stroke-dashoffset="${Math.round(2*Math.PI*22*(1-coherence/100))}" stroke-linecap="round"/></svg><span class="coh-ring-val" style="color:${cohColor(coherence)}">${coherence}%</span></div><div class="stat-label" style="cursor:pointer;" onclick="showCohInfo()">${t("coherence_pct")} \u24D8</div></div>
       <div class="stat-box"><div class="stat-val" style="color:${attAvg?attColor(parseFloat(attAvg)):'var(--mu)'}">${attAvg||"\u2014"}</div><div class="stat-label">${t("attitude_avg")}</div></div>
     </div>
-    ${cals.length===0?`<div class="onboarding-card"><h3>${lang==='es'?'\u00A1Bienvenido a MAAT! \u{1F44B}':'Welcome to MAAT! \u{1F44B}'}</h3><p>${lang==='es'?'Tu primer paso es calibrar tu d\u00EDa. Son solo 3 preguntas y 2 minutos. Empieza ahora.':'Your first step is to calibrate your day. It\'s just 3 questions and 2 minutes. Start now.'}</p><button class="btn-action" style="width:auto;padding:10px 24px;margin:0;" onclick="gv(\'v-calib\')">${lang==='es'?'Hacer mi primera calibraci\u00F3n \u2192':'Do my first calibration \u2192'}</button></div>`:''}
+    ${cals.length===0?`<div class="onboarding-card"><h3>${lang==='es'?'\u00A1Bienvenido a MAAT! \u{1F44B}':'Welcome to MAAT! \u{1F44B}'}</h3><p>${lang==='es'?'Tu primer paso es calibrar tu d\u00EDa. Toma solo 30 segundos y es el inicio de todo tu proceso.':'Your first step is to calibrate your day. It takes just 30 seconds and is the start of your whole journey.'}</p><button class="btn-action" style="width:auto;padding:10px 24px;margin:0;" onclick="gv(\'v-calib\')">${lang==='es'?'Hacer mi primera calibraci\u00F3n \u2192':'Do my first calibration \u2192'}</button></div>`:''}
     <div class="phase-badge" style="background:${getPhaseColor(phase)}22;color:${getPhaseColor(phase)};border:1px solid ${getPhaseColor(phase)}44;">
       \u25C6 ${t("phases")[phase-1]} \u2014 ${t("phase_names")[phase-1]}
     </div>
     <div class="cta-calib" onclick="gv('v-calib')"><h3>${t("cta_calib")}</h3><p>${t("cta_calib_sub")}</p></div>
+    <div class="card" style="margin-top:16px;border-left:3px solid var(--m);cursor:pointer;background:linear-gradient(135deg,rgba(125,205,147,.08),transparent);" onclick="gv('v-coach')">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="font-size:30px;flex-shrink:0;">\u{1F9E0}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:3px;">${lang==='es'?'Habla con tu Coach MAAT':'Talk to your MAAT Coach'}</div>
+          <div style="font-size:12px;color:var(--mu);line-height:1.5;">${san(coachHook)}</div>
+        </div>
+        <div style="font-size:20px;color:var(--m);flex-shrink:0;">\u2192</div>
+      </div>
+    </div>
     ${(mentorNotes.length&&mentorNotes[0].next_plan)?'<div class="card" style="margin-top:16px;border-left:3px solid var(--c);"><div style="font-size:11px;color:var(--c);font-family:var(--font-title);font-weight:600;letter-spacing:1px;margin-bottom:6px;">\u{1F4CB} '+(lang==='es'?'TAREA DE TU MENTOR':'FROM YOUR MENTOR')+'</div><p style="font-size:14px;line-height:1.6;">'+san(mentorNotes[0].next_plan)+'</p><p style="font-size:11px;color:var(--mu);margin-top:6px;">'+san(mentorNotes[0].session_type||'')+' \u00B7 '+san(mentorNotes[0].session_date||'')+' \u00B7 '+(lang==='es'?'Sem':'Week')+' '+(mentorNotes[0].client_week||'?')+'</p></div>':''}
     ${lastCal?`<p class="last-calib">${t("last_calib")} <strong>${san(lastCal.date||"")}</strong> \u00B7 ${t("attitude_avg")}: <strong style="color:${attColor(lastCal.coherence)}">${lastCal.coherence}/10</strong></p>`:`<p class="last-calib text-mu">${t("no_calib")}</p>`}
     ${upcomingEvents.length?`
@@ -979,8 +1112,58 @@ function toggleHomeHip(){
 
 /* ============ CALIBRACI\u00D3N ============ */
 function renderCalib(){
-  _calibStep=0;_calibAnswers={};
+  _calibStep=0;_calibAnswers={};_calibMode='express';
+  renderCalibExpress();
+}
+
+// \u2500\u2500 CALIBRACI\u00D3N EXPRESS (30s) \u2014 reduce la fricci\u00F3n al m\u00EDnimo \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+function renderCalibExpress(){
+  const el=document.getElementById("v-calib");
+  el.innerHTML=`
+    <h2 style="font-family:var(--font-title);font-size:22px;font-weight:600;margin-bottom:8px;">${t("calib_title")}</h2>
+    <p style="font-size:13px;color:var(--mu);line-height:1.6;margin-bottom:20px;">${lang==='es'?'En 30 segundos eliges conscientemente la actitud con la que vas a vivir tu d\u00EDa. Ese gesto, repetido, lo cambia todo.':'In 30 seconds you consciously choose the attitude you will live your day with. That gesture, repeated, changes everything.'}</p>
+    <div class="card">
+      <label class="field-label">${t("attitude_label")}</label>
+      <div class="slider-val" id="coh-val">5</div>
+      <div class="slider-wrap">
+        <input type="range" id="inp-coh" min="1" max="10" value="5" oninput="document.getElementById('coh-val').textContent=this.value">
+        <div class="slider-labels"><span>${t("attitude_low")}</span><span>${t("attitude_high")}</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <label class="field-label">${lang==='es'?'\u00BFUna palabra o frase para tu d\u00EDa? (opcional)':'A word or phrase for your day? (optional)'}</label>
+      <input type="text" id="inp-express-note" maxlength="280" placeholder="${lang==='es'?'Ej: enfocado, en paz, con energ\u00EDa...':'E.g. focused, at peace, energized...'}" style="width:100%;padding:12px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--bg2);color:var(--text);font-family:var(--font-body);font-size:16px;outline:none;">
+    </div>
+    <button class="btn-action" id="btn-save-calib" onclick="saveCalibExpress()">${t("btn_save_calib")}</button>
+    <button class="btn-action secondary" style="margin-top:8px;" onclick="switchToDeepCalib()">\u270D\uFE0F ${lang==='es'?'Calibraci\u00F3n profunda (3 preguntas)':'Deep calibration (3 questions)'}</button>
+  `;
+}
+
+function switchToDeepCalib(){
+  _calibMode='deep';_calibStep=0;
   renderCalibStep();
+  document.querySelector('.main-content')?.scrollTo({top:0,behavior:'instant'});
+}
+
+async function saveCalibExpress(){
+  if(calibradoHoy()){toast(lang==="es"?"Ya calibraste hoy. \u00A1Vuelve ma\u00F1ana!":"Already calibrated today. Come back tomorrow!","err");return;}
+  const coh=parseInt(document.getElementById("inp-coh").value);
+  const note=(document.getElementById("inp-express-note")?.value||"").trim();
+  const btn=document.getElementById("btn-save-calib");
+  btn.disabled=true;btn.textContent=t("saving");
+  try{
+    const{data,error}=await sb.from("calibrations").insert({
+      user_id:user.id,date:fmtDate(),week:hwk,coherence:coh,
+      answer_q1:note,answer_q2:"",answer_q3:"",session_note:"express"
+    }).select().single();
+    if(error){if(!chkAuthErr(error))toast(error.message,"err");return;}
+    cals.unshift(data);
+    _calibStep=0;_calibAnswers={};
+    track("calib_done",{week:hwk,coherence:coh,mode:"express"});
+    toast(t("saved"),"ok");
+    checkAchievements();
+    setTimeout(()=>gv("v-home"),800);
+  }finally{btn.disabled=false;btn.textContent=t("btn_save_calib");}
 }
 function renderCalibStep(){
   const steps=[t("q1"),t("q2"),t("q3")];
@@ -1010,7 +1193,7 @@ function renderCalibStep(){
       ${stepDots}
       <div class="card"><label class="field-label">${steps[_calibStep]}</label><textarea id="inp-step" rows="4" placeholder="${lang==='es'?'Escribe tu respuesta...':'Write your answer...'}">${san(_calibAnswers[key]||"")}</textarea></div>
       <button class="btn-action" onclick="nextCalibStep()">${_calibStep<2?(lang==='es'?'Siguiente':'Next')+' \u2192':lang==='es'?'Continuar':'Continue'} \u2192</button>
-      ${_calibStep>0?`<button class="btn-action secondary" style="margin-top:8px;" onclick="prevCalibStep()">\u2190 ${lang==='es'?'Anterior':'Back'}</button>`:''}
+      ${_calibStep>0?`<button class="btn-action secondary" style="margin-top:8px;" onclick="prevCalibStep()">\u2190 ${lang==='es'?'Anterior':'Back'}</button>`:`<button class="btn-action secondary" style="margin-top:8px;" onclick="renderCalibExpress()">\u26a1 ${lang==='es'?'Volver a calibraci\u00f3n express':'Back to express'}</button>`}
     `;
     setTimeout(()=>document.getElementById("inp-step")?.focus(),100);
   }
@@ -1052,6 +1235,7 @@ async function saveCalib(){
     if(error){if(!chkAuthErr(error))toast(error.message,"err");return;}
     cals.unshift(data);
     _calibStep=0;_calibAnswers={};
+    track("calib_done",{week:hwk,coherence:coh,mode:"deep"});
     toast(t("saved"),"ok");
     checkAchievements();
     setTimeout(()=>gv("v-home"),800);
@@ -1112,7 +1296,10 @@ function renderHabits(){
         <div><button onclick="addHabit()" style="margin-top:18px;">${lang==='es'?'Agregar':'Add'}</button></div>
       </div>
     </div>
-    <div style="display:flex;gap:10px;margin-top:14px;">
+    <div style="display:flex;align-items:center;gap:8px;margin-top:4px;min-height:18px;">
+      <span id="habit-save-ind" style="font-size:11px;transition:color .3s;"></span>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:6px;">
       <button class="btn-action" id="btn-program-week" onclick="saveHabits()" style="flex:1;">${lang==='es'?'Guardar semana':'Save week'}</button>
       <button class="btn-action" id="btn-evaluate-week" onclick="evaluateWeek()" style="flex:1;background:var(--m);">${lang==='es'?'Evaluar':'Evaluate'}</button>
     </div>
@@ -1133,6 +1320,34 @@ function chgHW(d){
   _habViewWeek=n;renderHabits();
 }
 
+// Auto-guardado con debounce: persiste los d\u00EDas marcados sin acci\u00F3n manual
+function autoSaveHabits(){
+  if(_habitSaveTimer)clearTimeout(_habitSaveTimer);
+  _habitSaveTimer=setTimeout(async()=>{
+    const habits=getHabits(_habViewWeek);
+    const existing=ht[_habViewWeek]||{};
+    const{error}=await sb.from("habit_tracker").upsert({
+      user_id:user.id,week:_habViewWeek,habits,
+      intention:existing.intention||"",learned:existing.learned||"",
+      felt:existing.felt||"",belief:existing.belief||"",
+      updated_at:new Date().toISOString()
+    },{onConflict:"user_id,week"});
+    if(error){if(!chkAuthErr(error)){
+      const ind=document.getElementById("habit-save-ind");
+      if(ind){ind.textContent="\u26A0\uFE0F";ind.style.color="var(--r)";}
+    }}else{
+      if(!ht[_habViewWeek])ht[_habViewWeek]={};
+      ht[_habViewWeek].habits=habits;
+      // Indicador visual sutil de guardado
+      const ind=document.getElementById("habit-save-ind");
+      if(ind){ind.textContent="\u2713 guardado";ind.style.color="var(--m)";setTimeout(()=>{if(ind)ind.textContent="";},2000);}
+    }
+  },1500);
+  // Mostrar indicador "guardando\u2026"
+  const ind=document.getElementById("habit-save-ind");
+  if(ind){ind.textContent="\u23F3 guardando...";ind.style.color="var(--mu)";}
+}
+
 // FIX: toggleDay updates both DOM and ht state object
 function toggleDay(el){
   el.classList.toggle("checked");
@@ -1141,6 +1356,7 @@ function toggleDay(el){
   el.classList.add("pop");
   setTimeout(()=>el.classList.remove("pop"),400);
   const isChecked=el.classList.contains("checked");
+  if(isChecked)track("habit_check",{week:_habViewWeek});
   el.textContent=isChecked?"\u2713":t("days")[parseInt(el.dataset.di)];
   // Sync state
   const hi=parseInt(el.dataset.hi);
@@ -1167,6 +1383,8 @@ function toggleDay(el){
     const cohEl=document.querySelector(".coherence-big .coh-val");
     const coh=calcCoherence(_habViewWeek);
     if(cohEl){cohEl.textContent=coh+"%";cohEl.style.color=cohColor(coh);}
+    // Auto-guardar en Supabase
+    autoSaveHabits();
   }
 }
 
@@ -1226,16 +1444,53 @@ async function evaluateWeek(){
     const totalHabits=habits.length;
     const fulfilled=habits.filter(h=>(h.days||[]).filter(Boolean).length>=(h.frequency||7)).length;
     const coherence=calcCoherence(_habViewWeek);
-    toast(`${lang==='es'?'Coherencia':'Coherence'}: ${coherence}% \u2014 ${fulfilled}/${totalHabits} ${lang==='es'?'completos':'completed'}`,"ok");
+    // 1) Marcar la semana evaluada como completada en week_progress
+    const evaluatedWeek=_habViewWeek;
+    const{error:wpErr}=await sb.from("week_progress").upsert({user_id:user.id,week:evaluatedWeek,completed:true},{onConflict:"user_id,week"});
+    if(!wpErr)wkp[evaluatedWeek]=true;
+    // 2) Auto-graduaci\u00F3n si evalu\u00F3 la semana 16 estando en ella
+    let advanced=false,graduatedNow=false;
+    if(evaluatedWeek===hwk && hwk===16 && !prof?.graduated){
+      const{error:gErr}=await sb.from("profiles").update({graduated:true,graduated_at:new Date().toISOString()}).eq("id",user.id);
+      if(!gErr){
+        if(prof){prof.graduated=true;prof.graduated_at=new Date().toISOString();}
+        graduatedNow=true;
+      }
+    }
+    // 3) Si estaba en la semana actual y a\u00FAn no es la \u00FAltima, avanzar current_week
+    else if(evaluatedWeek===hwk && hwk<16){
+      const newWeek=hwk+1;
+      const{error:pErr}=await sb.from("profiles").update({current_week:newWeek}).eq("id",user.id);
+      if(!pErr){
+        hwk=newWeek;
+        if(prof)prof.current_week=newWeek;
+        advanced=true;
+      }
+    }
+    const advMsg=advanced?` \u00B7 ${lang==='es'?'Avanzaste a Semana '+hwk:'Advanced to Week '+hwk}`:'';
+    toast(`${lang==='es'?'Coherencia':'Coherence'}: ${coherence}% \u2014 ${fulfilled}/${totalHabits} ${lang==='es'?'completos':'completed'}${advMsg}`,"ok");
+    // 4) Si nos graduamos, mostrar celebraci\u00F3n y volver al home
+    if(graduatedNow){
+      setTimeout(()=>{
+        const msg=lang==='es'
+          ?'\uD83C\uDF93 \u00A1Felicitaciones! Has completado las 16 semanas del proceso MAAT.\n\nA partir de hoy eres parte de la comunidad de graduados. Podr\u00E1s seguir usando la app, acceder a meditaciones exclusivas y eventos.'
+          :'\uD83C\uDF93 Congratulations! You completed the 16-week MAAT process.\n\nYou are now part of the graduates community. You will continue to have access to the app, exclusive meditations and events.';
+        alert(msg);
+        nav('v-home');
+      },800);
+      return;
+    }
+    // 5) Si avanzamos, actualiza la vista de h\u00E1bitos a la nueva semana
+    if(advanced)_habViewWeek=hwk;
     renderHabits();
-    // Ofrecer copiar h\u00E1bitos a siguiente semana
-    const nextW=_habViewWeek+1;
+    // 6) Ofrecer copiar h\u00E1bitos a siguiente semana
+    const nextW=evaluatedWeek+1;
     if(nextW<=16&&!getHabits(nextW).length){
       setTimeout(()=>{
         const msg=lang==='es'
           ?`\u00BFCopiar estos ${habits.length} h\u00E1bitos a la semana ${nextW}?`
           :`Copy these ${habits.length} habits to week ${nextW}?`;
-        if(confirm(msg))copyHabitsFromWeek(_habViewWeek,nextW);
+        if(confirm(msg))copyHabitsFromWeek(evaluatedWeek,nextW);
       },600);
     }
   }finally{btn.disabled=false;btn.textContent=lang==='es'?'Evaluar':'Evaluate';}
@@ -1288,12 +1543,17 @@ function renderCoach(){
     const chips=lang==='es'
       ?['\u00BFC\u00F3mo voy en mi proceso?','\u00BFQu\u00E9 deber\u00EDa priorizar esta semana?','Ay\u00FAdame a reflexionar sobre mis h\u00E1bitos','Prep\u00E1rame para mi pr\u00F3xima sesi\u00F3n','\u00BFQu\u00E9 significa mi \u00EDndice de coherencia?']
       :['How am I progressing?','What should I prioritize this week?','Help me reflect on my habits','Prepare me for my next session','What does my coherence score mean?'];
-    el.innerHTML=`<div class="text-center text-mu" style="padding:24px 0 8px;"><p style="font-size:28px;margin-bottom:8px;">\u{1F9E0}</p><p>${t("coach_title")}</p></div>
+    const firstName=san((prof?.full_name||'').split(' ')[0]||'');
+    const greeting=lang==='es'
+      ?`Hola${firstName?' '+firstName:''}. Soy tu Coach MAAT \u{1F9E0}<br><br>Estoy aqu\u00ED para acompa\u00F1arte en tu proceso, sin juicios y a tu ritmo. Puedes contarme c\u00F3mo te sientes, resolver una duda o simplemente pensar en voz alta.<br><br><strong>\u00BFPor d\u00F3nde quieres empezar?</strong>`
+      :`Hi${firstName?' '+firstName:''}. I'm your MAAT Coach \u{1F9E0}<br><br>I'm here to accompany you in your process, without judgment and at your own pace. Tell me how you feel, ask a question, or just think out loud.<br><br><strong>Where would you like to start?</strong>`;
+    el.innerHTML=`<div class="chat-msg assistant" style="max-width:100%;">${greeting}</div>
       <div class="coach-chips">${chips.map(c=>`<button class="coach-chip" onclick="useChip(this)">${c}</button>`).join("")}</div>`;
   } else {
     el.innerHTML="";
     chatHistory.forEach(m=>{
-      el.innerHTML+=`<div class="chat-msg ${m.role}">${san(m.content)}</div>`;
+      const body=m.role==='assistant'?mdRender(m.content):san(m.content);
+      el.innerHTML+=`<div class="chat-msg ${m.role}">${body}</div>`;
     });
     el.scrollTop=el.scrollHeight;
   }
@@ -1307,6 +1567,7 @@ async function sendMsg(){
   if(chatLocked)return;
   const inp=document.getElementById("chat-input");
   const msg=inp.value.trim();if(!msg)return;inp.value="";
+  track("coach_msg",{week:hwk});
   chatHistory.push({role:"user",content:msg});
   const msgEl=document.getElementById("chat-messages");
   msgEl.innerHTML+=`<div class="chat-msg user">${san(msg)}</div>`;
@@ -1332,7 +1593,7 @@ async function sendMsg(){
     try{localStorage.setItem("maat-chat-"+user?.id,JSON.stringify(chatHistory.slice(-20)));}catch(e){}
     saveChatServer();
     document.getElementById("typing")?.remove();
-    msgEl.innerHTML+=`<div class="chat-msg assistant">${san(reply)}</div>`;
+    msgEl.innerHTML+=`<div class="chat-msg assistant">${mdRender(reply)}</div>`;
   }catch(e){
     document.getElementById("typing")?.remove();
     msgEl.innerHTML+=`<div class="chat-msg assistant" style="color:var(--r)">Error: ${san(e.message)}</div>`;
@@ -1372,7 +1633,7 @@ function renderMas(){
       <div class="menu-item" onclick="gs('v-statement')"><div class="menu-icon">\u{1F4DD}</div><div class="menu-label">${t("menu_statement")}</div></div>
       <div class="menu-item" onclick="gs('v-historial')"><div class="menu-icon">\u{1F4CB}</div><div class="menu-label">${t("menu_history")}</div></div>
       <div class="menu-item" onclick="gs('v-meditacion')"><div class="menu-icon">\u{1F9D8}</div><div class="menu-label">${t("menu_meditation")}</div></div>
-      <div class="menu-item" onclick="nav('v-biblioteca')"><div class="menu-icon">\u{1F3A7}</div><div class="menu-label">${lang==='es'?'BIBLIOTECA':'LIBRARY'}</div></div>
+      <div class="menu-item" onclick="nav('v-biblioteca')"><div class="menu-icon">\u{1F3A7}</div><div class="menu-label">${lang==='es'?'MEDITACIONES GUIADAS':'GUIDED MEDITATIONS'}</div></div>
       <div class="menu-item" onclick="gs('v-libro')" style="border-color:var(--v);"><div class="menu-icon">\u{1F5FA}\uFE0F</div><div class="menu-label">${t("menu_book")}</div></div>
       <div class="menu-item" onclick="gs('v-pdf')"><div class="menu-icon">\u{1F4D6}</div><div class="menu-label">${t("menu_pdf")}</div></div>
       <div class="menu-item" onclick="gs('v-dailymaat')" style="border-color:var(--o);"><div class="menu-icon">\u2600\uFE0F</div><div class="menu-label">DAILY MAAT</div></div>
@@ -1619,7 +1880,7 @@ function renderHistorial(){
 function renderMeditacion(){
   document.getElementById("v-meditacion").innerHTML=`
     <div class="sv-header"><button class="btn-back" onclick="nav('v-mas')">\u2039</button><h2>${t("meditation_title")}</h2></div>
-    <p style="font-size:14px;color:var(--mu);margin:0 0 16px;line-height:1.6;">${lang==='es'?'La meditaci\u00F3n guiada MAAT es tu espacio de silencio y conexi\u00F3n interior. Practicarla con regularidad entrena tu mente para responder desde la calma y no desde el impulso. Unos minutos al d\u00EDa pueden transformar toda tu semana.':'The MAAT guided meditation is your space for silence and inner connection. Practicing it regularly trains your mind to respond from calm rather than impulse. A few minutes a day can transform your entire week.'}</p>
+    <p style="font-size:14px;color:var(--mu);margin:0 0 16px;line-height:1.6;">${lang==='es'?'Este es un sonido especialmente dise\u00F1ado para permitirte conectarte con tu interior. No es una meditaci\u00F3n guiada: es una frecuencia sonora que crea el espacio ideal para que tu mente se aquiete, tu cuerpo se relaje y puedas acceder a capas m\u00E1s profundas de ti mismo. Escucha con aud\u00EDfonos, en silencio y sin interrupciones.':'This is a sound specially designed to help you connect with your inner self. It is not a guided meditation \u2014 it is a sound frequency that creates the ideal space for your mind to quiet down, your body to relax, and for you to access deeper layers of yourself. Listen with headphones, in silence and without interruptions.'}</p>
     <div class="audio-player">
       <p style="font-size:36px;margin-bottom:8px;">\u{1F9D8}</p>
       <p class="text-mu mb-8">${t("meditation_title")}</p>
@@ -1634,11 +1895,11 @@ function renderMeditacion(){
     ${meditations.length?`
     <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--bd);">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-        <span style="font-size:13px;font-weight:600;color:var(--text);">\u{1F3A7} ${lang==='es'?'Biblioteca de Meditaciones':'Meditation Library'}</span>
+        <span style="font-size:13px;font-weight:600;color:var(--text);">\u{1F3A7} ${lang==='es'?'Meditaciones Guiadas':'Guided Meditations'}</span>
         <span style="font-size:12px;color:var(--mu);">${meditations.length} ${lang==='es'?'audios':'audios'}</span>
       </div>
       <p style="font-size:12px;color:var(--mu);margin:0 0 10px;">${lang==='es'?'Meditaciones guiadas para cada etapa de tu proceso.':'Guided meditations for every stage of your journey.'}</p>
-      <button class="btn-action" style="width:100%;padding:12px;" onclick="nav('v-biblioteca')">${lang==='es'?'Explorar biblioteca \u2192':'Explore library \u2192'}</button>
+      <button class="btn-action" style="width:100%;padding:12px;" onclick="nav('v-biblioteca')">${lang==='es'?'Explorar meditaciones \u2192':'Explore meditations \u2192'}</button>
     </div>`:''}
   `;
   const MED_URL="https://somosmaat.org/wp-content/uploads/2026/02/Meditation_Maat.mp3";
@@ -1672,8 +1933,9 @@ function renderBibliotecaMed(){
   document.getElementById('v-biblioteca').innerHTML=`
     <div class="sv-header">
       <button class="btn-back" onclick="nav('v-mas')" style="background:none;border:none;color:var(--c);font-size:22px;cursor:pointer;padding:8px;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;">\u2039</button>
-      <h2>${lang==='es'?'Biblioteca':'Library'}</h2>
+      <h2>${lang==='es'?'Meditaciones Guiadas':'Guided Meditations'}</h2>
     </div>
+    <p style="font-size:14px;color:var(--mu);margin:0 0 16px;line-height:1.6;">${lang==='es'?'Aqu\u00ED encontrar\u00E1s una colecci\u00F3n de audios de meditaci\u00F3n guiada especialmente seleccionados para acompa\u00F1ar cada etapa de tu proceso MAAT. Cada audio est\u00E1 dise\u00F1ado con intenci\u00F3n: para aquietar la mente, expandir la conciencia y cultivar el estado interior que transforma. Escucha con aud\u00EDfonos y en un espacio tranquilo.':'Here you will find a curated collection of guided meditation audios specially selected to accompany each stage of your MAAT journey. Each audio is crafted with intention \u2014 to quiet the mind, expand awareness, and cultivate the inner state that transforms. Listen with headphones in a quiet space.'}</p>
     <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:12px;scrollbar-width:none;">
       ${cats.map(c=>`<button onclick="_medCatFilter='${c}';renderBibliotecaMed();" style="flex-shrink:0;padding:6px 14px;border-radius:20px;border:1px solid ${_medCatFilter===c?'var(--c)':'var(--bd)'};background:${_medCatFilter===c?'var(--c)':'transparent'};color:${_medCatFilter===c?'#fff':'var(--mu)'};font-size:13px;cursor:pointer;white-space:nowrap;">${medCatLabel(c)}</button>`).join('')}
     </div>
@@ -1720,6 +1982,7 @@ async function toggleMedLib(medId, url){
   // Detener audio anterior
   if(_activeMedId)Audio_.stop('ml-'+_activeMedId);
   _activeMedId=medId;
+  track("meditation_play",{id:medId});
   renderBibliotecaMed();
   // Iniciar audio
   const a=Audio_.get('ml-'+medId,url);
@@ -2310,6 +2573,27 @@ async function requestNotifPermission(){
   }
 }
 
+// Pool de mensajes c\u00E1lidos y variados (rotaci\u00F3n para evitar habituaci\u00F3n)
+const NOTIF_DAILY={
+  es:[
+    {t:"Tu momento lleg\u00F3",b:"30 segundos para elegir conscientemente tu d\u00EDa."},
+    {t:"\u00BFC\u00F3mo quieres vivir hoy?",b:"Una calibraci\u00F3n r\u00E1pida y sigues con tu d\u00EDa."},
+    {t:"30 segundos contigo",b:"Tu calibraci\u00F3n te espera. Es m\u00E1s simple de lo que crees."},
+    {t:"Un instante de claridad",b:"Antes de seguir corriendo, \u00BFcalibramos tu d\u00EDa?"},
+    {t:"Tu d\u00EDa merece una intenci\u00F3n",b:"Elige tu actitud en 30 segundos."},
+    {t:"Pausa. Respira. Calibra.",b:"Solo toma un momento volver a ti."}
+  ],
+  en:[
+    {t:"Your moment is here",b:"30 seconds to consciously choose your day."},
+    {t:"How do you want to live today?",b:"A quick calibration and you're done."},
+    {t:"30 seconds with yourself",b:"Your calibration awaits. Simpler than you think."},
+    {t:"A moment of clarity",b:"Before you keep running, shall we calibrate?"},
+    {t:"Your day deserves an intention",b:"Choose your attitude in 30 seconds."},
+    {t:"Pause. Breathe. Calibrate.",b:"It only takes a moment to return to yourself."}
+  ]
+};
+function pickNotif(arr){return arr[Math.floor(Math.random()*arr.length)];}
+
 let _notifTimer=null;
 function scheduleNotifications(){
   if(_notifTimer)clearInterval(_notifTimer);
@@ -2321,10 +2605,9 @@ function scheduleNotifications(){
     // \u00BFYa calibr\u00F3 hoy? \u2014 compara ambos formatos (legacy "17 mar" + ISO)
     if(!calibradoHoy()){
       try{
-        new Notification(lang==="es"?"MAAT \u2014 Calibra tu d\u00EDa":"MAAT \u2014 Calibrate your day",{
-          body:lang==="es"
-            ?"Es tu momento de calibraci\u00F3n. 3 preguntas \u00B7 2 minutos."
-            :"Time to calibrate. 3 questions \u00B7 2 minutes.",
+        const m=pickNotif(NOTIF_DAILY[lang==="es"?"es":"en"]);
+        new Notification("MAAT \u2014 "+m.t,{
+          body:m.b,
           icon:"https://somosmaat.org/wp-content/uploads/2026/02/logo_app.png",
           tag:"maat-calib-daily",
           requireInteraction:false
@@ -2334,10 +2617,10 @@ function scheduleNotifications(){
     // Recordatorio semanal los domingos a las 20:00
     if(now.getDay()===0&&now.getHours()===20&&now.getMinutes()===0){
       try{
-        new Notification(lang==="es"?"MAAT \u2014 Resumen semanal":"MAAT \u2014 Weekly review",{
+        new Notification(lang==="es"?"MAAT \u2014 Cierra tu semana":"MAAT \u2014 Close your week",{
           body:lang==="es"
-            ?"\u00BFEvaluaste tu semana? Revisa tus h\u00E1bitos antes de empezar la pr\u00F3xima."
-            :"Did you evaluate your week? Review your habits before starting the next one.",
+            ?"T\u00F3mate un momento para evaluar tu semana y elegir c\u00F3mo empiezas la pr\u00F3xima."
+            :"Take a moment to review your week and choose how you start the next one.",
           icon:"https://somosmaat.org/wp-content/uploads/2026/02/logo_app.png",
           tag:"maat-weekly-summary",
           requireInteraction:false

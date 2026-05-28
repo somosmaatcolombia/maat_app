@@ -184,12 +184,12 @@ serve(async (req) => {
     for (const sub of subs) {
       const userInfo = toNotify.find((u) => u.id === sub.user_id);
       const daysSince = await getDaysSinceCalib(sb, sub.user_id);
+      const firstName = (userInfo?.full_name || "").split(" ")[0] || "";
+      const msg = buildReengageMessage(daysSince, firstName);
 
       const payload = JSON.stringify({
-        title: "MAAT — Tu calibración te espera",
-        body: daysSince
-          ? `Llevas ${daysSince} días sin calibrar. 5 minutos pueden cambiar tu día.`
-          : "Es momento de calibrar. 5 minutos de reflexión genuina.",
+        title: msg.title,
+        body: msg.body,
         icon: "https://somosmaat.org/wp-content/uploads/2026/02/logo_app.png",
         badge: "https://somosmaat.org/wp-content/uploads/2026/02/logo_app.png",
         data: { view: "calib" },
@@ -265,6 +265,59 @@ serve(async (req) => {
     );
   }
 });
+
+// Helper: construye un mensaje de re-enganche GRADUADO segun los dias de ausencia.
+// La gente se enfria progresivamente, asi que el tono cambia: empuje suave ->
+// invitacion calida -> reencuentro sin presion. Cada banda tiene variantes.
+function buildReengageMessage(
+  daysSince: number | null,
+  firstName: string,
+): { title: string; body: string } {
+  const name = firstName ? firstName : "";
+  const pick = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
+
+  // Nunca ha calibrado (daysSince === null): activacion
+  if (daysSince === null) {
+    return pick([
+      { title: "Tu proceso MAAT te espera", body: "Tu primera calibración toma 30 segundos. Empieza hoy." },
+      { title: name ? `${name}, demos el primer paso` : "Demos el primer paso", body: "30 segundos para elegir cómo quieres vivir tu día." },
+    ]);
+  }
+
+  // 2-3 dias: empuje suave, sin drama
+  if (daysSince <= 3) {
+    return pick([
+      { title: "Tu espacio te espera", body: "30 segundos para reconectar contigo. Calibra tu día." },
+      { title: name ? `${name}, un momento para ti` : "Un momento para ti", body: "Volver al ritual es simple. Solo toma 30 segundos." },
+      { title: "Tu calibración de hoy", body: "Elige tu actitud antes de seguir. Es rápido." },
+    ]);
+  }
+
+  // 4-7 dias: invitacion calida, reconoce la ausencia
+  if (daysSince <= 7) {
+    return pick([
+      { title: name ? `${name}, te extrañamos` : "Te extrañamos", body: `Han pasado ${daysSince} días. Volver es más fácil de lo que crees: 30 segundos.` },
+      { title: "Tu proceso sigue aquí", body: `${daysSince} días sin vernos. Un pequeño gesto hoy reenciende el hábito.` },
+      { title: "Retomemos donde lo dejaste", body: "No empiezas de cero. Tu camino te espera. Calibra hoy." },
+    ]);
+  }
+
+  // 8-14 dias: reencuentro sin culpa
+  if (daysSince <= 14) {
+    return pick([
+      { title: "Siempre puedes volver", body: "Tu proceso no se borró. Un nuevo comienzo está a 30 segundos." },
+      { title: name ? `${name}, sin culpas` : "Sin culpas", body: "Las pausas son parte del camino. Hoy es un buen día para retomar." },
+      { title: "Tu transformación sigue viva", body: "Donde quedaste sigue ahí. Solo necesitas un momento para volver." },
+    ]);
+  }
+
+  // 15+ dias: reencuentro suave, cero presion, puerta abierta
+  return pick([
+    { title: "La puerta sigue abierta", body: "No importa cuánto tiempo pase. Tu espacio MAAT te espera cuando estés listo." },
+    { title: name ? `${name}, un nuevo comienzo` : "Un nuevo comienzo", body: "Cada día es una oportunidad de reconectar contigo. Sin prisa, sin presión." },
+    { title: "Te guardamos tu lugar", body: "Tu proceso sigue intacto. Volver es tan simple como un primer paso de 30 segundos." },
+  ]);
+}
 
 // Helper: Get days since last calibration
 async function getDaysSinceCalib(

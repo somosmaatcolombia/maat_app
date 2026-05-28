@@ -20,7 +20,7 @@
 }
 [data-theme="light"]{--bg:#f0f4f8;--bg2:#e2e8f0;--text:#1a2030;--mu:#5a6377;--mu2:#6b7280;--bd:rgba(0,0,0,0.08);}
 *{margin:0;padding:0;box-sizing:border-box;}
-html,body{height:100%;overflow:hidden;}
+/* No aplicamos overflow:hidden a html/body \u2014 en Elementor leakea y bloquea el scroll del WordPress */
 body{font-family:var(--font-body);background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;}
 ::-webkit-scrollbar{width:5px;}
 ::-webkit-scrollbar-thumb{background:var(--mu2);border-radius:4px;}
@@ -146,20 +146,21 @@ a{color:var(--c);text-decoration:none;}
 
 /* SESSION FORM */
 .session-form{display:grid;gap:12px;}
-.session-form label{font-size:12px;color:var(--mu);font-weight:500;}
-.session-form textarea,.session-form input,.session-form select{width:100%;padding:10px 12px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-family:var(--font-body);font-size:16px;outline:none;resize:vertical;touch-action:manipulation;-webkit-appearance:none;}
-.session-form textarea{min-height:80px;}
+.session-form label{font-size:12px;color:var(--mu);font-weight:500;display:block;margin-bottom:4px;}
+.session-form input,.session-form select,.session-form textarea{width:100%;padding:10px 12px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-family:var(--font-body);font-size:16px;outline:none;touch-action:manipulation;display:block;}
+.session-form input:focus,.session-form select:focus,.session-form textarea:focus{border-color:var(--c);}
+.session-form textarea{min-height:80px;resize:vertical;}
 
-/* MODALS &#8212; centrado, compatible con Elementor */
-.sheet-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:99999;opacity:0;pointer-events:none;transition:opacity .3s;}
-.sheet-backdrop.show{opacity:1;pointer-events:auto;}
-.modal-overlay{position:fixed;inset:0;z-index:100000;display:none;align-items:center;justify-content:center;padding:16px;overflow-y:auto;}
-.modal-overlay.show{display:flex;}
-.modal{background:var(--bg2);border-radius:var(--radius);overflow-y:auto;max-height:85vh;width:100%;max-width:500px;-webkit-overflow-scrolling:touch;padding:24px 20px;border:1px solid var(--bd);box-shadow:0 20px 60px rgba(0,0,0,.5);}
-.modal-handle{width:40px;height:4px;background:var(--bd);border-radius:2px;margin:0 auto 18px;cursor:pointer;}
-.modal h3{font-family:var(--font-title);font-size:20px;margin-bottom:16px;}
-.modal-actions{display:flex;gap:8px;margin-top:20px;justify-content:flex-end;}
-@media(max-width:480px){.modal{max-width:100%;max-height:90vh;border-radius:var(--radius) var(--radius) 0 0;}}
+/* MODALS &#8212; &lt;dialog&gt; nativo: renderiza en TOP LAYER del browser, escapa Elementor */
+dialog.m-dialog{padding:0;border:none;background:transparent;max-width:100vw;max-height:100vh;width:100%;height:100%;margin:0;inset:0;color:var(--text);overflow:hidden;}
+dialog.m-dialog::backdrop{background:rgba(0,0,0,.55);}
+dialog.m-dialog[open]{display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;}
+/* OJO: usamos .maat-modal en vez de .modal porque el tema WordPress carga Bootstrap que tiene .modal{display:none} */
+.maat-modal{background:var(--bg2)!important;border-radius:var(--radius)!important;width:calc(100% - 32px)!important;max-width:500px!important;padding:24px 20px!important;border:1px solid var(--bd)!important;box-shadow:0 20px 60px rgba(0,0,0,.5)!important;margin:40px auto!important;position:relative!important;color:var(--text)!important;display:block!important;}
+.maat-modal h3{font-family:var(--font-title);font-size:20px;margin-bottom:16px;color:var(--text);}
+.modal-actions{display:flex;gap:8px;margin-top:20px;justify-content:flex-end;flex-wrap:wrap;}
+.modal-actions .btn{flex:0 1 auto;}
+@media(max-width:480px){.maat-modal{margin:20px auto!important;width:calc(100% - 16px)!important;padding:20px 16px!important;}}
 
 /* PROMPT EDITOR */
 .prompt-editor{width:100%;min-height:300px;padding:16px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-family:var(--font-body);font-size:13px;line-height:1.6;outline:none;resize:vertical;}
@@ -334,11 +335,9 @@ a{color:var(--c);text-decoration:none;}
 </div>
 </div>
 
-<!-- MODALS -->
-<div class="sheet-backdrop" id="sheet-backdrop" onclick="closeActiveModal()"></div>
-<div class="modal-overlay" id="modal-create">
-  <div class="modal">
-    <div class="modal-handle" onclick="closeModal('modal-create')"></div>
+<!-- MODALS &mdash; usando &lt;dialog&gt; nativo (top layer del browser, escapa Elementor) -->
+<dialog class="m-dialog" id="modal-create">
+  <div class="maat-modal">
     <h3>Crear Nuevo Cliente</h3>
     <div class="session-form">
       <div><label>Nombre completo</label><input type="text" id="nc-name" placeholder="Juan P&eacute;rez"></div>
@@ -347,10 +346,9 @@ a{color:var(--c);text-decoration:none;}
     <div id="nc-result"></div>
     <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modal-create')">Cancelar</button><button class="btn btn-c" id="nc-btn" onclick="createClient()">CREAR CLIENTE</button></div>
   </div>
-</div>
-<div class="modal-overlay" id="modal-session">
-  <div class="modal">
-    <div class="modal-handle" onclick="closeModal('modal-session')"></div>
+</dialog>
+<dialog class="m-dialog" id="modal-session">
+  <div class="maat-modal">
     <h3>Nueva Nota de Sesi&oacute;n</h3>
     <div class="session-form">
       <div><label>Cliente</label><div id="ms-client" style="font-weight:600;padding:4px 0;color:var(--text);"></div></div>
@@ -362,10 +360,9 @@ a{color:var(--c);text-decoration:none;}
     <input type="hidden" id="ms-client-id">
     <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modal-session')">Cancelar</button><button class="btn btn-c" id="ms-btn" onclick="saveSessionNote()">GUARDAR</button></div>
   </div>
-</div>
-<div class="modal-overlay" id="modal-role">
-  <div class="modal">
-    <div class="modal-handle" onclick="closeModal('modal-role')"></div>
+</dialog>
+<dialog class="m-dialog" id="modal-role">
+  <div class="maat-modal">
     <h3>Cambiar Rol</h3>
     <div class="session-form">
       <div><label>Usuario</label><div id="mr-user" style="font-weight:600;padding:4px 0;"></div></div>
@@ -374,7 +371,7 @@ a{color:var(--c);text-decoration:none;}
     <input type="hidden" id="mr-uid">
     <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modal-role')">Cancelar</button><button class="btn btn-c" id="mr-btn" onclick="saveRole()">CONFIRMAR</button></div>
   </div>
-</div>
+</dialog>
 <div id="offline-banner">&#128225; Sin conexi&oacute;n &#8212; revisando...</div>
 <div id="pwa-banner">
   <p>&#128242; Agrega MAAT Mentor a tu pantalla de inicio para una mejor experiencia</p>
@@ -422,19 +419,31 @@ function daysBetween(d1,d2){return Math.floor((d2-d1)/(1000*60*60*24));}
 function setTheme(t){theme=t;localStorage.setItem("maat-m-theme",t);document.documentElement.setAttribute("data-theme",t);document.getElementById("theme-select").value=t;}
 let _activeModal=null;
 function openModal(id){
-  if(_activeModal)closeModal(_activeModal);
   const el=document.getElementById(id);
   if(!el)return;
+  if(_activeModal&&_activeModal!==id)closeModal(_activeModal);
   _activeModal=id;
-  el.classList.add("show");
-  document.getElementById("sheet-backdrop")?.classList.add("show");
-  // scroll sheet to top
-  const inner=el.querySelector(".modal");
-  if(inner)inner.scrollTop=0;
+  // CR\u00CDTICO: mover al body para escapar contenedores transformados de Elementor
+  if(el.parentElement!==document.body)document.body.appendChild(el);
+  // showModal() del <dialog> nativo: top layer, sobre TODO en la p\u00E1gina
+  if(typeof el.showModal==="function"){
+    try{el.showModal();}catch(e){el.setAttribute("open","");}
+  }else{
+    el.setAttribute("open","");
+  }
+  // Cerrar al hacer click en el backdrop (fuera del .modal)
+  el.onclick=function(ev){if(ev.target===el)closeModal(id);};
+  // Foco autom\u00E1tico al primer input
+  setTimeout(()=>{const f=el.querySelector("input:not([type=hidden]),textarea,select");if(f){try{f.focus();}catch(_){}}},120);
 }
 function closeModal(id){
-  document.getElementById(id)?.classList.remove("show");
-  document.getElementById("sheet-backdrop")?.classList.remove("show");
+  const el=document.getElementById(id);
+  if(!el)return;
+  if(typeof el.close==="function"){
+    try{el.close();}catch(e){el.removeAttribute("open");}
+  }else{
+    el.removeAttribute("open");
+  }
   if(_activeModal===id)_activeModal=null;
 }
 function closeActiveModal(){
@@ -701,11 +710,13 @@ function renderClients(){
     ${filtered.length?`<div class="clients-grid">${filtered.map(p=>{
       const m=_clientMetrics[p.id]||{};
       const phase=getPhase(m.week||1);
-      return`<div class="client-card">
+      const isInactive=p.active===false;
+      return`<div class="client-card" style="${isInactive?'opacity:.55;border-color:var(--r)!important;':''}">
         ${m.hasAlert?'<div class="cc-alert"></div>':""}
+        ${isInactive?'<div style="position:absolute;top:10px;right:10px;background:var(--r);color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;letter-spacing:.5px;">DESACTIVADO</div>':''}
         <div class="cc-top">
           <div class="cc-avatar" style="background:${getPhaseHex(phase)}">${san((m.name||"?")[0].toUpperCase())}</div>
-          <div><div class="cc-name">${san(m.name)}</div><div class="cc-week">Semana ${m.week} \u00B7 Fase ${phase}</div></div>
+          <div><div class="cc-name">${san(m.name)}${p.graduated?' \u{1F393}':''}</div><div class="cc-week">${p.graduated?'Graduado':'Semana '+m.week+' \u00B7 Fase '+phase}</div></div>
         </div>
         <div class="cc-metrics">
           <div class="cc-metric"><div class="val" style="color:${m.coherence!==null?cohColor(m.coherence):'var(--mu)'}">${m.coherence!==null?m.coherence+'%':'\u2014'}</div><div class="lbl">Coherencia</div></div>
@@ -787,12 +798,14 @@ function renderProfile(){
       }).join("")}
     </div>
 
-    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
       <button class="btn btn-c" onclick="openSessionModal('${uid}','${san(m.name)}')">+ Nueva Sesi\u00F3n</button>
       <button class="btn btn-outline" id="btn-ai-summary" onclick="genAI('${uid}')">\u{1F916} Resumen IA</button>
       ${!p.graduated&&(m.week||1)>=16?`<button class="btn" style="background:#89608E;color:#fff;border:none;" onclick="graduateClient('${uid}','${san(m.name)}')">\u{1F393} Graduar</button>`:''}
       ${p.graduated?`<button class="btn btn-outline" onclick="newCycleClient('${uid}','${san(m.name)}')" style="color:var(--o);border-color:var(--o);">\u27F3 Nuevo Ciclo</button>`:''}
+      <button class="btn" id="btn-toggle-active" onclick="toggleClientActive('${uid}','${san(m.name)}')" style="background:${p.active===false?'rgba(215,107,110,.15)':'rgba(125,205,147,.15)'};color:${p.active===false?'var(--r)':'var(--m)'};border:1px solid ${p.active===false?'var(--r)':'var(--m)'};">${p.active===false?'\u{1F6AB} Desactivado':'\u2713 Activo'}</button>
     </div>
+    ${p.active===false?`<div style="background:rgba(215,107,110,.1);border:1px solid var(--r);border-radius:8px;padding:10px 14px;margin-bottom:16px;color:var(--r);font-size:13px;">\u26A0\uFE0F Este usuario est\u00E1 desactivado. No podr\u00E1 iniciar sesi\u00F3n en la app.</div>`:''}
     <div id="ai-summary-result"></div>
 
     <div class="card">
@@ -859,6 +872,27 @@ async function graduateClient(uid,name){
   if(p){p.graduated=true;p.graduated_at=new Date().toISOString();}
   toast('\u{1F393} '+name+' graduado exitosamente!','ok');
   renderProfile();
+}
+
+async function toggleClientActive(uid,name){
+  const p=_allProfiles.find(x=>x.id===uid);
+  if(!p)return;
+  const currentlyActive=p.active!==false; // default true si es null
+  const newState=!currentlyActive;
+  const action=newState?'reactivar':'desactivar';
+  const warning=newState
+    ?`\u00BFReactivar a ${name}? Podr\u00E1 iniciar sesi\u00F3n en la app de nuevo.`
+    :`\u00BFDesactivar a ${name}?\n\nEsto bloquear\u00E1 su acceso a la app inmediatamente. ${p.graduated?'Como graduado, perder\u00E1 acceso a la comunidad hasta que lo reactives.':'No podr\u00E1 iniciar sesi\u00F3n.'}\n\nLos datos NO se borran y puedes reactivarlo en cualquier momento.`;
+  if(!confirm(warning))return;
+  const btn=document.getElementById('btn-toggle-active');
+  if(btn){btn.disabled=true;btn.textContent='Guardando...';}
+  try{
+    const{error}=await sb.from('profiles').update({active:newState}).eq('id',uid);
+    if(error){toast(`Error al ${action}: `+error.message,'err');return;}
+    p.active=newState;
+    toast(newState?'\u2713 '+name+' reactivado':'\u{1F6AB} '+name+' desactivado','ok');
+    renderProfile();
+  }finally{if(btn)btn.disabled=false;}
 }
 
 async function newCycleClient(uid,name){

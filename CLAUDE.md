@@ -9,7 +9,14 @@ MAAT es un sistema de mentoría que integra neurociencia aplicada, filosofía pr
 1. **App del Cliente** (`src/maat_dashboard.html`) — PWA móvil, acompañamiento diario, 16 semanas
 2. **Portal del Mentor** (`src/maat_mentor_dashboard.html`) — Dashboard web, monitoreo de clientes
 
-**Sitio:** somosmaat.org | **Supabase project:** `pcclptmojjzqmfmzftot`
+**Sitio:** somosmaat.org | **Supabase project MAAT:** `pcclptmojjzqmfmzftot`
+
+> ⚠️ **DOS proyectos Supabase SEPARADOS** (no confundir):
+> - **MAAT** → `pcclptmojjzqmfmzftot` (app, BD, Edge Functions: coach-maat, maat-summary, send-notifications)
+> - **CRM** → `vbfesmgxegxsurnfazjs` (proyecto aparte, NO desplegar aquí funciones de MAAT)
+>
+> **ANTES de cada `supabase functions deploy`**, verificar el proyecto vinculado:
+> `supabase link --project-ref pcclptmojjzqmfmzftot` y confirmar que el output del deploy diga `pcclptmojjzqmfmzftot`.
 
 ## Stack técnico
 
@@ -161,6 +168,7 @@ $$;
 - **XSS:** san() en TODA inyección a innerHTML
 - **Eventos:** data-attributes + event delegation, NUNCA onclick con datos
 - **Contraseñas:** crypto.getRandomValues(), NUNCA Math.random()
+- **Encoding (CRÍTICO):** NUNCA escribir acentos/emojis literales en los `.html`. Elementor los lee como Mac Roman y rompe el UTF-8 (`día`→`d√≠a`). Usar SIEMPRE escapes `\uXXXX` dentro de `<script>` (ej: `í`=í, `ñ`=ñ, `✍️`=✍️) y entidades HTML (`&iquest;`, `&aacute;`) fuera del script. Ambos `.html` deben ser ASCII puro (`file` debe decir "ASCII text"). Verificar con: `python3 -c "print(all(ord(c)<128 for c in open('archivo.html').read()))"`
 
 ## Métricas clave
 
