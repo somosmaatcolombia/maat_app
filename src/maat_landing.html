@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>MAAT &mdash; Bienvenida a la Mentor&iacute;a</title>
+<meta name="description" content="Un proceso de 16 semanas para reconectar con tu sentido, tu energ&iacute;a y tu prop&oacute;sito.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@400;600;700&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Paleta MAAT (modo claro, papercut friendly) */
+  --c:#39A1C9; --o:#EBA055; --m:#7DCD93; --v:#89608E; --r:#D76B6E;
+  --paper:#fdfaf6;       /* cream paper */
+  --paper2:#f5efe6;      /* warmer paper */
+  --ink:#2a2030;         /* warm dark text */
+  --ink2:#5a4f5e;
+  --mu:#8a7d8c;
+  --bd:rgba(42,32,48,0.10);
+  --shadow:0 8px 30px rgba(42,32,48,0.08);
+  --shadow-lg:0 20px 60px rgba(42,32,48,0.12);
+  --radius:18px;
+  --radius-sm:12px;
+  --font-title:'Saira Condensed',sans-serif;
+  --font-body:'Sora',sans-serif;
+}
+/* Imagenes papercut decorativas */
+.maat-illo{max-width:100%;height:auto;display:block;margin:0 auto;}
+.maat-illo-sm{max-width:240px;}
+.maat-illo-md{max-width:320px;}
+.maat-illo-lg{max-width:420px;}
+.maat-carta-illo{margin:32px auto 0;max-width:240px;display:block;}
+.maat-form-deco{max-width:180px;margin:0 auto 18px;display:block;}
+.maat-cta-banner{margin:0 auto 40px;max-width:560px;display:block;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);background:#fff;}
+.maat-cta-banner-illo{width:100%;aspect-ratio:1/0.78;overflow:hidden;display:block;background:#fff;}
+.maat-cta-banner-illo img{width:100%;height:auto;display:block;}
+.maat-cta-banner-copy{padding:18px 26px 26px;text-align:center;font-family:var(--font-body);font-size:16px;color:var(--ink);line-height:1.6;}
+.maat-cta-banner-copy strong{color:var(--v);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:var(--font-body);background:var(--paper);color:var(--ink);font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased;overflow-x:hidden;}
+img{max-width:100%;height:auto;display:block;}
+a{color:var(--c);text-decoration:none;}
+button{font-family:inherit;}
+
+/* Contenedor */
+.maat-wrap{width:100%;}
+.maat-section{padding:80px 24px;position:relative;}
+.maat-inner{max-width:760px;margin:0 auto;position:relative;}
+
+/* HERO */
+.maat-hero{min-height:92vh;background:var(--paper);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:64px 24px;position:relative;overflow:hidden;}
+.maat-hero-bg{position:absolute;inset:0;pointer-events:none;z-index:0;}
+.maat-hero-bg img{width:100%;height:100%;object-fit:cover;display:block;}
+.maat-hero-inner{position:relative;z-index:1;max-width:680px;}
+.maat-logo{width:84px;height:84px;border-radius:18px;margin:0 auto 28px;display:block;object-fit:cover;box-shadow:0 6px 24px rgba(42,32,48,0.10);}
+.maat-eyebrow{font-family:var(--font-title);font-size:15px;font-weight:700;letter-spacing:4px;color:var(--c);text-transform:uppercase;margin-bottom:16px;}
+.maat-hero h1{font-family:var(--font-title);font-size:clamp(38px,7vw,68px);font-weight:700;letter-spacing:-.5px;line-height:1.05;margin-bottom:22px;color:var(--ink);}
+.maat-hero h1 em{font-style:italic;color:var(--v);}
+.maat-hero p{font-size:clamp(16px,2vw,19px);color:var(--ink2);max-width:520px;margin:0 auto 36px;line-height:1.7;}
+.maat-scroll{display:inline-block;margin-top:8px;color:var(--mu);font-size:13px;letter-spacing:2px;text-transform:uppercase;font-family:var(--font-title);}
+.maat-scroll span{display:block;font-size:22px;margin-top:6px;animation:scrollHint 1.8s ease-in-out infinite;}
+@keyframes scrollHint{0%,100%{transform:translateY(0);opacity:.6;}50%{transform:translateY(8px);opacity:1;}}
+
+/* CARTA */
+.maat-letter{background:var(--paper);}
+.maat-letter-card{background:#fff;border:1px solid var(--bd);border-radius:var(--radius);padding:48px 40px;box-shadow:var(--shadow);position:relative;}
+.maat-letter-card::before{content:'';position:absolute;top:14px;left:14px;right:14px;bottom:14px;border:1px dashed #d5c3d8;border-radius:14px;pointer-events:none;}
+.maat-letter-inner{position:relative;}
+.maat-greet{font-family:var(--font-title);font-size:30px;color:var(--v);margin-bottom:24px;line-height:1.2;}
+.maat-letter p{margin-bottom:18px;color:var(--ink);font-size:16.5px;line-height:1.8;}
+.maat-letter p strong{color:var(--v);}
+.maat-quote{background:var(--paper2);border-left:4px solid var(--v);padding:24px 28px;margin:32px 0;border-radius:0 12px 12px 0;}
+.maat-quote p{font-family:var(--font-title);font-size:22px;line-height:1.4;color:var(--v);margin:0;font-style:italic;}
+.maat-signature{margin-top:36px;display:flex;align-items:center;gap:14px;padding-top:24px;border-top:1px solid var(--bd);}
+.maat-signature .sig-avatar{width:60px;height:60px;border-radius:50%;overflow:hidden;flex-shrink:0;box-shadow:0 4px 14px rgba(42,32,48,0.12);border:2px solid #fff;}
+.maat-signature .sig-avatar img{width:100%;height:100%;object-fit:cover;display:block;}
+.maat-signature .sig-name{font-family:var(--font-title);font-size:20px;color:var(--ink);}
+.maat-signature .sig-role{font-size:13px;color:var(--mu);}
+
+/* COMO FUNCIONA */
+.maat-how{background:var(--paper);}
+.maat-section-head{text-align:center;margin-bottom:56px;}
+.maat-section-head .eyebrow{font-family:var(--font-title);font-size:15px;font-weight:700;letter-spacing:4px;color:var(--c);text-transform:uppercase;margin-bottom:14px;}
+.maat-section-head h2{font-family:var(--font-title);font-size:clamp(30px,5vw,44px);font-weight:700;color:var(--ink);line-height:1.2;margin-bottom:14px;}
+.maat-section-head p{font-size:16px;color:var(--ink2);max-width:560px;margin:0 auto;line-height:1.7;}
+
+.maat-how-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+.maat-how-card{background:#fff;border:1px solid var(--bd);border-radius:var(--radius-sm);padding:28px 22px;text-align:center;transition:transform .3s ease,box-shadow .3s ease;}
+.maat-how-card:hover{transform:translateY(-4px);box-shadow:var(--shadow);}
+.maat-how-card .num{font-family:var(--font-title);font-size:42px;font-weight:700;color:var(--c);line-height:1;margin-bottom:8px;}
+.maat-how-card h4{font-family:var(--font-title);font-size:17px;font-weight:600;margin-bottom:8px;color:var(--ink);}
+.maat-how-card p{font-size:13.5px;color:var(--ink2);line-height:1.6;}
+
+/* COMPROMISOS */
+.maat-compromisos{background:var(--paper2);}
+.maat-comp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+.maat-comp-card{background:#fff;border:1px solid var(--bd);border-radius:var(--radius-sm);padding:28px 22px;text-align:center;}
+.maat-comp-card .icon{font-size:36px;margin-bottom:14px;}
+.maat-comp-card h4{font-family:var(--font-title);font-size:18px;font-weight:600;margin-bottom:10px;color:var(--v);letter-spacing:.5px;}
+.maat-comp-card p{font-size:13.5px;color:var(--ink2);line-height:1.6;}
+
+/* FASES */
+.maat-phases{background:var(--paper);}
+.maat-phases-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:24px;}
+.maat-phase-card{background:#fff;border:1px solid var(--bd);border-radius:var(--radius-sm);padding:0;position:relative;overflow:hidden;display:flex;flex-direction:column;}
+.maat-phase-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;z-index:2;}
+.maat-phase-card[data-ph="1"]::before{background:var(--c);}
+.maat-phase-card[data-ph="2"]::before{background:var(--o);}
+.maat-phase-card[data-ph="3"]::before{background:var(--m);}
+.maat-phase-card[data-ph="4"]::before{background:var(--v);}
+.maat-phase-img{width:100%;height:230px;border-radius:0;background:var(--paper2);display:block;overflow:hidden;margin:0;}
+.maat-phase-img img{width:100%;height:100%;object-fit:cover;display:block;}
+.maat-phase-weeks{font-family:var(--font-title);font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--mu);margin-bottom:6px;padding:24px 24px 0;}
+.maat-phase-name{font-family:var(--font-title);font-size:26px;font-weight:700;line-height:1.1;margin-bottom:10px;padding:0 24px;}
+.maat-phase-desc{padding:0 24px 24px;}
+.maat-phase-card[data-ph="1"] .maat-phase-name{color:var(--c);}
+.maat-phase-card[data-ph="2"] .maat-phase-name{color:var(--o);}
+.maat-phase-card[data-ph="3"] .maat-phase-name{color:var(--m);}
+.maat-phase-card[data-ph="4"] .maat-phase-name{color:var(--v);}
+.maat-phase-desc{font-size:14px;color:var(--ink2);line-height:1.6;}
+
+/* FORM CTA */
+.maat-cta{background:var(--paper);position:relative;overflow:hidden;}
+.maat-form-card{background:#fff;border:1px solid var(--bd);border-radius:var(--radius);padding:44px 36px;box-shadow:var(--shadow-lg);position:relative;z-index:1;}
+.maat-form-head{text-align:center;margin-bottom:32px;}
+.maat-form-head h2{font-family:var(--font-title);font-size:clamp(28px,4.5vw,40px);font-weight:700;color:var(--ink);margin-bottom:12px;line-height:1.2;}
+.maat-form-head p{font-size:15px;color:var(--ink2);max-width:440px;margin:0 auto;line-height:1.7;}
+.maat-field{margin-bottom:16px;}
+.maat-field label{display:block;font-family:var(--font-title);font-size:12px;letter-spacing:1.5px;color:var(--mu);text-transform:uppercase;margin-bottom:8px;font-weight:600;}
+.maat-field input{width:100%;padding:14px 16px;background:var(--paper);border:1.5px solid var(--bd);border-radius:var(--radius-sm);font-family:var(--font-body);font-size:16px;color:var(--ink);outline:none;transition:border-color .2s,background .2s;}
+.maat-field input:focus{border-color:var(--c);background:#fff;}
+.maat-field input.err{border-color:var(--r);background:rgba(215,107,110,.04);}
+.maat-submit{width:100%;padding:16px;background:var(--v);color:#fff;border:none;border-radius:var(--radius-sm);font-family:var(--font-title);font-size:16px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;margin-top:8px;transition:transform .2s,background .2s;}
+.maat-submit:hover{transform:translateY(-2px);background:var(--c);}
+.maat-submit:disabled{opacity:.6;cursor:not-allowed;transform:none;box-shadow:none;}
+.maat-form-note{text-align:center;font-size:12px;color:var(--mu);margin-top:18px;line-height:1.5;}
+.maat-form-err{background:rgba(215,107,110,.1);color:var(--r);padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:14px;display:none;}
+.maat-form-err.show{display:block;}
+
+/* SUCCESS */
+.maat-success{text-align:center;padding:20px 0;animation:successIn .6s cubic-bezier(.34,1.56,.64,1);}
+@keyframes successIn{from{opacity:0;transform:scale(.94);}to{opacity:1;transform:scale(1);}}
+.maat-success .check{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--m),var(--c));color:#fff;font-size:42px;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;box-shadow:0 12px 30px rgba(125,205,147,.3);}
+.maat-success h3{font-family:var(--font-title);font-size:28px;color:var(--ink);margin-bottom:12px;line-height:1.2;}
+.maat-success p{font-size:15px;color:var(--ink2);line-height:1.7;max-width:420px;margin:0 auto 16px;}
+.maat-success .email{font-weight:600;color:var(--v);}
+.maat-success .tip{font-size:13px;color:var(--mu);margin-top:18px;}
+
+/* FOOTER */
+.maat-footer{background:var(--ink);color:#e6dcef;padding:48px 24px;text-align:center;}
+.maat-footer-logo{width:48px;height:48px;border-radius:12px;margin:0 auto 16px;}
+.maat-footer h3{font-family:var(--font-title);font-size:22px;margin-bottom:8px;}
+.maat-footer .tagline{font-size:13px;color:#a89fb1;margin-bottom:20px;}
+.maat-footer .links{display:flex;justify-content:center;gap:18px;margin-bottom:20px;}
+.maat-footer .links a{color:#e6dcef;font-size:13px;letter-spacing:1px;text-transform:uppercase;font-family:var(--font-title);transition:color .2s;}
+.maat-footer .links a:hover{color:var(--o);}
+.maat-footer .copy{font-size:12px;color:#8a7d8c;}
+
+/* RESPONSIVE */
+@media (max-width: 720px){
+  .maat-section{padding:60px 20px;}
+  .maat-letter-card{padding:32px 22px;}
+  .maat-letter-card::before{top:10px;left:10px;right:10px;bottom:10px;}
+  .maat-greet{font-size:24px;}
+  .maat-letter p{font-size:15.5px;}
+  .maat-quote p{font-size:18px;}
+  .maat-how-grid,.maat-comp-grid,.maat-phases-grid{grid-template-columns:1fr;}
+  .maat-form-card{padding:32px 22px;}
+}
+</style>
+</head>
+<body>
+
+<div class="maat-wrap">
+
+<!-- ============================================================ -->
+<!-- HERO                                                          -->
+<!-- ============================================================ -->
+<section class="maat-hero" id="hero">
+  <!-- IMG: hero papercut (1200x800 recomendado). Reemplazar src cuando est&eacute; lista. -->
+  <div class="maat-hero-bg">
+    <img src="https://somosmaat.org/wp-content/uploads/2026/06/maat-hero.png" alt="" onerror="this.style.display='none'">
+  </div>
+  <div class="maat-hero-inner">
+    <img class="maat-logo" src="https://somosmaat.org/wp-content/uploads/2026/02/Fav-icon-1.png" alt="MAAT">
+    <div class="maat-eyebrow">Mentor&iacute;a MAAT &middot; 16 semanas</div>
+    <h1>Un proceso para <em>volver a ti</em>.</h1>
+    <p>Un acompa&ntilde;amiento de 16 semanas que integra neurociencia, filosof&iacute;a y metacognici&oacute;n para que reconectes con tu energ&iacute;a, tu sentido y tu prop&oacute;sito.</p>
+    <a href="#activar" class="maat-scroll">Empieza aqu&iacute;<span>&darr;</span></a>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- CARTA DE BIENVENIDA                                           -->
+<!-- ============================================================ -->
+<section class="maat-section maat-letter">
+  <div class="maat-inner">
+    <div class="maat-letter-card">
+      <div class="maat-letter-inner">
+        <div class="maat-greet">Querido amigo, querida amiga,</div>
+        <p>Antes que nada, <strong>gracias</strong>. Gracias por dar este paso valiente, por confiar no solo en este proyecto, sino principalmente en ese potencial infinito que llevas dentro y que est&aacute; a punto de despertar. Tu decisi&oacute;n de estar aqu&iacute; ya habla de esa sabidur&iacute;a interior que te susurra que hay algo m&aacute;s grande esperando por ti.</p>
+        <p>Quiero contarte c&oacute;mo vamos a trabajar juntos en este proceso de crecimiento y expansi&oacute;n.</p>
+        <p>Imagina nuestras sesiones como ese caf&eacute; con un amigo que siempre te dice la verdad, pero desde el amor y el respeto. Un espacio donde puedes ser t&uacute; mismo, sin m&aacute;scaras ni pretensiones. Ac&aacute; vamos a explorar qu&eacute; te est&aacute; frenando y qu&eacute; necesitas para dar ese salto que sabes que puedes dar.</p>
+        <p>Yo ser&eacute; tu acompa&ntilde;ante en este proceso, pero <strong>el verdadero poder y la transformaci&oacute;n residen en ti</strong>. Estoy aqu&iacute; para ofrecerte orientaci&oacute;n, pero siempre recordando que t&uacute; tienes todas las respuestas dentro de ti.</p>
+
+        <div class="maat-quote">
+          <p>&ldquo;Todo lo que hablemos queda entre nosotros. Es sagrado.&rdquo;</p>
+        </div>
+
+        <p>Estoy emocionado de ver todo lo que podemos lograr juntos y de ser testigo de tu evoluci&oacute;n. Con fuerza de voluntad, juntos haremos cosas incre&iacute;bles.</p>
+
+        <img class="maat-carta-illo" src="https://somosmaat.org/wp-content/uploads/2024/12/Sin-titulo-15.jpeg" alt="El verdadero poder reside en ti">
+
+        <div class="maat-signature">
+          <div class="sig-avatar"><img src="https://somosmaat.org/wp-content/uploads/2024/10/Perfil_mentoria.png" alt="Rub&eacute;n"></div>
+          <div>
+            <div class="sig-name">Rub&eacute;n</div>
+            <div class="sig-role">Tu mentor MAAT</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- COMO TRABAJAMOS                                               -->
+<!-- ============================================================ -->
+<section class="maat-section maat-how">
+  <div class="maat-inner">
+    <div class="maat-section-head">
+      <img class="maat-illo maat-illo-md" src="https://somosmaat.org/wp-content/uploads/2024/12/Sin-titulo-16.jpeg" alt="Sesiones grupales" style="margin-bottom:28px;">
+      <div class="eyebrow">C&oacute;mo trabajamos</div>
+      <h2>Es como ir al gimnasio: <br>la consistencia es la clave.</h2>
+      <p>Nos vemos 4 veces al mes, una vez por semana, en sesiones grupales. Elegimos un horario que funciona al grupo y nos comprometemos a respetarlo.</p>
+    </div>
+    <div class="maat-how-grid">
+      <div class="maat-how-card">
+        <div class="num">4</div>
+        <h4>Sesiones al mes</h4>
+        <p>Una vez por semana, en grupo. Un ritmo sostenible que crea h&aacute;bito.</p>
+      </div>
+      <div class="maat-how-card">
+        <div class="num">16</div>
+        <h4>Semanas en total</h4>
+        <p>4 fases de transformaci&oacute;n. Tiempo suficiente para integrar.</p>
+      </div>
+      <div class="maat-how-card">
+        <div class="num">1:1</div>
+        <h4>Acompa&ntilde;amiento real</h4>
+        <p>App diaria, Coach IA 24/7 y un mentor humano que te conoce.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- COMPROMISOS                                                   -->
+<!-- ============================================================ -->
+<section class="maat-section maat-compromisos">
+  <div class="maat-inner">
+    <div class="maat-section-head">
+      <div class="eyebrow">Lo que nos hace funcionar</div>
+      <h2>Tres compromisos sagrados</h2>
+      <p>Para que esto fluya, nos comprometemos los dos con estos tres principios.</p>
+    </div>
+    <div class="maat-comp-grid">
+      <div class="maat-comp-card">
+        <div class="icon">&#128274;</div>
+        <h4>SAGRADO</h4>
+        <p>Todo lo que hablemos queda entre nosotros. La confianza es la base del proceso.</p>
+      </div>
+      <div class="maat-comp-card">
+        <div class="icon">&#10004;</div>
+        <h4>COMPROMISO</h4>
+        <p>Puntualidad, preparaci&oacute;n y dedicaci&oacute;n a las pr&aacute;cticas que acordemos juntos.</p>
+      </div>
+      <div class="maat-comp-card">
+        <div class="icon">&#128172;</div>
+        <h4>RETROALIMENTACI&Oacute;N</h4>
+        <p>Tu voz importa. Tus comentarios adaptan el proceso a lo que t&uacute; necesitas.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- LAS 4 FASES                                                   -->
+<!-- ============================================================ -->
+<section class="maat-section maat-phases">
+  <div class="maat-inner">
+    <div class="maat-section-head">
+      <div class="eyebrow">El viaje</div>
+      <h2>4 fases, 16 semanas, una versi&oacute;n nueva de ti.</h2>
+      <p>Cada fase tiene un foco y una intenci&oacute;n. Las vives en orden, en grupo, a tu ritmo.</p>
+    </div>
+    <div class="maat-phases-grid">
+
+      <div class="maat-phase-card" data-ph="1">
+        <div class="maat-phase-img"><img src="https://somosmaat.org/wp-content/uploads/2024/10/AGRADECIMIENTO.png" alt="Gratitud"></div>
+        <div class="maat-phase-weeks">Semanas 1 &mdash; 4</div>
+        <div class="maat-phase-name">Gratitud</div>
+        <div class="maat-phase-desc">Despertar la conciencia. Descubrir lo que has estado evitando. La fundaci&oacute;n de todo.</div>
+      </div>
+
+      <div class="maat-phase-card" data-ph="2">
+        <div class="maat-phase-img"><img src="https://somosmaat.org/wp-content/uploads/2024/10/AMOR.png" alt="Amor"></div>
+        <div class="maat-phase-weeks">Semanas 5 &mdash; 8</div>
+        <div class="maat-phase-name">Amor</div>
+        <div class="maat-phase-desc">Reescribir las creencias que te limitan. Sanar la relaci&oacute;n contigo mismo.</div>
+      </div>
+
+      <div class="maat-phase-card" data-ph="3">
+        <div class="maat-phase-img"><img src="https://somosmaat.org/wp-content/uploads/2024/10/Intencion.png" alt="Intenci&oacute;n"></div>
+        <div class="maat-phase-weeks">Semanas 9 &mdash; 12</div>
+        <div class="maat-phase-name">Intenci&oacute;n</div>
+        <div class="maat-phase-desc">Reconstruir desde la voluntad consciente. Dirigir tu energ&iacute;a hacia lo que importa.</div>
+      </div>
+
+      <div class="maat-phase-card" data-ph="4">
+        <div class="maat-phase-img"><img src="https://somosmaat.org/wp-content/uploads/2024/10/Voluntad.png" alt="Voluntad"></div>
+        <div class="maat-phase-weeks">Semanas 13 &mdash; 16</div>
+        <div class="maat-phase-name">Voluntad</div>
+        <div class="maat-phase-desc">Integrar tu nueva versi&oacute;n como forma de vida. No fuerza &mdash; coherencia.</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- FORMULARIO DE ACTIVACION                                      -->
+<!-- ============================================================ -->
+<section class="maat-section maat-cta" id="activar">
+  <div class="maat-inner" style="max-width:560px;">
+    <div class="maat-cta-banner">
+      <div class="maat-cta-banner-illo">
+        <img src="https://somosmaat.org/wp-content/uploads/2024/11/Sin-titulo-8.jpeg" alt="Tu proceso interior">
+      </div>
+      <div class="maat-cta-banner-copy">
+        <strong>Crea tu usuario</strong> para acceder a tu aplicativo que acompa&ntilde;ar&aacute; tu proceso d&iacute;a a d&iacute;a.
+      </div>
+    </div>
+    <div class="maat-form-card" id="form-card">
+      <img class="maat-form-deco" src="https://somosmaat.org/wp-content/uploads/2025/01/Untitled-2.png" alt="Reg&iacute;strate aqu&iacute;">
+      <div class="maat-form-head">
+        <h2>Empieza tu proceso MAAT</h2>
+        <p>D&eacute;janos tu nombre y correo. Te enviaremos un email para que actives tu cuenta y crees tu contrase&ntilde;a.</p>
+      </div>
+      <div class="maat-form-err" id="form-err"></div>
+      <div class="maat-field">
+        <label for="m-name">Tu nombre</label>
+        <input type="text" id="m-name" placeholder="Como te gusta que te llamen" autocomplete="name">
+      </div>
+      <div class="maat-field">
+        <label for="m-email">Tu correo</label>
+        <input type="email" id="m-email" placeholder="tu@correo.com" autocomplete="email">
+      </div>
+      <button class="maat-submit" id="btn-activate" onclick="maatActivate()">Activar mi cuenta MAAT</button>
+      <p class="maat-form-note">Te enviaremos un correo seguro para que crees tu contrase&ntilde;a. <br>No te suscribimos a nada m&aacute;s.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- FOOTER                                                        -->
+<!-- ============================================================ -->
+<footer class="maat-footer">
+  <img class="maat-footer-logo" src="https://somosmaat.org/wp-content/uploads/2023/12/favicon.png" alt="MAAT">
+  <h3>somosmaat</h3>
+  <p class="tagline">Neurociencia + filosof&iacute;a + metacognici&oacute;n</p>
+  <div class="links">
+    <a href="https://www.instagram.com/channel/AbbcibCK3UQj4tzf/" target="_blank" rel="noopener">Instagram</a>
+    <a href="https://chat.whatsapp.com/C6jZLOiDI8nBX5x0uWEQIJ" target="_blank" rel="noopener">WhatsApp</a>
+    <a href="https://somosmaat.org" target="_blank" rel="noopener">somosmaat.org</a>
+  </div>
+  <p class="copy">&copy; <span id="m-year"></span> MAAT. Hecho con cari&ntilde;o.</p>
+</footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+/* ============================================================ */
+/* CONFIG                                                       */
+/* ============================================================ */
+const SU="https://pcclptmojjzqmfmzftot.supabase.co";
+const SK="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjY2xwdG1vamp6cW1mbXpmdG90Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4OTg3MjAsImV4cCI6MjA4NzQ3NDcyMH0.VuFBEy19fgNN5pSp_r8p2ZVViniunKdVW7Hy3AmqJXE";
+/* URL a donde Supabase enviar\u00E1 al usuario tras hacer clic en el email de activaci\u00F3n. */
+/* Debe ser la URL de la app del cliente embebida en somosmaat.org */
+const REDIRECT_URL="https://www.somosmaat.org/dashboard";
+/* Cliente Supabase aislado (no persiste sesi\u00F3n en la landing) */
+const sb=supabase.createClient(SU,SK,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
+
+document.getElementById("m-year").textContent=new Date().getFullYear();
+
+function genPass(){
+  const chars="ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%&*";
+  const arr=new Uint8Array(20);crypto.getRandomValues(arr);
+  return Array.from(arr,b=>chars[b%chars.length]).join("");
+}
+
+function showErr(msg){
+  const el=document.getElementById("form-err");
+  el.textContent=msg;el.classList.add("show");
+}
+function clearErr(){document.getElementById("form-err").classList.remove("show");}
+function markErr(id,on){document.getElementById(id).classList.toggle("err",!!on);}
+
+async function maatActivate(){
+  clearErr();markErr("m-name",false);markErr("m-email",false);
+  const name=document.getElementById("m-name").value.trim();
+  const email=document.getElementById("m-email").value.trim().toLowerCase();
+  if(!name){markErr("m-name",true);showErr("Cu\u00E9ntanos c\u00F3mo te llamas.");return;}
+  if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+    markErr("m-email",true);showErr("Necesitamos un correo v\u00E1lido.");return;
+  }
+  const btn=document.getElementById("btn-activate");
+  btn.disabled=true;btn.textContent="Activando...";
+
+  try{
+    /* 1) Crear el usuario con contrase\u00F1a aleatoria + guardar el nombre */
+    const password=genPass();
+    const{data,error}=await sb.auth.signUp({
+      email,password,
+      options:{data:{full_name:name},emailRedirectTo:REDIRECT_URL}
+    });
+    if(error){
+      const m=(error.message||"").toLowerCase();
+      if(m.includes("already")||m.includes("exists")||m.includes("registered")){
+        showErr("Este correo ya est\u00E1 registrado. Te enviamos un enlace para que reactives tu acceso.");
+      }else{
+        showErr(error.message||"No pudimos crear la cuenta. Intenta de nuevo.");
+        btn.disabled=false;btn.textContent="Activar mi cuenta MAAT";return;
+      }
+    }
+    /* 2) Enviar el email de activaci\u00F3n (reset password = crea tu contrase\u00F1a) */
+    const{error:rErr}=await sb.auth.resetPasswordForEmail(email,{redirectTo:REDIRECT_URL});
+    if(rErr){
+      showErr("Cuenta creada, pero hubo un problema enviando el email. Escr\u00EDbenos por WhatsApp.");
+      btn.disabled=false;btn.textContent="Activar mi cuenta MAAT";return;
+    }
+    /* 3) Cerrar cualquier sesi\u00F3n local (por si acaso) */
+    try{await sb.auth.signOut();}catch(_){}
+    /* 4) Mostrar pantalla de \u00E9xito */
+    showSuccess(name,email);
+  }catch(e){
+    showErr(e.message||"Algo sali\u00F3 mal. Intenta de nuevo en un momento.");
+    btn.disabled=false;btn.textContent="Activar mi cuenta MAAT";
+  }
+}
+
+function showSuccess(name,email){
+  document.getElementById("form-card").innerHTML=`
+    <div class="maat-success">
+      <div class="check">\u2713</div>
+      <h3>${escapeHTML(name.split(" ")[0])}, revisa tu correo \u2728</h3>
+      <p>Te enviamos un email a <span class="email">${escapeHTML(email)}</span> con un enlace para crear tu contrase\u00F1a y entrar a tu espacio MAAT.</p>
+      <p>Es el primer paso de un proceso de 16 semanas. Estamos felices de tenerte aqu\u00ED.</p>
+      <p class="tip">No olvides revisar la carpeta de <strong>spam o promociones</strong> por si acaso.</p>
+    </div>`;
+}
+
+function escapeHTML(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");}
+
+/* Enter en cualquier input env\u00EDa */
+["m-name","m-email"].forEach(id=>{
+  document.getElementById(id).addEventListener("keydown",e=>{
+    if(e.key==="Enter")maatActivate();
+  });
+});
+</script>
+</body>
+</html>

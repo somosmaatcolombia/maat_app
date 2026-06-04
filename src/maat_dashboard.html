@@ -307,6 +307,21 @@ label.field-label{display:block;font-size:14px;color:var(--mu);margin-bottom:6px
 #calib-close .cc-ach .cca-t{font-family:var(--font-title);font-size:15px;font-weight:700;color:var(--m);}
 #calib-close .cc-ach .cca-d{font-size:12px;color:var(--mu);}
 #calib-close .cc-btn{background:var(--c);color:#fff;border:none;border-radius:var(--radius-sm);font-family:var(--font-title);font-size:15px;font-weight:600;letter-spacing:.5px;padding:13px 40px;cursor:pointer;touch-action:manipulation;}
+/* Configurar contrase\u00F1a despu\u00E9s de activaci\u00F3n por email */
+#setpass-overlay{position:fixed;inset:0;background:var(--bg);z-index:600;display:none;align-items:center;justify-content:center;padding:24px;}
+#setpass-overlay.show{display:flex;}
+#setpass-overlay .sp-inner{max-width:420px;width:100%;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--radius);padding:32px 28px;text-align:center;animation:ccRise .5s cubic-bezier(.34,1.56,.64,1);}
+#setpass-overlay .sp-icon{font-size:42px;margin-bottom:12px;}
+#setpass-overlay h3{font-family:var(--font-title);font-size:22px;font-weight:700;margin-bottom:8px;color:var(--text);line-height:1.25;}
+#setpass-overlay .sp-msg{font-size:14px;color:var(--mu);line-height:1.55;margin-bottom:22px;}
+#setpass-overlay .sp-field{margin-bottom:12px;text-align:left;}
+#setpass-overlay .sp-field label{display:block;font-size:11px;color:var(--mu);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:6px;font-weight:600;}
+#setpass-overlay .sp-field input{width:100%;padding:13px 14px;background:var(--bg);border:1px solid var(--bd);border-radius:var(--radius-sm);color:var(--text);font-family:var(--font-body);font-size:16px;outline:none;}
+#setpass-overlay .sp-field input:focus{border-color:var(--c);}
+#setpass-overlay .sp-err{color:var(--r);font-size:12px;min-height:16px;margin:6px 0 14px;}
+#setpass-overlay .sp-btn{width:100%;padding:14px;background:var(--c);color:#fff;border:none;border-radius:var(--radius-sm);font-family:var(--font-title);font-size:15px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;touch-action:manipulation;}
+#setpass-overlay .sp-btn:disabled{opacity:.6;cursor:not-allowed;}
+#setpass-overlay .sp-hint{font-size:11px;color:var(--mu2);margin-top:14px;line-height:1.5;}
 
 /* PROFILE SHEET */
 .sheet-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;opacity:0;transition:opacity .3s;}
@@ -456,6 +471,7 @@ input:focus-visible,textarea:focus-visible,select:focus-visible{outline:none;bor
 <div id="onboarding-overlay"></div>
 <div id="achievement"><div class="ach-icon"></div><div class="ach-title"></div><div class="ach-text"></div></div>
 <div id="calib-close"><div class="cc-inner"></div></div>
+<div id="setpass-overlay"><div class="sp-inner"></div></div>
 <div id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -3008,15 +3024,75 @@ function exportProgress(){
   toast(lang==='es'?'Progreso exportado':'Progress exported','ok');
 }
 
+/* ============ CONFIGURAR CONTRASE\u00d1A (post-activaci\u00f3n por email) ============ */
+function isRecoveryUrl(){
+  // Supabase coloca type=recovery en el hash (#) o en query (?) tras click del email
+  const h=(window.location.hash||"").toLowerCase();
+  const q=(window.location.search||"").toLowerCase();
+  return h.includes("type=recovery")||q.includes("type=recovery");
+}
+
+function showSetPassword(){
+  const el=document.getElementById("setpass-overlay");
+  const isES=lang!=='en';
+  el.querySelector(".sp-inner").innerHTML=`
+    <div class="sp-icon">\u{1F511}</div>
+    <h3>${isES?'\u00a1Bienvenido a MAAT!':'Welcome to MAAT!'}</h3>
+    <p class="sp-msg">${isES?'Crea tu contrase\u00f1a para acceder a tu cuenta. La usar\u00e1s desde cualquier dispositivo.':'Create your password to access your account. You will use it from any device.'}</p>
+    <div class="sp-field">
+      <label for="sp-pass">${isES?'Nueva contrase\u00f1a':'New password'}</label>
+      <input type="password" id="sp-pass" autocomplete="new-password" placeholder="${isES?'M\u00ednimo 8 caracteres':'At least 8 characters'}">
+    </div>
+    <div class="sp-field">
+      <label for="sp-pass2">${isES?'Confirmar contrase\u00f1a':'Confirm password'}</label>
+      <input type="password" id="sp-pass2" autocomplete="new-password" placeholder="${isES?'Rep\u00edtela':'Repeat it'}">
+    </div>
+    <div class="sp-err" id="sp-err"></div>
+    <button class="sp-btn" id="sp-btn" onclick="saveNewPassword()">${isES?'Guardar contrase\u00f1a':'Save password'}</button>
+    <p class="sp-hint">${isES?'Despu\u00e9s podr\u00e1s usar tu correo y esta contrase\u00f1a para entrar.':'You will use your email and this password to sign in later.'}</p>
+  `;
+  el.classList.add("show");
+  setTimeout(()=>{document.getElementById("sp-pass")?.focus();},150);
+  // Enter submits
+  ["sp-pass","sp-pass2"].forEach(id=>{
+    document.getElementById(id)?.addEventListener("keydown",e=>{if(e.key==="Enter")saveNewPassword();});
+  });
+}
+
+async function saveNewPassword(){
+  const p1=document.getElementById("sp-pass").value;
+  const p2=document.getElementById("sp-pass2").value;
+  const err=document.getElementById("sp-err");
+  const btn=document.getElementById("sp-btn");
+  const isES=lang!=='en';
+  err.textContent="";
+  if(!p1||p1.length<8){err.textContent=isES?"La contrase\u00f1a debe tener al menos 8 caracteres.":"Password must be at least 8 characters.";return;}
+  if(p1!==p2){err.textContent=isES?"Las contrase\u00f1as no coinciden.":"Passwords do not match.";return;}
+  btn.disabled=true;btn.textContent=isES?"GUARDANDO...":"SAVING...";
+  try{
+    const{error}=await sb.auth.updateUser({password:p1});
+    if(error){err.textContent=error.message;btn.disabled=false;btn.textContent=isES?"Guardar contrase\u00f1a":"Save password";return;}
+    // Limpiar el hash de recovery para que no reaparezca al recargar
+    try{history.replaceState(null,"",window.location.pathname+window.location.search);}catch(_){}
+    document.getElementById("setpass-overlay").classList.remove("show");
+    toast(isES?"Contrase\u00f1a guardada \u2713":"Password saved \u2713","ok");
+  }catch(e){
+    err.textContent=e.message||"Error";btn.disabled=false;btn.textContent=isES?"Guardar contrase\u00f1a":"Save password";
+  }
+}
+
 /* ============ BOOTSTRAP \u2014 FIX: no auth flash ============ */
 (async function boot(){
   updateAuthUI();
   setTheme(theme);
+  const recovery=isRecoveryUrl();
   try{
     const{data:{session}}=await sb.auth.getSession();
     if(session?.user){
       user=session.user;
       await initApp();
+      // Si vino del email de activaci\u00f3n, pedirle que cree su contrase\u00f1a
+      if(recovery)setTimeout(()=>showSetPassword(),500);
     }else{
       document.getElementById("auth-screen").classList.add("visible");
     }
