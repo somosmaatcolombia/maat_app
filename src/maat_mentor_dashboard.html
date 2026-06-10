@@ -390,6 +390,9 @@ dialog.m-dialog[open]{display:flex;align-items:flex-start;justify-content:center
 /* ============================================ */
 /* CONFIG                                       */
 /* ============================================ */
+// Activar warnings de fallos silenciosos con localStorage.setItem("maat-debug","1")
+const MAAT_DEBUG=(typeof localStorage!=="undefined"&&localStorage.getItem("maat-debug")==="1");
+const _w=MAAT_DEBUG?console.warn.bind(console):function(){};
 const SU="https://pcclptmojjzqmfmzftot.supabase.co";
 const SK="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjY2xwdG1vamp6cW1mbXpmdG90Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4OTg3MjAsImV4cCI6MjA4NzQ3NDcyMH0.VuFBEy19fgNN5pSp_r8p2ZVViniunKdVW7Hy3AmqJXE";
 const sb=supabase.createClient(SU,SK);
@@ -557,31 +560,76 @@ async function initApp(){
 /* ============================================ */
 /* LOAD DATA                                    */
 /* ============================================ */
+// Cache de textos completos de calibracion por cliente (lazy, solo al abrir perfil)
+const _clientCalibsFull={};
+
 async function loadData(){
   const uid=user.id;
   if(myRole==="admin"){
-    const{data}=await sb.from("profiles").select("*").order("full_name");
-    _allUsers=data||[];_allProfiles=_allUsers.filter(u=>u.role==="client");_clientIds=_allProfiles.map(u=>u.id);
+    // Filtra clientes en el servidor (la BD comparte con CRM: no traer otros roles)
+    // Solo los campos necesarios para listar/buscar
+    const{data}=await sb.from("profiles")
+      .select("id,full_name,email,role,active,current_week,graduated,graduated_at,cycle,whatsapp_number,phone,avatar_url,created_at")
+      .eq("role","client")
+      .order("full_name");
+    _allProfiles=data||[];_allUsers=_allProfiles;_clientIds=_allProfiles.map(u=>u.id);
   }else{
     const{data:mc,error:mcErr}=await sb.from("mentor_clients").select("client_id").eq("mentor_id",uid).or("active.eq.true,active.is.null");
     if(mcErr)chkAuthErr(mcErr);
     _clientIds=(mc||[]).map(r=>r.client_id);
-    if(_clientIds.length){const{data:profs}=await sb.from("profiles").select("*").in("id",_clientIds).order("full_name");_allProfiles=profs||[];}
-    else _allProfiles=[];
+    if(_clientIds.length){
+      const{data:profs}=await sb.from("profiles")
+        .select("id,full_name,email,role,active,current_week,graduated,graduated_at,cycle,whatsapp_number,phone,avatar_url,created_at")
+        .in("id",_clientIds).order("full_name");
+      _allProfiles=profs||[];
+    }else _allProfiles=[];
   }
   if(!_clientIds.length){_allCals=[];_allWkp=[];_allHt=[];_allSessions=[];_clientMetrics={};return;}
 
+  // Ventana de 90 dias: las metricas (coherencia, racha, alertas) solo miran lo reciente.
+  // Si abres un perfil de un cliente, los textos completos se cargan bajo demanda.
+  const since90=new Date(Date.now()-90*24*60*60*1000).toISOString();
+
   const[r1,r2,r3,r4]=await Promise.allSettled([
-    sb.from("calibrations").select("*").in("user_id",_clientIds).order("created_at",{ascending:false}),
-    sb.from("week_progress").select("*").in("user_id",_clientIds),
-    sb.from("habit_tracker").select("*").in("user_id",_clientIds),
-    sb.from("session_notes").select("*").eq("mentor_id",uid).order("created_at",{ascending:false}),
+    // CALIBRACIONES: SOLO campos light para metricas (sin answer_q1/q2/q3 ni session_note)
+    sb.from("calibrations")
+      .select("user_id,date,week,coherence,created_at")
+      .in("user_id",_clientIds)
+      .gte("created_at",since90)
+      .order("created_at",{ascending:false})
+      .limit(1500),
+    sb.from("week_progress").select("user_id,week,completed").in("user_id",_clientIds),
+    // HABIT_TRACKER: trae habits JSONB; lo necesitamos para calcular %. Limitar a 16 ultimas semanas
+    sb.from("habit_tracker")
+      .select("user_id,week,habits,learned,updated_at")
+      .in("user_id",_clientIds)
+      .order("updated_at",{ascending:false})
+      .limit(500),
+    sb.from("session_notes")
+      .select("id,client_id,session_type,session_date,notes,next_plan,client_week,created_at")
+      .eq("mentor_id",uid)
+      .order("created_at",{ascending:false})
+      .limit(50),
   ]);
   _allCals=r1.status==="fulfilled"?(r1.value.data||[]):[];
   _allWkp=r2.status==="fulfilled"?(r2.value.data||[]):[];
   _allHt=r3.status==="fulfilled"?(r3.value.data||[]):[];
   _allSessions=r4.status==="fulfilled"?(r4.value.data||[]):[];
   computeMetrics();
+}
+
+// Carga bajo demanda: textos completos de las ultimas 10 calibraciones de UN cliente.
+// Solo se invoca al abrir el perfil. Cacheado para no repetir queries.
+async function loadClientFullCalibrations(clientId){
+  if(_clientCalibsFull[clientId])return _clientCalibsFull[clientId];
+  const{data,error}=await sb.from("calibrations")
+    .select("date,week,coherence,answer_q1,answer_q2,answer_q3,session_note,created_at")
+    .eq("user_id",clientId)
+    .order("created_at",{ascending:false})
+    .limit(10);
+  if(error){chkAuthErr(error);return[];}
+  _clientCalibsFull[clientId]=data||[];
+  return _clientCalibsFull[clientId];
 }
 
 /* ============================================ */
@@ -746,7 +794,15 @@ function renderClients(){
 /* ============================================ */
 /* CLIENT PROFILE                               */
 /* ============================================ */
-function openProfile(uid){_selectedClient=uid;goView("profile");renderProfile();}
+function openProfile(uid){
+  _selectedClient=uid;
+  goView("profile");
+  renderProfile();
+  // Cargar textos completos en segundo plano y re-render cuando lleguen
+  loadClientFullCalibrations(uid).then(()=>{
+    if(_currentView==="profile"&&_selectedClient===uid)renderProfile();
+  });
+}
 
 function renderProfile(){
   const uid=_selectedClient;
@@ -755,7 +811,8 @@ function renderProfile(){
   if(!p){document.getElementById("v-profile").innerHTML='<p>Cliente no encontrado</p>';return;}
 
   const phase=getPhase(m.week||1);
-  const clientCals=_allCals.filter(c=>c.user_id===uid).slice(0,10);
+  // Si ya cargaron los textos completos, usarlos; si no, las metricas light (sin Q1/Q2/Q3)
+  const clientCals=_clientCalibsFull[uid]||_allCals.filter(c=>c.user_id===uid).slice(0,10);
   const clientSessions=_allSessions.filter(s=>s.client_id===uid);
   const clientWkp={};_allWkp.filter(w=>w.user_id===uid).forEach(w=>{clientWkp[w.week]=w.completed;});
 
@@ -1039,7 +1096,7 @@ async function createClient(){
     const{error:profErr}=await sb.from("profiles").upsert({id:newUid,full_name:name,role:"client",current_week:1});
     if(profErr){toast("Perfil: "+profErr.message,"err");return;}
     const{error:mcErr}=await sb.from("mentor_clients").upsert({mentor_id:user.id,client_id:newUid,active:true},{onConflict:"mentor_id,client_id"});
-    if(mcErr)console.warn("mentor_clients:",mcErr.message);
+    if(mcErr)_w("mentor_clients:",mcErr.message);
     resultEl.innerHTML=`<div class="success-screen"><div class="icon">\u2705</div><h3>Cliente creado exitosamente</h3><div class="cred"><strong>Email:</strong> ${san(email)}<br><strong>Contrase\u00F1a:</strong> ${san(password)}</div><p style="font-size:12px;color:var(--mu);">Guarda estas credenciales \u2014 la contrase\u00F1a no se puede recuperar.</p></div>`;
     await loadData();
     if(_currentView==="clients")setTimeout(()=>renderClients(),300);
@@ -1264,7 +1321,7 @@ async function renderMeditacionesAdmin(){
       ${_adminMeds.map(med=>`
         <div style="background:var(--bg2);border:1px solid var(--bd);border-radius:var(--radius-sm);padding:14px;display:flex;align-items:center;gap:12px;">
           <div style="width:44px;height:44px;border-radius:8px;background:var(--bg);border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;overflow:hidden;">
-            ${med.cover_url?`<img src="${san(med.cover_url)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.textContent='\u{1F3A7}'">`:'\u{1F3A7}'}
+            ${med.cover_url?`<img loading="lazy" decoding="async" src="${san(med.cover_url)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.textContent='\u{1F3A7}'">`:'\u{1F3A7}'}
           </div>
           <div style="flex:1;min-width:0;">
             <div style="font-weight:600;font-size:14px;">${san(med.title_es)}</div>

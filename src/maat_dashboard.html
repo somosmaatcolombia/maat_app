@@ -479,6 +479,9 @@ input:focus-visible,textarea:focus-visible,select:focus-visible{outline:none;bor
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
 /* ============ CONFIG ============ */
+// Activar para ver warnings de fallos silenciosos (catch blocks). En prod: false.
+const MAAT_DEBUG=(typeof localStorage!=="undefined"&&localStorage.getItem("maat-debug")==="1");
+const _w=MAAT_DEBUG?console.warn.bind(console):function(){};
 const SU="https://pcclptmojjzqmfmzftot.supabase.co";
 const SK="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjY2xwdG1vamp6cW1mbXpmdG90Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4OTg3MjAsImV4cCI6MjA4NzQ3NDcyMH0.VuFBEy19fgNN5pSp_r8p2ZVViniunKdVW7Hy3AmqJXE";
 const sb=supabase.createClient(SU,SK);
@@ -811,7 +814,7 @@ function renderObStep(){
   const s=OB_STEPS[_obStep];const last=_obStep===OB_STEPS.length-1;
   document.getElementById("onboarding-overlay").innerHTML=`
     <div class="ob-step">
-      <div class="ob-icon">${s.img?`<img src="${s.img}" alt="" style="max-width:260px;width:80%;height:auto;display:block;margin:0 auto;" onerror="this.outerHTML='${s.icon}'">`:s.icon}</div>
+      <div class="ob-icon">${s.img?`<img loading="lazy" decoding="async" src="${s.img}" alt="" style="max-width:260px;width:80%;height:auto;display:block;margin:0 auto;" onerror="this.outerHTML='${s.icon}'">`:s.icon}</div>
       <div class="ob-title">${lang==='es'?s.title_es:s.title_en}</div>
       <div class="ob-text">${lang==='es'?s.text_es:s.text_en}</div>
       <div class="ob-dots">${OB_STEPS.map((_,i)=>`<div class="ob-dot ${i===_obStep?'active':''}"></div>`).join("")}</div>
@@ -833,7 +836,7 @@ function finishOnboarding(){
 function showAchievement(icon,title,text,img){
   const el=document.getElementById("achievement");
   const iconEl=el.querySelector(".ach-icon");
-  if(img){iconEl.innerHTML=`<img src="${img}" alt="" style="max-width:140px;width:80%;height:auto;display:block;margin:0 auto;" onerror="this.outerHTML='${icon}'">`;}
+  if(img){iconEl.innerHTML=`<img loading="lazy" decoding="async" src="${img}" alt="" style="max-width:140px;width:80%;height:auto;display:block;margin:0 auto;" onerror="this.outerHTML='${icon}'">`;}
   else{iconEl.textContent=icon;}
   el.querySelector(".ach-title").textContent=title;
   el.querySelector(".ach-text").textContent=text;
@@ -953,7 +956,7 @@ function showGraduationCelebration(){
   const es=lang==='es';
   const el=document.getElementById("calib-close");
   el.querySelector(".cc-inner").innerHTML=`
-    <img src="${OB_IMG_BASE}celebracion-graduacion.png" alt="" style="max-width:260px;width:80%;height:auto;display:block;margin:0 auto 20px;" onerror="this.outerHTML='<div class=\\'cc-icon\\'>\\u{1F393}</div>'">
+    <img loading="lazy" decoding="async" src="${OB_IMG_BASE}celebracion-graduacion.png" alt="" style="max-width:260px;width:80%;height:auto;display:block;margin:0 auto 20px;" onerror="this.outerHTML='<div class=\\'cc-icon\\'>\\u{1F393}</div>'">
     <div class="cc-head" style="background:linear-gradient(135deg,var(--o),var(--v));-webkit-background-clip:text;background-clip:text;color:transparent;">${es?'\u00A1Eres graduado MAAT!':'You are a MAAT graduate!'}</div>
     <div class="cc-msg">${es?'Completaste las 16 semanas. A partir de hoy eres parte de la comunidad de graduados. Tu proceso continua, ahora con meditaciones exclusivas y eventos.':'You completed the 16 weeks. You are now part of the graduates community. Your process continues, with exclusive meditations and events.'}</div>
     <div><button class="cc-btn" onclick="closeCalibClose()">${es?'Continuar':'Continue'}</button></div>
@@ -1047,7 +1050,7 @@ async function loadDataCritical(){
     if(results[1]?.status==="fulfilled"){const{data,error}=results[1].value;if(!error)cals=data||[];else chkAuthErr(error);}
     if(results[2]?.status==="fulfilled"){const{data,error}=results[2].value;if(!error&&data){wkp={};data.forEach(r=>{wkp[r.week]=r.completed;});}else if(error)chkAuthErr(error);}
     if(results[3]?.status==="fulfilled"){const{data,error}=results[3].value;if(!error&&data){ht={};wkLearning={};data.forEach(r=>{ht[r.week]=r;if(r.learned)wkLearning[r.week]=r.learned;});}else if(error)chkAuthErr(error);}
-  }catch(e){console.warn("loadDataCritical:",e.message);}
+  }catch(e){_w("loadDataCritical:",e.message);}
 }
 
 // Fase 2 \u2014 datos secundarios (no bloquean el primer render)
@@ -1074,7 +1077,7 @@ async function loadDataSecondary(){
     if(results[6]?.status==="fulfilled"){const{data}=results[6].value;if(data)events=data||[];}
     if(results[7]?.status==="fulfilled"){const{data}=results[7].value;if(data)myEventRegs=data||[];}
     if(results[8]?.status==="fulfilled"){const{data}=results[8].value;if(data)communityPulse=data;}
-  }catch(e){console.warn("loadDataSecondary:",e.message);}
+  }catch(e){_w("loadDataSecondary:",e.message);}
 }
 
 // Recarga completa para reconexi\u00F3n / sync offline (mantiene compatibilidad)
@@ -1342,7 +1345,7 @@ function renderHome(){
             const{data:sd}=await sb.storage.from("hipnosis").createSignedUrl(decodeURIComponent(pm[1]),86400);
             if(sd?.signedUrl){a.src=sd.signedUrl;a.load();}
           }
-        }catch(e){console.warn("Hip audio fallback failed:",e);}
+        }catch(e){_w("Hip audio fallback failed:",e);}
       });
     }
   }
@@ -1525,7 +1528,7 @@ function renderHabits(){
           <div class="habit-progress"><div class="fill" style="width:${pct}%;background:${isFulfilled?'var(--m)':'var(--o)'}"></div></div>
         </div>`;
       }).join(""):`<div style="text-align:center;padding:24px 0;">
-        <img src="${OB_IMG_BASE}empty-habits.png" alt="" style="max-width:200px;width:55%;height:auto;display:block;margin:0 auto 14px;opacity:.95;" onerror="this.style.display='none'">
+        <img loading="lazy" decoding="async" src="${OB_IMG_BASE}empty-habits.png" alt="" style="max-width:200px;width:55%;height:auto;display:block;margin:0 auto 14px;opacity:.95;" onerror="this.style.display='none'">
         <p class="text-mu" style="margin-bottom:12px;">${t("no_habits")}</p>
         ${(()=>{const prev=getHabits(w-1);return w>1&&prev.length?`<button onclick="copyHabitsFromWeek(${w-1})" style="background:var(--bg2);border:1px dashed var(--c);color:var(--c);padding:10px 20px;border-radius:var(--radius-sm);font-size:13px;cursor:pointer;">\u{1F4CB} ${lang==='es'?'Copiar h\u00E1bitos de semana '+(w-1):'Copy habits from week '+(w-1)}</button>`:''})()}
       </div>`}
@@ -1789,11 +1792,11 @@ function renderCoach(){
     el.innerHTML=`<div class="chat-msg assistant" style="max-width:100%;">${greeting}</div>
       <div class="coach-chips">${chips.map(c=>`<button class="coach-chip" onclick="useChip(this)">${c}</button>`).join("")}</div>`;
   } else {
-    el.innerHTML="";
-    chatHistory.forEach(m=>{
+    // Construir todo el HTML primero y un solo reflow al final
+    el.innerHTML=chatHistory.map(m=>{
       const body=m.role==='assistant'?mdRender(m.content):san(m.content);
-      el.innerHTML+=`<div class="chat-msg ${m.role}">${body}</div>`;
-    });
+      return`<div class="chat-msg ${m.role}">${body}</div>`;
+    }).join("");
     el.scrollTop=el.scrollHeight;
   }
 }
@@ -1809,8 +1812,9 @@ async function sendMsg(){
   track("coach_msg",{week:hwk});
   chatHistory.push({role:"user",content:msg});
   const msgEl=document.getElementById("chat-messages");
-  msgEl.innerHTML+=`<div class="chat-msg user">${san(msg)}</div>`;
-  msgEl.innerHTML+=`<div class="chat-msg assistant typing-indicator" id="typing"><span></span><span></span><span></span></div>`;
+  // insertAdjacentHTML evita re-parsear el chat entero en cada append
+  msgEl.insertAdjacentHTML("beforeend",`<div class="chat-msg user">${san(msg)}</div>`);
+  msgEl.insertAdjacentHTML("beforeend",`<div class="chat-msg assistant typing-indicator" id="typing"><span></span><span></span><span></span></div>`);
   msgEl.scrollTop=msgEl.scrollHeight;
   chatLocked=true;
   try{
@@ -1832,10 +1836,10 @@ async function sendMsg(){
     try{localStorage.setItem("maat-chat-"+user?.id,JSON.stringify(chatHistory.slice(-20)));}catch(e){}
     saveChatServer();
     document.getElementById("typing")?.remove();
-    msgEl.innerHTML+=`<div class="chat-msg assistant">${mdRender(reply)}</div>`;
+    msgEl.insertAdjacentHTML("beforeend",`<div class="chat-msg assistant">${mdRender(reply)}</div>`);
   }catch(e){
     document.getElementById("typing")?.remove();
-    msgEl.innerHTML+=`<div class="chat-msg assistant" style="color:var(--r)">Error: ${san(e.message)}</div>`;
+    msgEl.insertAdjacentHTML("beforeend",`<div class="chat-msg assistant" style="color:var(--r)">Error: ${san(e.message)}</div>`);
   }finally{chatLocked=false;msgEl.scrollTop=msgEl.scrollHeight;}
 }
 
@@ -1861,7 +1865,7 @@ async function loadMentorContact(){
       const mp=mc[0].profiles;
       if(mp?.whatsapp_number)mentorWhatsapp={number:mp.whatsapp_number,name:mp.full_name||"Mentor"};
     }
-  }catch(e){console.warn("loadMentorContact:",e);}
+  }catch(e){_w("loadMentorContact:",e);}
 }
 function renderMas(){
   document.getElementById("v-mas").innerHTML=`
@@ -1984,7 +1988,7 @@ function renderBeliefs(){
         <button class="btn-del" data-bid="${b.id}" onclick="delBelief(this)">\u2715</button>
       </div>
     `).join("")||`<div style="text-align:center;padding:32px 20px;">
-      <img src="${OB_IMG_BASE}empty-creencias.png" alt="" style="max-width:200px;width:55%;height:auto;display:block;margin:0 auto 14px;opacity:.95;" onerror="this.style.display='none'">
+      <img loading="lazy" decoding="async" src="${OB_IMG_BASE}empty-creencias.png" alt="" style="max-width:200px;width:55%;height:auto;display:block;margin:0 auto 14px;opacity:.95;" onerror="this.style.display='none'">
       <p class="text-mu">${lang==='es'?'Sin creencias a\u00FAn. Empieza registrando una.':'No beliefs yet. Start by adding one.'}</p>
     </div>`}</div>
   `;
@@ -2116,7 +2120,7 @@ function renderHistorial(){
         </div>
       </div>
     `).join(""):`<div style="text-align:center;padding:32px 20px;">
-      <img src="${OB_IMG_BASE}empty-historial.png" alt="" style="max-width:200px;width:55%;height:auto;display:block;margin:0 auto 14px;opacity:.95;" onerror="this.style.display='none'">
+      <img loading="lazy" decoding="async" src="${OB_IMG_BASE}empty-historial.png" alt="" style="max-width:200px;width:55%;height:auto;display:block;margin:0 auto 14px;opacity:.95;" onerror="this.style.display='none'">
       <p class="text-mu">${t("no_calib")}</p>
     </div>`}
   `;
@@ -2186,7 +2190,7 @@ function renderBibliotecaMed(){
       ${cats.map(c=>`<button onclick="_medCatFilter='${c}';renderBibliotecaMed();" style="flex-shrink:0;padding:6px 14px;border-radius:20px;border:1px solid ${_medCatFilter===c?'var(--c)':'var(--bd)'};background:${_medCatFilter===c?'var(--c)':'transparent'};color:${_medCatFilter===c?'#fff':'var(--mu)'};font-size:13px;cursor:pointer;white-space:nowrap;">${medCatLabel(c)}</button>`).join('')}
     </div>
     ${filtered.length===0?`<div style="text-align:center;padding:32px 20px;">
-      <img src="${OB_IMG_BASE}empty-meditaciones.png" alt="" style="max-width:220px;width:60%;height:auto;display:block;margin:0 auto 14px;opacity:.95;" onerror="this.style.display='none'">
+      <img loading="lazy" decoding="async" src="${OB_IMG_BASE}empty-meditaciones.png" alt="" style="max-width:220px;width:60%;height:auto;display:block;margin:0 auto 14px;opacity:.95;" onerror="this.style.display='none'">
       <p style="color:var(--mu);">${lang==='es'?'Sin meditaciones en esta categor\u00eda.':'No meditations in this category.'}</p>
     </div>`:''}
     <div style="display:flex;flex-direction:column;gap:12px;">
@@ -2196,7 +2200,7 @@ function renderBibliotecaMed(){
         return`<div style="background:var(--bg2);border:1px solid ${isActive?'var(--c)':'var(--bd)'};border-radius:var(--radius-sm);overflow:hidden;">
           <div style="display:flex;align-items:center;gap:12px;padding:12px;cursor:pointer;" onclick="toggleMedLib('${med.id}','${san(med.audio_url)}')">
             <div style="width:52px;height:52px;border-radius:10px;background:${isActive?'var(--c)':'var(--bg)'};border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;overflow:hidden;">
-              ${med.cover_url?`<img src="${san(med.cover_url)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.textContent='\u{1F9D8}'">`:'\u{1F9D8}'}
+              ${med.cover_url?`<img loading="lazy" decoding="async" src="${san(med.cover_url)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.textContent='\u{1F9D8}'">`:'\u{1F9D8}'}
             </div>
             <div style="flex:1;min-width:0;">
               <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${san(lang==='es'?med.title_es:med.title_en||med.title_es)}</div>
@@ -2272,7 +2276,7 @@ function renderEventos(){
     </div>
     ${!isGrad?`<div style="background:var(--o)11;border:1px solid var(--o)44;border-radius:var(--radius-sm);padding:14px;margin-bottom:16px;font-size:13px;color:var(--o);">\u{1F393} ${lang==='es'?'Los eventos exclusivos para graduados se ver\u00e1n disponibles cuando completes las 16 semanas.':'Exclusive graduate events will be available when you complete 16 weeks.'}</div>`:''}
     ${visible.length===0?`<div style="text-align:center;padding:32px 20px;">
-      <img src="${OB_IMG_BASE}empty-eventos.png" alt="" style="max-width:220px;width:60%;height:auto;display:block;margin:0 auto 14px;opacity:.95;" onerror="this.style.display='none'">
+      <img loading="lazy" decoding="async" src="${OB_IMG_BASE}empty-eventos.png" alt="" style="max-width:220px;width:60%;height:auto;display:block;margin:0 auto 14px;opacity:.95;" onerror="this.style.display='none'">
       <p style="color:var(--mu);font-size:14px;">${lang==='es'?'No hay eventos pr\u00f3ximos por ahora. \u00a1Vuelve pronto!':'No upcoming events right now. Check back soon!'}</p>
     </div>`:`
     <div style="display:flex;flex-direction:column;gap:14px;">
@@ -2282,7 +2286,7 @@ function renderEventos(){
         const ts=d.toLocaleTimeString(lang==='es'?'es-CO':'en-US',{hour:'2-digit',minute:'2-digit'});
         const isReg=myEventRegs.some(r=>r.event_id===e.id);
         return`<div style="background:var(--bg2);border:1px solid var(--bd);border-radius:var(--radius-sm);overflow:hidden;">
-          ${e.cover_url?`<img src="${san(e.cover_url)}" style="width:100%;height:140px;object-fit:cover;" onerror="this.style.display='none'">`:''}
+          ${e.cover_url?`<img loading="lazy" decoding="async" src="${san(e.cover_url)}" style="width:100%;height:140px;object-fit:cover;" onerror="this.style.display='none'">`:''}
           <div style="padding:14px;">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
               <span style="background:var(--o)22;color:var(--o);font-size:11px;font-weight:600;padding:3px 8px;border-radius:10px;font-family:var(--font-title);">${evtIcon(e.event_type)} ${evtTypeName(e.event_type)}</span>
@@ -2873,7 +2877,7 @@ async function subscribePush(){
       auth_key:j.keys.auth,
       device_name:(navigator.userAgent||"").slice(0,120)
     },{onConflict:"user_id,endpoint"});
-  }catch(e){console.warn("push subscribe:",e.message);}
+  }catch(e){_w("push subscribe:",e.message);}
 }
 
 /* ============ SISTEMA DE NOTIFICACIONES ============ */
@@ -3034,8 +3038,8 @@ async function flushQueue(){
       if(item.action==='insert')result=await sb.from(item.table).insert(item.payload);
       else if(item.action==='upsert')result=await sb.from(item.table).upsert(item.payload.data,item.payload.opts);
       else if(item.action==='update')result=await sb.from(item.table).update(item.payload.data).eq("id",item.payload.id);
-      if(result?.error){failed++;console.warn("Queue flush error:",result.error);}
-    }catch(e){failed++;console.warn("Queue flush exception:",e);}
+      if(result?.error){failed++;_w("Queue flush error:",result.error);}
+    }catch(e){failed++;_w("Queue flush exception:",e);}
   }
   if(failed>0)toast(lang==='es'?`${failed} cambio(s) no se pudieron sincronizar`:`${failed} change(s) failed to sync`,'err');
   else if(items.length>0){toast(lang==='es'?'Cambios sincronizados':'Changes synced','ok');await loadData();renderHome();}
@@ -3055,7 +3059,7 @@ async function saveChatServer(){
       messages:JSON.stringify(chatHistory.slice(-40)),
       updated_at:new Date().toISOString()
     },{onConflict:"user_id"});
-  }catch(e){console.warn("saveChatServer:",e);}
+  }catch(e){_w("saveChatServer:",e);}
 }
 async function loadChatServer(){
   if(!user)return;

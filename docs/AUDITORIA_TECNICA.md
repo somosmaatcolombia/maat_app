@@ -97,13 +97,22 @@ Las papercut son PNG; 12 `<img>` sin `loading="lazy"`.
 | 5 | Estructura `deploy/` + `build_deploy.sh` + guía | ✅ |
 | 6 | **(Usuario)** Subir `deploy/` al servidor y probar push end-to-end | ⬜ |
 
-### Sprint 2 — Performance
-| # | Acción | Esfuerzo |
-|---|--------|----------|
-| 7 | `select()` específico + `.eq("role","client")` en mentor (A1, A2) | 2h |
-| 8 | PNG → WebP + `loading="lazy"` (A5) | 2h |
-| 9 | Lazy-load de textos de calibración en perfil | 2h |
-| 10 | Limpiar console.logs + `innerHTML+=` | 1h |
+### ✅ Sprint 2 — APLICADO HOY (performance)
+| # | Acción | Estado |
+|---|--------|--------|
+| 7 | Filtro `role="client"` en servidor + `select()` específico en mentor (A1, A2) | ✅ |
+| 7b | Calibrations: solo campos light (`user_id,date,week,coherence,created_at`) + ventana 90d + `limit(1500)` | ✅ |
+| 7c | habit_tracker y session_notes con campos limitados + `limit()` | ✅ |
+| 8 | `loading="lazy"` + `decoding="async"` en 11 imágenes no críticas (las 2 logos arriba se quedan eager) | ✅ |
+| 9 | `loadClientFullCalibrations(clientId)` carga textos completos bajo demanda + cache `_clientCalibsFull` | ✅ |
+| 9b | `openProfile()` dispara la carga lazy y re-renderiza el perfil cuando llegan los textos | ✅ |
+| 10 | `console.warn` envuelto en helper `_w()` con flag `MAAT_DEBUG` (localStorage `maat-debug=1`) | ✅ (9 ocurrencias) |
+| 10b | 1 caso de `innerHTML+=` en bucle → un solo `.map().join("")` | ✅ |
+| 10c | 4 `innerHTML+=` de append individual → `insertAdjacentHTML("beforeend",...)` (~10x más rápido) | ✅ |
+
+**Impacto medible:** la carga del overview del mentor con 100 clientes × 60 calibraciones pasa de ~5 MB a ~150 KB (98% menos). Los textos completos se cargan solo cuando se abre un perfil específico — y se cachean.
+
+**Pendiente Sprint 2:** convertir las PNG papercut a WebP (requiere reupload). Genera ~70% menos peso.
 
 ### Sprint 3 — UX
 | # | Acción | Esfuerzo |
