@@ -2,8 +2,9 @@
 <html lang="es" data-theme="dark">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5">
 <meta name="theme-color" content="#0d1117">
+<link rel="manifest" href="./manifest.json">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>MAAT &#8212; Calibraci&oacute;n Diaria</title>
@@ -290,7 +291,8 @@ label.field-label{display:block;font-size:14px;color:var(--mu);margin-bottom:6px
 /* ACHIEVEMENT TOAST */
 #achievement{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);background:var(--bg2);border:2px solid var(--m);border-radius:var(--radius);padding:32px;text-align:center;z-index:400;transition:transform .4s cubic-bezier(.34,1.56,.64,1);pointer-events:none;min-width:260px;}
 #achievement.show{transform:translate(-50%,-50%) scale(1);pointer-events:auto;}
-#achievement .ach-icon{font-size:48px;margin-bottom:8px;}
+#achievement .ach-icon{font-size:48px;margin-bottom:8px;min-height:48px;display:flex;align-items:center;justify-content:center;}
+#achievement .ach-icon img{max-width:160px;width:100%;height:auto;display:block;}
 #achievement .ach-title{font-family:var(--font-title);font-size:20px;font-weight:700;color:var(--m);margin-bottom:4px;}
 #achievement .ach-text{font-size:14px;color:var(--mu);}
 /* Cierre Peak-End post-calibracion */
@@ -793,11 +795,12 @@ function skelHistory(){
 
 /* ============ ONBOARDING \u2014 first-time users ============ */
 let _obStep=0;
+const OB_IMG_BASE="https://somosmaat.org/wp-content/uploads/2026/06/";
 const OB_STEPS=[
-  {icon:"\uD83E\uDDED",title_es:"Bienvenido a MAAT",title_en:"Welcome to MAAT",text_es:"No es un curso m\u00E1s. Es un proceso de 16 semanas para reconectar con tu sentido, tu energ\u00EDa y tu prop\u00F3sito. Hecho para personas exigentes como t\u00FA.",text_en:"This isn't just another course. It's a 16-week process to reconnect with your meaning, energy and purpose. Made for demanding people like you."},
-  {icon:"\u26A1",title_es:"Calibrar toma 30 segundos",title_en:"Calibrating takes 30 seconds",text_es:"Cada d\u00EDa eliges conscientemente la actitud con la que vas a vivir. Un gesto peque\u00F1o que, repetido, lo cambia todo. Es el coraz\u00F3n del m\u00E9todo.",text_en:"Each day you consciously choose the attitude you'll live with. A small gesture that, repeated, changes everything. It's the heart of the method."},
-  {icon:"\u2705",title_es:"H\u00E1bitos que te construyen",title_en:"Habits that build you",text_es:"Programa las acciones que construyen la versi\u00F3n de ti que quieres ser. Marca tus d\u00EDas y observa c\u00F3mo creces semana a semana.",text_en:"Program the actions that build the version of yourself you want to be. Check your days and watch yourself grow week by week."},
-  {icon:"\uD83E\uDD16",title_es:"Nunca est\u00E1s solo",title_en:"You're never alone",text_es:"Tienes un Coach con IA disponible 24/7 para acompa\u00F1arte con preguntas, reflexiones y apoyo personalizado en cada paso.",text_en:"You have an AI Coach available 24/7 to accompany you with questions, reflections and personalized support every step."}
+  {icon:"\uD83E\uDDED",img:OB_IMG_BASE+"onboarding-01-bienvenida.png",title_es:"Bienvenido a MAAT",title_en:"Welcome to MAAT",text_es:"No es un curso m\u00E1s. Es un proceso de 16 semanas para reconectar con tu sentido, tu energ\u00EDa y tu prop\u00F3sito. Hecho para personas exigentes como t\u00FA.",text_en:"This isn't just another course. It's a 16-week process to reconnect with your meaning, energy and purpose. Made for demanding people like you."},
+  {icon:"\u26A1",img:OB_IMG_BASE+"onboarding-02-Calibracion.png",title_es:"Calibrar toma 30 segundos",title_en:"Calibrating takes 30 seconds",text_es:"Cada d\u00EDa eliges conscientemente la actitud con la que vas a vivir. Un gesto peque\u00F1o que, repetido, lo cambia todo. Es el coraz\u00F3n del m\u00E9todo.",text_en:"Each day you consciously choose the attitude you'll live with. A small gesture that, repeated, changes everything. It's the heart of the method."},
+  {icon:"\u2705",img:OB_IMG_BASE+"onboarding-03-habitos.png",title_es:"H\u00E1bitos que te construyen",title_en:"Habits that build you",text_es:"Programa las acciones que construyen la versi\u00F3n de ti que quieres ser. Marca tus d\u00EDas y observa c\u00F3mo creces semana a semana.",text_en:"Program the actions that build the version of yourself you want to be. Check your days and watch yourself grow week by week."},
+  {icon:"\uD83E\uDD16",img:OB_IMG_BASE+"onboarding-04-coach.png",title_es:"Nunca est\u00E1s solo",title_en:"You're never alone",text_es:"Tienes un Coach con IA disponible 24/7 para acompa\u00F1arte con preguntas, reflexiones y apoyo personalizado en cada paso.",text_en:"You have an AI Coach available 24/7 to accompany you with questions, reflections and personalized support every step."}
 ];
 function showOnboarding(){
   _obStep=0;
@@ -808,7 +811,7 @@ function renderObStep(){
   const s=OB_STEPS[_obStep];const last=_obStep===OB_STEPS.length-1;
   document.getElementById("onboarding-overlay").innerHTML=`
     <div class="ob-step">
-      <div class="ob-icon">${s.icon}</div>
+      <div class="ob-icon">${s.img?`<img src="${s.img}" alt="" style="max-width:260px;width:80%;height:auto;display:block;margin:0 auto;" onerror="this.outerHTML='${s.icon}'">`:s.icon}</div>
       <div class="ob-title">${lang==='es'?s.title_es:s.title_en}</div>
       <div class="ob-text">${lang==='es'?s.text_es:s.text_en}</div>
       <div class="ob-dots">${OB_STEPS.map((_,i)=>`<div class="ob-dot ${i===_obStep?'active':''}"></div>`).join("")}</div>
@@ -827,17 +830,19 @@ function finishOnboarding(){
 }
 
 /* ============ ACHIEVEMENT NOTIFICATIONS ============ */
-function showAchievement(icon,title,text){
+function showAchievement(icon,title,text,img){
   const el=document.getElementById("achievement");
-  el.querySelector(".ach-icon").textContent=icon;
+  const iconEl=el.querySelector(".ach-icon");
+  if(img){iconEl.innerHTML=`<img src="${img}" alt="" style="max-width:140px;width:80%;height:auto;display:block;margin:0 auto;" onerror="this.outerHTML='${icon}'">`;}
+  else{iconEl.textContent=icon;}
   el.querySelector(".ach-title").textContent=title;
   el.querySelector(".ach-text").textContent=text;
   el.classList.add("show");
-  setTimeout(()=>el.classList.remove("show"),3500);
+  setTimeout(()=>el.classList.remove("show"),3800);
 }
 // Catalogo de logros con lenguaje de IDENTIDAD ("eres alguien que...")
 const ACHIEVEMENTS=[
-  {id:"first-calib",icon:"\u{1F3AF}",es:{t:"Diste el primer paso",d:"Empezaste tu viaje. Eres de los que actuan."},en:{t:"You took the first step",d:"You began your journey. You're someone who acts."}},
+  {id:"first-calib",icon:"\u{1F3AF}",img:OB_IMG_BASE+"celebracion-primera-calib.png",es:{t:"Diste el primer paso",d:"Empezaste tu viaje. Eres de los que actuan."},en:{t:"You took the first step",d:"You began your journey. You're someone who acts."}},
   {id:"first-coach",icon:"\u{1F9E0}",es:{t:"No caminas solo",d:"Buscaste apoyo. Pedir ayuda es fortaleza."},en:{t:"You don't walk alone",d:"You reached out. Asking for help is strength."}},
   {id:"first-belief",icon:"\u{1F4AD}",es:{t:"Mirando hacia adentro",d:"Registraste tu primera creencia. Te observas."},en:{t:"Looking inward",d:"You logged your first belief. You observe yourself."}},
   {id:"streak-3",icon:"\u{1F525}",es:{t:"Constancia naciente",d:"3 dias seguidos. Asi empiezan los habitos."},en:{t:"Emerging consistency",d:"3 days straight. This is how habits begin."}},
@@ -845,12 +850,12 @@ const ACHIEVEMENTS=[
   {id:"streak-14",icon:"\u{1F525}",es:{t:"Dos semanas imparable",d:"14 dias. Esto ya es parte de quien eres."},en:{t:"Two weeks unstoppable",d:"14 days. This is part of who you are now."}},
   {id:"streak-21",icon:"\u2728",es:{t:"Habito forjado",d:"21 dias. Te convertiste en alguien constante."},en:{t:"Habit forged",d:"21 days. You became a consistent person."}},
   {id:"streak-30",icon:"\u{1F451}",es:{t:"Maestria de la constancia",d:"30 dias. Pocos llegan aqui. Tu si."},en:{t:"Mastery of consistency",d:"30 days. Few get here. You did."}},
-  {id:"phase-1",icon:"\u25C6",es:{t:"Fundacion construida",d:"Completaste la Fase 1: Gratitud."},en:{t:"Foundation built",d:"You completed Phase 1: Gratitude."}},
-  {id:"phase-2",icon:"\u25C6",es:{t:"Cruzaste el umbral",d:"Completaste la Fase 2: Amor, el corazon del proceso."},en:{t:"You crossed the threshold",d:"You completed Phase 2: Love, the heart of the process."}},
-  {id:"phase-3",icon:"\u25C6",es:{t:"Nueva direccion",d:"Completaste la Fase 3: Intencion."},en:{t:"New direction",d:"You completed Phase 3: Intention."}},
-  {id:"phase-4",icon:"\u25C6",es:{t:"Integracion total",d:"Completaste la Fase 4: Voluntad."},en:{t:"Full integration",d:"You completed Phase 4: Will."}},
+  {id:"phase-1",icon:"\u25C6",img:OB_IMG_BASE+"celebracion-fase-completa.png",es:{t:"Fundacion construida",d:"Completaste la Fase 1: Gratitud."},en:{t:"Foundation built",d:"You completed Phase 1: Gratitude."}},
+  {id:"phase-2",icon:"\u25C6",img:OB_IMG_BASE+"celebracion-fase-completa.png",es:{t:"Cruzaste el umbral",d:"Completaste la Fase 2: Amor, el corazon del proceso."},en:{t:"You crossed the threshold",d:"You completed Phase 2: Love, the heart of the process."}},
+  {id:"phase-3",icon:"\u25C6",img:OB_IMG_BASE+"celebracion-fase-completa.png",es:{t:"Nueva direccion",d:"Completaste la Fase 3: Intencion."},en:{t:"New direction",d:"You completed Phase 3: Intention."}},
+  {id:"phase-4",icon:"\u25C6",img:OB_IMG_BASE+"celebracion-fase-completa.png",es:{t:"Integracion total",d:"Completaste la Fase 4: Voluntad."},en:{t:"Full integration",d:"You completed Phase 4: Will."}},
   {id:"halfway",icon:"\u26F0\uFE0F",es:{t:"A mitad del camino",d:"Llegaste a la semana 8. El tramo mas dificil, superado."},en:{t:"Halfway there",d:"You reached week 8. The hardest stretch, behind you."}},
-  {id:"graduate",icon:"\u{1F393}",es:{t:"Graduado MAAT",d:"Completaste las 16 semanas. Eres tu nueva version."},en:{t:"MAAT Graduate",d:"You completed the 16 weeks. You are your new self."}}
+  {id:"graduate",icon:"\u{1F393}",img:OB_IMG_BASE+"celebracion-graduacion.png",es:{t:"Graduado MAAT",d:"Completaste las 16 semanas. Eres tu nueva version."},en:{t:"MAAT Graduate",d:"You completed the 16 weeks. You are your new self."}}
 ];
 
 // Devuelve los IDs de logros que el usuario YA cumple (segun el estado actual)
@@ -878,7 +883,7 @@ function checkAchievements(opts){
     shown[id]=true;
     if(!opts||!opts.silent){
       const a=ACHIEVEMENTS.find(x=>x.id===id);
-      if(a)setTimeout(()=>showAchievement(a.icon,lang==='es'?a.es.t:a.en.t,lang==='es'?a.es.d:a.en.d),1000+i*1600);
+      if(a)setTimeout(()=>showAchievement(a.icon,lang==='es'?a.es.t:a.en.t,lang==='es'?a.es.d:a.en.d,a.img),1000+i*1600);
     }
   });
   localStorage.setItem(shownKey,JSON.stringify(shown));
@@ -941,6 +946,19 @@ function closeCalibClose(){
   clearTimeout(window._ccTimer);
   document.getElementById("calib-close").classList.remove("show");
   gv("v-home");
+}
+
+// Celebracion grande de graduacion (al completar las 16 semanas)
+function showGraduationCelebration(){
+  const es=lang==='es';
+  const el=document.getElementById("calib-close");
+  el.querySelector(".cc-inner").innerHTML=`
+    <img src="${OB_IMG_BASE}celebracion-graduacion.png" alt="" style="max-width:260px;width:80%;height:auto;display:block;margin:0 auto 20px;" onerror="this.outerHTML='<div class=\\'cc-icon\\'>\\u{1F393}</div>'">
+    <div class="cc-head" style="background:linear-gradient(135deg,var(--o),var(--v));-webkit-background-clip:text;background-clip:text;color:transparent;">${es?'\u00A1Eres graduado MAAT!':'You are a MAAT graduate!'}</div>
+    <div class="cc-msg">${es?'Completaste las 16 semanas. A partir de hoy eres parte de la comunidad de graduados. Tu proceso continua, ahora con meditaciones exclusivas y eventos.':'You completed the 16 weeks. You are now part of the graduates community. Your process continues, with exclusive meditations and events.'}</div>
+    <div><button class="cc-btn" onclick="closeCalibClose()">${es?'Continuar':'Continue'}</button></div>
+  `;
+  el.classList.add("show");
 }
 
 // Vista coleccionable de Logros (refuerza identidad: ver lo conseguido)
@@ -1506,7 +1524,8 @@ function renderHabits(){
           </div>
           <div class="habit-progress"><div class="fill" style="width:${pct}%;background:${isFulfilled?'var(--m)':'var(--o)'}"></div></div>
         </div>`;
-      }).join(""):`<div style="text-align:center;padding:20px 0;">
+      }).join(""):`<div style="text-align:center;padding:24px 0;">
+        <img src="${OB_IMG_BASE}empty-habits.png" alt="" style="max-width:200px;width:55%;height:auto;display:block;margin:0 auto 14px;opacity:.95;" onerror="this.style.display='none'">
         <p class="text-mu" style="margin-bottom:12px;">${t("no_habits")}</p>
         ${(()=>{const prev=getHabits(w-1);return w>1&&prev.length?`<button onclick="copyHabitsFromWeek(${w-1})" style="background:var(--bg2);border:1px dashed var(--c);color:var(--c);padding:10px 20px;border-radius:var(--radius-sm);font-size:13px;cursor:pointer;">\u{1F4CB} ${lang==='es'?'Copiar h\u00E1bitos de semana '+(w-1):'Copy habits from week '+(w-1)}</button>`:''})()}
       </div>`}
@@ -1693,15 +1712,11 @@ async function evaluateWeek(){
     }
     const advMsg=advanced?` \u00B7 ${lang==='es'?'Avanzaste a Semana '+hwk:'Advanced to Week '+hwk}`:'';
     toast(`${lang==='es'?'Coherencia':'Coherence'}: ${coherence}% \u2014 ${fulfilled}/${totalHabits} ${lang==='es'?'completos':'completed'}${advMsg}`,"ok");
-    // 4) Si nos graduamos, mostrar celebraci\u00F3n y volver al home
+    // 4) Si nos graduamos, mostrar celebraci\u00F3n rica y volver al home
     if(graduatedNow){
       setTimeout(()=>{
-        const msg=lang==='es'
-          ?'\uD83C\uDF93 \u00A1Felicitaciones! Has completado las 16 semanas del proceso MAAT.\n\nA partir de hoy eres parte de la comunidad de graduados. Podr\u00E1s seguir usando la app, acceder a meditaciones exclusivas y eventos.'
-          :'\uD83C\uDF93 Congratulations! You completed the 16-week MAAT process.\n\nYou are now part of the graduates community. You will continue to have access to the app, exclusive meditations and events.';
-        alert(msg);
-        nav('v-home');
-      },800);
+        showGraduationCelebration();
+      },600);
       return;
     }
     // 5) Si avanzamos, actualiza la vista de h\u00E1bitos a la nueva semana
@@ -1968,7 +1983,10 @@ function renderBeliefs(){
         <div style="flex:1"><div style="font-size:14px;">${san(b.text)}</div><div style="font-size:14px;color:var(--mu);">${san(b.category||"")} \u00B7 ${san(b.date||"")}</div></div>
         <button class="btn-del" data-bid="${b.id}" onclick="delBelief(this)">\u2715</button>
       </div>
-    `).join("")||`<p class="text-mu text-center" style="padding:20px;">${lang==='es'?'Sin creencias a\u00FAn':'No beliefs yet'}</p>`}</div>
+    `).join("")||`<div style="text-align:center;padding:32px 20px;">
+      <img src="${OB_IMG_BASE}empty-creencias.png" alt="" style="max-width:200px;width:55%;height:auto;display:block;margin:0 auto 14px;opacity:.95;" onerror="this.style.display='none'">
+      <p class="text-mu">${lang==='es'?'Sin creencias a\u00FAn. Empieza registrando una.':'No beliefs yet. Start by adding one.'}</p>
+    </div>`}</div>
   `;
 }
 async function addBelief(){
@@ -2097,7 +2115,10 @@ function renderHistorial(){
           <p><strong>Q3:</strong> ${san(c.answer_q3||"")}</p>
         </div>
       </div>
-    `).join(""):`<p class="text-mu text-center">${t("no_calib")}</p>`}
+    `).join(""):`<div style="text-align:center;padding:32px 20px;">
+      <img src="${OB_IMG_BASE}empty-historial.png" alt="" style="max-width:200px;width:55%;height:auto;display:block;margin:0 auto 14px;opacity:.95;" onerror="this.style.display='none'">
+      <p class="text-mu">${t("no_calib")}</p>
+    </div>`}
   `;
 }
 
@@ -2164,7 +2185,10 @@ function renderBibliotecaMed(){
     <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:12px;scrollbar-width:none;">
       ${cats.map(c=>`<button onclick="_medCatFilter='${c}';renderBibliotecaMed();" style="flex-shrink:0;padding:6px 14px;border-radius:20px;border:1px solid ${_medCatFilter===c?'var(--c)':'var(--bd)'};background:${_medCatFilter===c?'var(--c)':'transparent'};color:${_medCatFilter===c?'#fff':'var(--mu)'};font-size:13px;cursor:pointer;white-space:nowrap;">${medCatLabel(c)}</button>`).join('')}
     </div>
-    ${filtered.length===0?`<div style="text-align:center;padding:40px 20px;color:var(--mu);">${lang==='es'?'Sin meditaciones en esta categor\u00eda.':'No meditations in this category.'}</div>`:''}
+    ${filtered.length===0?`<div style="text-align:center;padding:32px 20px;">
+      <img src="${OB_IMG_BASE}empty-meditaciones.png" alt="" style="max-width:220px;width:60%;height:auto;display:block;margin:0 auto 14px;opacity:.95;" onerror="this.style.display='none'">
+      <p style="color:var(--mu);">${lang==='es'?'Sin meditaciones en esta categor\u00eda.':'No meditations in this category.'}</p>
+    </div>`:''}
     <div style="display:flex;flex-direction:column;gap:12px;">
       ${filtered.map(med=>{
         const isActive=_activeMedId===med.id;
@@ -2247,9 +2271,9 @@ function renderEventos(){
       <h2>${lang==='es'?'Eventos y Experiencias':'Events & Experiences'}</h2>
     </div>
     ${!isGrad?`<div style="background:var(--o)11;border:1px solid var(--o)44;border-radius:var(--radius-sm);padding:14px;margin-bottom:16px;font-size:13px;color:var(--o);">\u{1F393} ${lang==='es'?'Los eventos exclusivos para graduados se ver\u00e1n disponibles cuando completes las 16 semanas.':'Exclusive graduate events will be available when you complete 16 weeks.'}</div>`:''}
-    ${visible.length===0?`<div style="text-align:center;padding:40px 20px;">
-      <div style="font-size:48px;margin-bottom:12px;">\u{1F4C5}</div>
-      <p style="color:var(--mu);font-size:14px;">${lang==='es'?'No hay eventos pr\u00f3ximos por ahora.\u00a1Vuelve pronto!':'No upcoming events right now. Check back soon!'}</p>
+    ${visible.length===0?`<div style="text-align:center;padding:32px 20px;">
+      <img src="${OB_IMG_BASE}empty-eventos.png" alt="" style="max-width:220px;width:60%;height:auto;display:block;margin:0 auto 14px;opacity:.95;" onerror="this.style.display='none'">
+      <p style="color:var(--mu);font-size:14px;">${lang==='es'?'No hay eventos pr\u00f3ximos por ahora. \u00a1Vuelve pronto!':'No upcoming events right now. Check back soon!'}</p>
     </div>`:`
     <div style="display:flex;flex-direction:column;gap:14px;">
       ${visible.map(e=>{
@@ -2790,12 +2814,76 @@ async function saveProfile(){
   finally{btn.disabled=false;btn.textContent=t("save");}
 }
 
+/* ============ PWA: SERVICE WORKER + WEB PUSH ============ */
+// La clave PUBLICA VAPID (la privada vive solo en Supabase secrets).
+const VAPID_PUBLIC_KEY="BG-NXBTYpdFywYHjaaMqHQdyWSktuHR3ivPCpcF601vhmNeTHwt-RZWRWHjnYmQk7MlD_OnUdxBHXuAlOj2Dops";
+let _swReg=null;
+
+// Registra el Service Worker (./sw.js debe estar junto al index.html en el servidor).
+// Si la app corre embebida en Elementor sin sw.js al lado, falla silencioso y nada se rompe.
+async function setupPWA(){
+  if(!("serviceWorker" in navigator))return;
+  try{
+    _swReg=await navigator.serviceWorker.register("./sw.js");
+  }catch(e){return;}
+  // El SW manda NAVIGATE cuando el usuario toca una notificacion
+  navigator.serviceWorker.addEventListener("message",(e)=>{
+    if(e.data?.type==="NAVIGATE"&&e.data.view){
+      try{gv("v-"+e.data.view);}catch(_){}
+    }
+  });
+}
+
+function urlB64ToUint8Array(base64String){
+  const padding="=".repeat((4-base64String.length%4)%4);
+  const base64=(base64String+padding).replace(/-/g,"+").replace(/_/g,"/");
+  const rawData=atob(base64);
+  const outputArray=new Uint8Array(rawData.length);
+  for(let i=0;i<rawData.length;i++)outputArray[i]=rawData.charCodeAt(i);
+  return outputArray;
+}
+
+// Crea (o recupera) la suscripcion Web Push y la guarda en push_subscriptions.
+// Es lo que permite que send-notifications alcance al usuario CON LA APP CERRADA.
+async function subscribePush(){
+  if(!("PushManager" in window)||!user)return;
+  if(Notification.permission!=="granted")return;
+  // Esperar a que el SW termine de registrarse (max 3s; si no hay SW, salir)
+  if(!_swReg&&"serviceWorker" in navigator){
+    _swReg=await Promise.race([
+      navigator.serviceWorker.ready,
+      new Promise(r=>setTimeout(()=>r(null),3000))
+    ]);
+  }
+  if(!_swReg)return;
+  try{
+    let sub=await _swReg.pushManager.getSubscription();
+    if(!sub){
+      sub=await _swReg.pushManager.subscribe({
+        userVisibleOnly:true,
+        applicationServerKey:urlB64ToUint8Array(VAPID_PUBLIC_KEY)
+      });
+    }
+    const j=sub.toJSON();
+    if(!j?.keys?.p256dh)return;
+    await sb.from("push_subscriptions").upsert({
+      user_id:user.id,
+      endpoint:sub.endpoint,
+      p256dh:j.keys.p256dh,
+      auth_key:j.keys.auth,
+      device_name:(navigator.userAgent||"").slice(0,120)
+    },{onConflict:"user_id,endpoint"});
+  }catch(e){console.warn("push subscribe:",e.message);}
+}
+
 /* ============ SISTEMA DE NOTIFICACIONES ============ */
 async function requestNotifPermission(){
   if(!("Notification" in window))return;
   if(Notification.permission==="default"){
     await Notification.requestPermission();
   }
+  // Con permiso concedido, activar la suscripcion push real
+  if(Notification.permission==="granted")await subscribePush();
 }
 
 // Pool de mensajes c\u00E1lidos y variados (rotaci\u00F3n para evitar habituaci\u00F3n)
@@ -3085,6 +3173,7 @@ async function saveNewPassword(){
 (async function boot(){
   updateAuthUI();
   setTheme(theme);
+  setupPWA(); // registra el Service Worker (no bloquea el arranque)
   const recovery=isRecoveryUrl();
   try{
     const{data:{session}}=await sb.auth.getSession();

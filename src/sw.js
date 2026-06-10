@@ -63,9 +63,9 @@ self.addEventListener("notificationclick", (event) => {
           return;
         }
       }
-      // Otherwise open a new window
+      // Otherwise open a new window at the SW scope (works on any deploy path)
       if (self.clients.openWindow) {
-        return self.clients.openWindow("/");
+        return self.clients.openWindow(self.registration.scope);
       }
     })
   );
