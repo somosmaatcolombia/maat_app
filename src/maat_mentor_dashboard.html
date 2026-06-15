@@ -237,7 +237,7 @@ dialog.m-dialog[open]{display:flex;align-items:flex-start;justify-content:center
 
 <!-- AUTH &#8212; hidden by default, shown via .visible class -->
 <div id="auth-screen">
-  <img src="https://somosmaat.org/wp-content/uploads/2026/02/logo_app.png" alt="MAAT" class="logo-auth" onerror="this.style.display='none'">
+  <img src="https://somosmaat.org/wp-content/uploads/2026/02/logo_app.png?v=1" alt="MAAT" class="logo-auth" onerror="this.style.display='none'">
   <h1>MENTOR</h1>
   <p class="subtitle">Portal de Mentor</p>
   <div class="auth-box">
@@ -254,7 +254,7 @@ dialog.m-dialog[open]{display:flex;align-items:flex-start;justify-content:center
 <div class="layout">
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <img src="https://somosmaat.org/wp-content/uploads/2026/02/logo_app.png" alt="M" style="height:32px;border-radius:8px" onerror="this.style.display='none'">
+      <img src="https://somosmaat.org/wp-content/uploads/2026/02/logo_app.png?v=1" alt="M" style="height:32px;border-radius:8px" onerror="this.style.display='none'">
       <span>MAAT</span>
     </div>
     <nav class="sidebar-nav" id="sidebar-nav">
@@ -390,12 +390,15 @@ dialog.m-dialog[open]{display:flex;align-items:flex-start;justify-content:center
 /* ============================================ */
 /* CONFIG                                       */
 /* ============================================ */
+const CONFIG={
+  SUPABASE_URL:"https://pcclptmojjzqmfmzftot.supabase.co",
+  SUPABASE_ANON_KEY:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjY2xwdG1vamp6cW1mbXpmdG90Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4OTg3MjAsImV4cCI6MjA4NzQ3NDcyMH0.VuFBEy19fgNN5pSp_r8p2ZVViniunKdVW7Hy3AmqJXE",
+  HISTORY_WINDOW_DAYS:90
+};
 // Activar warnings de fallos silenciosos con localStorage.setItem("maat-debug","1")
 const MAAT_DEBUG=(typeof localStorage!=="undefined"&&localStorage.getItem("maat-debug")==="1");
 const _w=MAAT_DEBUG?console.warn.bind(console):function(){};
-const SU="https://pcclptmojjzqmfmzftot.supabase.co";
-const SK="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjY2xwdG1vamp6cW1mbXpmdG90Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4OTg3MjAsImV4cCI6MjA4NzQ3NDcyMH0.VuFBEy19fgNN5pSp_r8p2ZVViniunKdVW7Hy3AmqJXE";
-const sb=supabase.createClient(SU,SK);
+const sb=supabase.createClient(CONFIG.SUPABASE_URL,CONFIG.SUPABASE_ANON_KEY);
 
 /* ============================================ */
 /* STATE                                        */
@@ -588,7 +591,7 @@ async function loadData(){
 
   // Ventana de 90 dias: las metricas (coherencia, racha, alertas) solo miran lo reciente.
   // Si abres un perfil de un cliente, los textos completos se cargan bajo demanda.
-  const since90=new Date(Date.now()-90*24*60*60*1000).toISOString();
+  const since90=new Date(Date.now()-CONFIG.HISTORY_WINDOW_DAYS*24*60*60*1000).toISOString();
 
   const[r1,r2,r3,r4]=await Promise.allSettled([
     // CALIBRACIONES: SOLO campos light para metricas (sin answer_q1/q2/q3 ni session_note)
@@ -911,8 +914,8 @@ async function genAI(uid){
   try{
     const session=await sb.auth.getSession();const token=session?.data?.session?.access_token;
     if(!token){toast("Sesi\u00F3n expirada. Vuelve a iniciar sesi\u00F3n.","err");return;}
-    const res=await fetch(SU+"/functions/v1/maat-summary",{
-      method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token,"apikey":SK},
+    const res=await fetch(CONFIG.SUPABASE_URL+"/functions/v1/maat-summary",{
+      method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token,"apikey":CONFIG.SUPABASE_ANON_KEY},
       body:JSON.stringify({client_id:uid})
     });
     const json=await res.json();
@@ -1087,7 +1090,7 @@ async function createClient(){
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Creando...';resultEl.innerHTML="";
   try{
     const password=genPass();
-    const sb2=supabase.createClient(SU,SK,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
+    const sb2=supabase.createClient(CONFIG.SUPABASE_URL,CONFIG.SUPABASE_ANON_KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
     const{data:signUpData,error:signUpErr}=await sb2.auth.signUp({email,password});
     if(signUpErr){toast(signUpErr.message,"err");return;}
     const newUid=signUpData.user?.id;

@@ -124,8 +124,16 @@ Las papercut son PNG; 12 `<img>` sin `loading="lazy"`.
 
 **Impacto:** el Coach IA ya no espera 5-15s en blanco — el texto empieza a aparecer en cuanto Mistral suelta el primer token (200-400ms). Percepción típica: ~3× más rápido aunque el total dure igual.
 
+### ✅ Sprint 4 — APLICADO HOY (backlog técnico)
+| # | Acción | Estado |
+|---|--------|--------|
+| 15 | **CONFIG centralizado** (AR2) — objeto `CONFIG` por app con SUPABASE_URL/ANON_KEY, VAPID_PUBLIC_KEY, IMG_BASE, LOGO_URL, REDIRECT_URL, HISTORY_WINDOW_DAYS; reemplaza `SU/SK/OB_IMG_BASE/VAPID_PUBLIC_KEY` sueltos. | ✅ |
+| 16 | **Cache-busting** (AR3) — `CONFIG.ASSET_VERSION`/`ASSET_V` con `?v=` en las 16 URLs de imágenes papercut (`CONFIG.IMG_BASE`) y en el logo (`logo_app.png?v=1`, incluye `manifest.json`). Subir `ASSET_VERSION` cuando se reemplacen imágenes con el mismo nombre. | ✅ |
+| 17 | **Minificación** (M4) — `build_deploy.sh` minifica los 3 `.html` con `html-minifier-terser` (`ascii_only:true`, preserva `\uXXXX`); ~13-15% menos peso. `--no-minify` para omitir. | ✅ |
+| 18 | **Offline shell** (M3) — `sw.js` v2 precachea `./` y `./manifest.json` en `install`; `fetch` usa network-first con fallback a cache para el documento principal y stale-while-revalidate para recursos same-origin. Verificado en preview: SW `activated`, shell en cache, respuesta 200 offline. | ✅ |
+
 ### Backlog
-CONFIG centralizado · cache-busting · minificación · offline shell · Coach agéntico con Claude
+Coach agéntico con Claude (AR1) — cambio arquitectónico mayor, pendiente de priorizar.
 
 ---
 

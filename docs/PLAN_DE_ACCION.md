@@ -23,7 +23,7 @@
 | 2 | Ejecutar `sql/maat_community_pulse.sql` | ✅ Hecho |
 | 3 | Pegar app cliente actualizada en Elementor | ⬜ |
 | 4 | Pegar portal del mentor (con dashboard Tracción) en Elementor | ⬜ |
-| 5 | Commit + push de todo el trabajo nuevo | ⬜ |
+| 5 | Commit + push de todo el trabajo nuevo | ✅ Hecho |
 | 6 | Verificar el dashboard de Tracción (ADMIN → Tracción) | ⬜ |
 
 ### Frente humano (NO requiere código — es lo más urgente)

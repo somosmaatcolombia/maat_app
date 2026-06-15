@@ -385,13 +385,15 @@ button{font-family:inherit;}
 /* ============================================================ */
 /* CONFIG                                                       */
 /* ============================================================ */
-const SU="https://pcclptmojjzqmfmzftot.supabase.co";
-const SK="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjY2xwdG1vamp6cW1mbXpmdG90Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4OTg3MjAsImV4cCI6MjA4NzQ3NDcyMH0.VuFBEy19fgNN5pSp_r8p2ZVViniunKdVW7Hy3AmqJXE";
-/* URL a donde Supabase enviar\u00E1 al usuario tras hacer clic en el email de activaci\u00F3n. */
-/* Debe ser la URL de la app del cliente embebida en somosmaat.org */
-const REDIRECT_URL="https://www.somosmaat.org/dashboard";
+const CONFIG={
+  SUPABASE_URL:"https://pcclptmojjzqmfmzftot.supabase.co",
+  SUPABASE_ANON_KEY:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjY2xwdG1vamp6cW1mbXpmdG90Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4OTg3MjAsImV4cCI6MjA4NzQ3NDcyMH0.VuFBEy19fgNN5pSp_r8p2ZVViniunKdVW7Hy3AmqJXE",
+  // URL a donde Supabase enviara al usuario tras hacer clic en el email de activacion.
+  // Debe ser la URL de la app del cliente embebida en somosmaat.org
+  REDIRECT_URL:"https://www.somosmaat.org/dashboard"
+};
 /* Cliente Supabase aislado (no persiste sesi\u00F3n en la landing) */
-const sb=supabase.createClient(SU,SK,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
+const sb=supabase.createClient(CONFIG.SUPABASE_URL,CONFIG.SUPABASE_ANON_KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
 
 document.getElementById("m-year").textContent=new Date().getFullYear();
 
@@ -424,7 +426,7 @@ async function maatActivate(){
     const password=genPass();
     const{data,error}=await sb.auth.signUp({
       email,password,
-      options:{data:{full_name:name},emailRedirectTo:REDIRECT_URL}
+      options:{data:{full_name:name},emailRedirectTo:CONFIG.REDIRECT_URL}
     });
     if(error){
       const m=(error.message||"").toLowerCase();
@@ -436,7 +438,7 @@ async function maatActivate(){
       }
     }
     /* 2) Enviar el email de activaci\u00F3n (reset password = crea tu contrase\u00F1a) */
-    const{error:rErr}=await sb.auth.resetPasswordForEmail(email,{redirectTo:REDIRECT_URL});
+    const{error:rErr}=await sb.auth.resetPasswordForEmail(email,{redirectTo:CONFIG.REDIRECT_URL});
     if(rErr){
       showErr("Cuenta creada, pero hubo un problema enviando el email. Escr\u00EDbenos por WhatsApp.");
       btn.disabled=false;btn.textContent="Activar mi cuenta MAAT";return;

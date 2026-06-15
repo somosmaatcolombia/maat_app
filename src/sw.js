@@ -1,12 +1,18 @@
 // MAAT — Service Worker
-// Push notifications + offline awareness
-// Registrado desde maat_dashboard.html via navigator.serviceWorker.register('/sw.js')
+// Push notifications + offline shell
+// Registrado desde maat_dashboard.html via navigator.serviceWorker.register('./sw.js')
 
-const CACHE_NAME = "maat-v1";
+const CACHE_NAME = "maat-v2";
+const APP_SHELL = ["./", "./manifest.json"];
 
-// Install — pre-cache minimal shell
+// Install — pre-cache app shell (sin bloquear si falla algun recurso)
 self.addEventListener("install", (event) => {
-  self.skipWaiting();
+  event.waitUntil(
+    caches
+      .open(CACHE_NAME)
+      .then((cache) => Promise.allSettled(APP_SHELL.map((url) => cache.add(url))))
+      .then(() => self.skipWaiting())
+  );
 });
 
 // Activate — clean old caches
@@ -21,6 +27,44 @@ self.addEventListener("activate", (event) => {
     )
   );
   self.clients.claim();
+});
+
+// Fetch — shell offline-first, resto stale-while-revalidate (solo same-origin GET)
+self.addEventListener("fetch", (event) => {
+  const req = event.request;
+  if (req.method !== "GET") return;
+
+  // Documento principal: red primero (contenido fresco), cache como respaldo offline.
+  if (req.mode === "navigate") {
+    event.respondWith(
+      fetch(req)
+        .then((res) => {
+          const copy = res.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put("./", copy));
+          return res;
+        })
+        .catch(() => caches.match("./"))
+    );
+    return;
+  }
+
+  // Recursos propios (manifest, iconos locales): stale-while-revalidate.
+  if (req.url.startsWith(self.location.origin)) {
+    event.respondWith(
+      caches.match(req).then((cached) => {
+        const network = fetch(req)
+          .then((res) => {
+            if (res.ok) {
+              const copy = res.clone();
+              caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
+            }
+            return res;
+          })
+          .catch(() => cached);
+        return cached || network;
+      })
+    );
+  }
 });
 
 // Push notification received

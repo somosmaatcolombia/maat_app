@@ -377,7 +377,7 @@ input:focus-visible,textarea:focus-visible,select:focus-visible{outline:none;bor
 
 <!-- AUTH (hidden by default, shown only if no session) -->
 <section id="auth-screen" aria-label="Inicio de sesi&oacute;n">
-  <img src="https://somosmaat.org/wp-content/uploads/2026/02/logo_app.png" alt="Logo MAAT" class="logo-auth" onerror="this.style.display='none'">
+  <img src="https://somosmaat.org/wp-content/uploads/2026/02/logo_app.png?v=1" alt="Logo MAAT" class="logo-auth" onerror="this.style.display='none'">
   <h1></h1>
   <p class="subtitle">Estoicismo & Bien-estar</p>
   <form class="auth-box" onsubmit="event.preventDefault();doAuth();" aria-label="Formulario de login">
@@ -392,7 +392,7 @@ input:focus-visible,textarea:focus-visible,select:focus-visible{outline:none;bor
 <!-- APP -->
 <div id="app" role="application">
   <header class="topbar">
-    <img src="https://somosmaat.org/wp-content/uploads/2026/02/logo_app.png" alt="Logo MAAT" class="logo-small" onerror="this.textContent='M'">
+    <img src="https://somosmaat.org/wp-content/uploads/2026/02/logo_app.png?v=1" alt="Logo MAAT" class="logo-small" onerror="this.textContent='M'">
     <span class="topbar-title">MAAT</span>
     <button class="btn-profile" id="btn-profile" onclick="openProfile()" aria-label="Abrir perfil"></button>
   </header>
@@ -479,12 +479,21 @@ input:focus-visible,textarea:focus-visible,select:focus-visible{outline:none;bor
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
 /* ============ CONFIG ============ */
+const CONFIG={
+  SUPABASE_URL:"https://pcclptmojjzqmfmzftot.supabase.co",
+  SUPABASE_ANON_KEY:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjY2xwdG1vamp6cW1mbXpmdG90Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4OTg3MjAsImV4cCI6MjA4NzQ3NDcyMH0.VuFBEy19fgNN5pSp_r8p2ZVViniunKdVW7Hy3AmqJXE",
+  VAPID_PUBLIC_KEY:"BG-NXBTYpdFywYHjaaMqHQdyWSktuHR3ivPCpcF601vhmNeTHwt-RZWRWHjnYmQk7MlD_OnUdxBHXuAlOj2Dops",
+  IMG_BASE:"https://somosmaat.org/wp-content/uploads/2026/06/",
+  LOGO_URL:"https://somosmaat.org/wp-content/uploads/2026/02/logo_app.png?v=1",
+  ASSET_VERSION:1
+};
+// Sufijo de cache-busting: agregar a las URLs de imagenes que vengan de CONFIG.IMG_BASE.
+// Subir ASSET_VERSION cuando se reemplacen las imagenes papercut (mismo nombre, archivo nuevo).
+const ASSET_V="?v="+CONFIG.ASSET_VERSION;
 // Activar para ver warnings de fallos silenciosos (catch blocks). En prod: false.
 const MAAT_DEBUG=(typeof localStorage!=="undefined"&&localStorage.getItem("maat-debug")==="1");
 const _w=MAAT_DEBUG?console.warn.bind(console):function(){};
-const SU="https://pcclptmojjzqmfmzftot.supabase.co";
-const SK="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjY2xwdG1vamp6cW1mbXpmdG90Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4OTg3MjAsImV4cCI6MjA4NzQ3NDcyMH0.VuFBEy19fgNN5pSp_r8p2ZVViniunKdVW7Hy3AmqJXE";
-const sb=supabase.createClient(SU,SK);
+const sb=supabase.createClient(CONFIG.SUPABASE_URL,CONFIG.SUPABASE_ANON_KEY);
 
 /* ============ STATE ============ */
 let user=null,prof=null,cals=[],bels=[],wkp={},ht={},sh=null,aiCfg={};
@@ -813,12 +822,11 @@ function skelCoach(){
 
 /* ============ ONBOARDING \u2014 first-time users ============ */
 let _obStep=0;
-const OB_IMG_BASE="https://somosmaat.org/wp-content/uploads/2026/06/";
 const OB_STEPS=[
-  {icon:"\uD83E\uDDED",img:OB_IMG_BASE+"onboarding-01-bienvenida.png",title_es:"Bienvenido a MAAT",title_en:"Welcome to MAAT",text_es:"No es un curso m\u00E1s. Es un proceso de 16 semanas para reconectar con tu sentido, tu energ\u00EDa y tu prop\u00F3sito. Hecho para personas exigentes como t\u00FA.",text_en:"This isn't just another course. It's a 16-week process to reconnect with your meaning, energy and purpose. Made for demanding people like you."},
-  {icon:"\u26A1",img:OB_IMG_BASE+"onboarding-02-Calibracion.png",title_es:"Calibrar toma 30 segundos",title_en:"Calibrating takes 30 seconds",text_es:"Cada d\u00EDa eliges conscientemente la actitud con la que vas a vivir. Un gesto peque\u00F1o que, repetido, lo cambia todo. Es el coraz\u00F3n del m\u00E9todo.",text_en:"Each day you consciously choose the attitude you'll live with. A small gesture that, repeated, changes everything. It's the heart of the method."},
-  {icon:"\u2705",img:OB_IMG_BASE+"onboarding-03-habitos.png",title_es:"H\u00E1bitos que te construyen",title_en:"Habits that build you",text_es:"Programa las acciones que construyen la versi\u00F3n de ti que quieres ser. Marca tus d\u00EDas y observa c\u00F3mo creces semana a semana.",text_en:"Program the actions that build the version of yourself you want to be. Check your days and watch yourself grow week by week."},
-  {icon:"\uD83E\uDD16",img:OB_IMG_BASE+"onboarding-04-coach.png",title_es:"Nunca est\u00E1s solo",title_en:"You're never alone",text_es:"Tienes un Coach con IA disponible 24/7 para acompa\u00F1arte con preguntas, reflexiones y apoyo personalizado en cada paso.",text_en:"You have an AI Coach available 24/7 to accompany you with questions, reflections and personalized support every step."}
+  {icon:"\uD83E\uDDED",img:CONFIG.IMG_BASE+"onboarding-01-bienvenida.png"+ASSET_V,title_es:"Bienvenido a MAAT",title_en:"Welcome to MAAT",text_es:"No es un curso m\u00E1s. Es un proceso de 16 semanas para reconectar con tu sentido, tu energ\u00EDa y tu prop\u00F3sito. Hecho para personas exigentes como t\u00FA.",text_en:"This isn't just another course. It's a 16-week process to reconnect with your meaning, energy and purpose. Made for demanding people like you."},
+  {icon:"\u26A1",img:CONFIG.IMG_BASE+"onboarding-02-Calibracion.png"+ASSET_V,title_es:"Calibrar toma 30 segundos",title_en:"Calibrating takes 30 seconds",text_es:"Cada d\u00EDa eliges conscientemente la actitud con la que vas a vivir. Un gesto peque\u00F1o que, repetido, lo cambia todo. Es el coraz\u00F3n del m\u00E9todo.",text_en:"Each day you consciously choose the attitude you'll live with. A small gesture that, repeated, changes everything. It's the heart of the method."},
+  {icon:"\u2705",img:CONFIG.IMG_BASE+"onboarding-03-habitos.png"+ASSET_V,title_es:"H\u00E1bitos que te construyen",title_en:"Habits that build you",text_es:"Programa las acciones que construyen la versi\u00F3n de ti que quieres ser. Marca tus d\u00EDas y observa c\u00F3mo creces semana a semana.",text_en:"Program the actions that build the version of yourself you want to be. Check your days and watch yourself grow week by week."},
+  {icon:"\uD83E\uDD16",img:CONFIG.IMG_BASE+"onboarding-04-coach.png"+ASSET_V,title_es:"Nunca est\u00E1s solo",title_en:"You're never alone",text_es:"Tienes un Coach con IA disponible 24/7 para acompa\u00F1arte con preguntas, reflexiones y apoyo personalizado en cada paso.",text_en:"You have an AI Coach available 24/7 to accompany you with questions, reflections and personalized support every step."}
 ];
 function showOnboarding(){
   _obStep=0;
@@ -860,7 +868,7 @@ function showAchievement(icon,title,text,img){
 }
 // Catalogo de logros con lenguaje de IDENTIDAD ("eres alguien que...")
 const ACHIEVEMENTS=[
-  {id:"first-calib",icon:"\u{1F3AF}",img:OB_IMG_BASE+"celebracion-primera-calib.png",es:{t:"Diste el primer paso",d:"Empezaste tu viaje. Eres de los que actuan."},en:{t:"You took the first step",d:"You began your journey. You're someone who acts."}},
+  {id:"first-calib",icon:"\u{1F3AF}",img:CONFIG.IMG_BASE+"celebracion-primera-calib.png"+ASSET_V,es:{t:"Diste el primer paso",d:"Empezaste tu viaje. Eres de los que actuan."},en:{t:"You took the first step",d:"You began your journey. You're someone who acts."}},
   {id:"first-coach",icon:"\u{1F9E0}",es:{t:"No caminas solo",d:"Buscaste apoyo. Pedir ayuda es fortaleza."},en:{t:"You don't walk alone",d:"You reached out. Asking for help is strength."}},
   {id:"first-belief",icon:"\u{1F4AD}",es:{t:"Mirando hacia adentro",d:"Registraste tu primera creencia. Te observas."},en:{t:"Looking inward",d:"You logged your first belief. You observe yourself."}},
   {id:"streak-3",icon:"\u{1F525}",es:{t:"Constancia naciente",d:"3 dias seguidos. Asi empiezan los habitos."},en:{t:"Emerging consistency",d:"3 days straight. This is how habits begin."}},
@@ -868,12 +876,12 @@ const ACHIEVEMENTS=[
   {id:"streak-14",icon:"\u{1F525}",es:{t:"Dos semanas imparable",d:"14 dias. Esto ya es parte de quien eres."},en:{t:"Two weeks unstoppable",d:"14 days. This is part of who you are now."}},
   {id:"streak-21",icon:"\u2728",es:{t:"Habito forjado",d:"21 dias. Te convertiste en alguien constante."},en:{t:"Habit forged",d:"21 days. You became a consistent person."}},
   {id:"streak-30",icon:"\u{1F451}",es:{t:"Maestria de la constancia",d:"30 dias. Pocos llegan aqui. Tu si."},en:{t:"Mastery of consistency",d:"30 days. Few get here. You did."}},
-  {id:"phase-1",icon:"\u25C6",img:OB_IMG_BASE+"celebracion-fase-completa.png",es:{t:"Fundacion construida",d:"Completaste la Fase 1: Gratitud."},en:{t:"Foundation built",d:"You completed Phase 1: Gratitude."}},
-  {id:"phase-2",icon:"\u25C6",img:OB_IMG_BASE+"celebracion-fase-completa.png",es:{t:"Cruzaste el umbral",d:"Completaste la Fase 2: Amor, el corazon del proceso."},en:{t:"You crossed the threshold",d:"You completed Phase 2: Love, the heart of the process."}},
-  {id:"phase-3",icon:"\u25C6",img:OB_IMG_BASE+"celebracion-fase-completa.png",es:{t:"Nueva direccion",d:"Completaste la Fase 3: Intencion."},en:{t:"New direction",d:"You completed Phase 3: Intention."}},
-  {id:"phase-4",icon:"\u25C6",img:OB_IMG_BASE+"celebracion-fase-completa.png",es:{t:"Integracion total",d:"Completaste la Fase 4: Voluntad."},en:{t:"Full integration",d:"You completed Phase 4: Will."}},
+  {id:"phase-1",icon:"\u25C6",img:CONFIG.IMG_BASE+"celebracion-fase-completa.png"+ASSET_V,es:{t:"Fundacion construida",d:"Completaste la Fase 1: Gratitud."},en:{t:"Foundation built",d:"You completed Phase 1: Gratitude."}},
+  {id:"phase-2",icon:"\u25C6",img:CONFIG.IMG_BASE+"celebracion-fase-completa.png"+ASSET_V,es:{t:"Cruzaste el umbral",d:"Completaste la Fase 2: Amor, el corazon del proceso."},en:{t:"You crossed the threshold",d:"You completed Phase 2: Love, the heart of the process."}},
+  {id:"phase-3",icon:"\u25C6",img:CONFIG.IMG_BASE+"celebracion-fase-completa.png"+ASSET_V,es:{t:"Nueva direccion",d:"Completaste la Fase 3: Intencion."},en:{t:"New direction",d:"You completed Phase 3: Intention."}},
+  {id:"phase-4",icon:"\u25C6",img:CONFIG.IMG_BASE+"celebracion-fase-completa.png"+ASSET_V,es:{t:"Integracion total",d:"Completaste la Fase 4: Voluntad."},en:{t:"Full integration",d:"You completed Phase 4: Will."}},
   {id:"halfway",icon:"\u26F0\uFE0F",es:{t:"A mitad del camino",d:"Llegaste a la semana 8. El tramo mas dificil, superado."},en:{t:"Halfway there",d:"You reached week 8. The hardest stretch, behind you."}},
-  {id:"graduate",icon:"\u{1F393}",img:OB_IMG_BASE+"celebracion-graduacion.png",es:{t:"Graduado MAAT",d:"Completaste las 16 semanas. Eres tu nueva version."},en:{t:"MAAT Graduate",d:"You completed the 16 weeks. You are your new self."}}
+  {id:"graduate",icon:"\u{1F393}",img:CONFIG.IMG_BASE+"celebracion-graduacion.png"+ASSET_V,es:{t:"Graduado MAAT",d:"Completaste las 16 semanas. Eres tu nueva version."},en:{t:"MAAT Graduate",d:"You completed the 16 weeks. You are your new self."}}
 ];
 
 // Devuelve los IDs de logros que el usuario YA cumple (segun el estado actual)
@@ -971,7 +979,7 @@ function showGraduationCelebration(){
   const es=lang==='es';
   const el=document.getElementById("calib-close");
   el.querySelector(".cc-inner").innerHTML=`
-    <img loading="lazy" decoding="async" src="${OB_IMG_BASE}celebracion-graduacion.png" alt="" style="max-width:260px;width:80%;height:auto;display:block;margin:0 auto 20px;" onerror="this.outerHTML='<div class=\\'cc-icon\\'>\\u{1F393}</div>'">
+    <img loading="lazy" decoding="async" src="${CONFIG.IMG_BASE}celebracion-graduacion.png${ASSET_V}" alt="" style="max-width:260px;width:80%;height:auto;display:block;margin:0 auto 20px;" onerror="this.outerHTML='<div class=\\'cc-icon\\'>\\u{1F393}</div>'">
     <div class="cc-head" style="background:linear-gradient(135deg,var(--o),var(--v));-webkit-background-clip:text;background-clip:text;color:transparent;">${es?'\u00A1Eres graduado MAAT!':'You are a MAAT graduate!'}</div>
     <div class="cc-msg">${es?'Completaste las 16 semanas. A partir de hoy eres parte de la comunidad de graduados. Tu proceso continua, ahora con meditaciones exclusivas y eventos.':'You completed the 16 weeks. You are now part of the graduates community. Your process continues, with exclusive meditations and events.'}</div>
     <div><button class="cc-btn" onclick="closeCalibClose()">${es?'Continuar':'Continue'}</button></div>
@@ -1554,7 +1562,7 @@ function renderHabits(){
           <div class="habit-progress"><div class="fill" style="width:${pct}%;background:${isFulfilled?'var(--m)':'var(--o)'}"></div></div>
         </div>`;
       }).join(""):`<div style="text-align:center;padding:24px 0;">
-        <img loading="lazy" decoding="async" src="${OB_IMG_BASE}empty-habits.png" alt="" style="max-width:200px;width:55%;height:auto;display:block;margin:0 auto 14px;opacity:.95;" onerror="this.style.display='none'">
+        <img loading="lazy" decoding="async" src="${CONFIG.IMG_BASE}empty-habits.png${ASSET_V}" alt="" style="max-width:200px;width:55%;height:auto;display:block;margin:0 auto 14px;opacity:.95;" onerror="this.style.display='none'">
         <p class="text-mu" style="margin-bottom:12px;">${t("no_habits")}</p>
         ${(()=>{const prev=getHabits(w-1);return w>1&&prev.length?`<button onclick="copyHabitsFromWeek(${w-1})" style="background:var(--bg2);border:1px dashed var(--c);color:var(--c);padding:10px 20px;border-radius:var(--radius-sm);font-size:13px;cursor:pointer;">\u{1F4CB} ${lang==='es'?'Copiar h\u00E1bitos de semana '+(w-1):'Copy habits from week '+(w-1)}</button>`:''})()}
       </div>`}
@@ -1848,7 +1856,7 @@ async function sendMsg(){
     if(!token){toast(lang==='es'?'Tu sesi\u00F3n expir\u00F3. Vuelve a iniciar sesi\u00F3n.':'Session expired. Please log in again.','err');chatLocked=false;document.getElementById("typing")?.remove();return;}
     const body={messages:chatHistory.slice(-20),stream:true};
     if(aiCfg?.system_prompt)body.system=aiCfg.system_prompt;
-    const res=await fetch(SU+"/functions/v1/coach-maat",{
+    const res=await fetch(CONFIG.SUPABASE_URL+"/functions/v1/coach-maat",{
       method:"POST",
       headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},
       body:JSON.stringify(body)
@@ -2069,7 +2077,7 @@ function renderBeliefs(){
         <button class="btn-del" data-bid="${b.id}" onclick="delBelief(this)">\u2715</button>
       </div>
     `).join("")||`<div style="text-align:center;padding:32px 20px;">
-      <img loading="lazy" decoding="async" src="${OB_IMG_BASE}empty-creencias.png" alt="" style="max-width:200px;width:55%;height:auto;display:block;margin:0 auto 14px;opacity:.95;" onerror="this.style.display='none'">
+      <img loading="lazy" decoding="async" src="${CONFIG.IMG_BASE}empty-creencias.png${ASSET_V}" alt="" style="max-width:200px;width:55%;height:auto;display:block;margin:0 auto 14px;opacity:.95;" onerror="this.style.display='none'">
       <p class="text-mu">${lang==='es'?'Sin creencias a\u00FAn. Empieza registrando una.':'No beliefs yet. Start by adding one.'}</p>
     </div>`}</div>
   `;
@@ -2201,7 +2209,7 @@ function renderHistorial(){
         </div>
       </div>
     `).join(""):`<div style="text-align:center;padding:32px 20px;">
-      <img loading="lazy" decoding="async" src="${OB_IMG_BASE}empty-historial.png" alt="" style="max-width:200px;width:55%;height:auto;display:block;margin:0 auto 14px;opacity:.95;" onerror="this.style.display='none'">
+      <img loading="lazy" decoding="async" src="${CONFIG.IMG_BASE}empty-historial.png${ASSET_V}" alt="" style="max-width:200px;width:55%;height:auto;display:block;margin:0 auto 14px;opacity:.95;" onerror="this.style.display='none'">
       <p class="text-mu">${t("no_calib")}</p>
     </div>`}
   `;
@@ -2271,7 +2279,7 @@ function renderBibliotecaMed(){
       ${cats.map(c=>`<button onclick="_medCatFilter='${c}';renderBibliotecaMed();" style="flex-shrink:0;padding:6px 14px;border-radius:20px;border:1px solid ${_medCatFilter===c?'var(--c)':'var(--bd)'};background:${_medCatFilter===c?'var(--c)':'transparent'};color:${_medCatFilter===c?'#fff':'var(--mu)'};font-size:13px;cursor:pointer;white-space:nowrap;">${medCatLabel(c)}</button>`).join('')}
     </div>
     ${filtered.length===0?`<div style="text-align:center;padding:32px 20px;">
-      <img loading="lazy" decoding="async" src="${OB_IMG_BASE}empty-meditaciones.png" alt="" style="max-width:220px;width:60%;height:auto;display:block;margin:0 auto 14px;opacity:.95;" onerror="this.style.display='none'">
+      <img loading="lazy" decoding="async" src="${CONFIG.IMG_BASE}empty-meditaciones.png${ASSET_V}" alt="" style="max-width:220px;width:60%;height:auto;display:block;margin:0 auto 14px;opacity:.95;" onerror="this.style.display='none'">
       <p style="color:var(--mu);">${lang==='es'?'Sin meditaciones en esta categor\u00eda.':'No meditations in this category.'}</p>
     </div>`:''}
     <div style="display:flex;flex-direction:column;gap:12px;">
@@ -2357,7 +2365,7 @@ function renderEventos(){
     </div>
     ${!isGrad?`<div style="background:var(--o)11;border:1px solid var(--o)44;border-radius:var(--radius-sm);padding:14px;margin-bottom:16px;font-size:13px;color:var(--o);">\u{1F393} ${lang==='es'?'Los eventos exclusivos para graduados se ver\u00e1n disponibles cuando completes las 16 semanas.':'Exclusive graduate events will be available when you complete 16 weeks.'}</div>`:''}
     ${visible.length===0?`<div style="text-align:center;padding:32px 20px;">
-      <img loading="lazy" decoding="async" src="${OB_IMG_BASE}empty-eventos.png" alt="" style="max-width:220px;width:60%;height:auto;display:block;margin:0 auto 14px;opacity:.95;" onerror="this.style.display='none'">
+      <img loading="lazy" decoding="async" src="${CONFIG.IMG_BASE}empty-eventos.png${ASSET_V}" alt="" style="max-width:220px;width:60%;height:auto;display:block;margin:0 auto 14px;opacity:.95;" onerror="this.style.display='none'">
       <p style="color:var(--mu);font-size:14px;">${lang==='es'?'No hay eventos pr\u00f3ximos por ahora. \u00a1Vuelve pronto!':'No upcoming events right now. Check back soon!'}</p>
     </div>`:`
     <div style="display:flex;flex-direction:column;gap:14px;">
@@ -2900,8 +2908,7 @@ async function saveProfile(){
 }
 
 /* ============ PWA: SERVICE WORKER + WEB PUSH ============ */
-// La clave PUBLICA VAPID (la privada vive solo en Supabase secrets).
-const VAPID_PUBLIC_KEY="BG-NXBTYpdFywYHjaaMqHQdyWSktuHR3ivPCpcF601vhmNeTHwt-RZWRWHjnYmQk7MlD_OnUdxBHXuAlOj2Dops";
+// La clave PUBLICA VAPID vive en CONFIG.VAPID_PUBLIC_KEY (la privada solo en Supabase secrets).
 let _swReg=null;
 
 // Registra el Service Worker (./sw.js debe estar junto al index.html en el servidor).
@@ -2946,7 +2953,7 @@ async function subscribePush(){
     if(!sub){
       sub=await _swReg.pushManager.subscribe({
         userVisibleOnly:true,
-        applicationServerKey:urlB64ToUint8Array(VAPID_PUBLIC_KEY)
+        applicationServerKey:urlB64ToUint8Array(CONFIG.VAPID_PUBLIC_KEY)
       });
     }
     const j=sub.toJSON();
@@ -3006,7 +3013,7 @@ function scheduleNotifications(){
         const m=pickNotif(NOTIF_DAILY[lang==="es"?"es":"en"]);
         new Notification("MAAT \u2014 "+m.t,{
           body:m.b,
-          icon:"https://somosmaat.org/wp-content/uploads/2026/02/logo_app.png",
+          icon:CONFIG.LOGO_URL,
           tag:"maat-calib-daily",
           requireInteraction:false
         });
@@ -3019,7 +3026,7 @@ function scheduleNotifications(){
           body:lang==="es"
             ?"T\u00F3mate un momento para evaluar tu semana y elegir c\u00F3mo empiezas la pr\u00F3xima."
             :"Take a moment to review your week and choose how you start the next one.",
-          icon:"https://somosmaat.org/wp-content/uploads/2026/02/logo_app.png",
+          icon:CONFIG.LOGO_URL,
           tag:"maat-weekly-summary",
           requireInteraction:false
         });
