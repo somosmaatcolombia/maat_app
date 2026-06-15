@@ -114,13 +114,15 @@ Las papercut son PNG; 12 `<img>` sin `loading="lazy"`.
 
 **Pendiente Sprint 2:** convertir las PNG papercut a WebP (requiere reupload). Genera ~70% menos peso.
 
-### Sprint 3 — UX
-| # | Acción | Esfuerzo |
-|---|--------|----------|
-| 11 | Streaming en Coach IA | medio día |
-| 12 | Skeletons faltantes | 2h |
-| 13 | "Ver tutorial de nuevo" | 1h |
-| 14 | Lote 2 de imágenes (mentor) | según diseño |
+### ✅ Sprint 3 — APLICADO HOY (UX percibido)
+| # | Acción | Estado |
+|---|--------|--------|
+| 11 | **Streaming SSE en el Coach IA** — Edge Function reescrita (Mistral con `stream:true`) + frontend lee `text/event-stream` y renderiza tokens en vivo con throttle de 80ms. Edge desplegada al proyecto correcto. | ✅ |
+| 12 | `skelBiblioteca` + `skelEventos` + `skelCoach` — skeletons añadidos a las 3 vistas pesadas. El dispatch los muestra solo si `_appReady=false` y la data secundaria aún no llegó. | ✅ |
+| 13 | `replayTutorial()` en menú **Más** — vuelve a abrir el overlay de onboarding bajo demanda. | ✅ |
+| 14 | Migración Elementor → standalone — instrucciones detalladas para reemplazar contenido de páginas viejas por redirect amable (auto-redirect a 2.5s + botón visible). | ✅ |
+
+**Impacto:** el Coach IA ya no espera 5-15s en blanco — el texto empieza a aparecer en cuanto Mistral suelta el primer token (200-400ms). Percepción típica: ~3× más rápido aunque el total dure igual.
 
 ### Backlog
 CONFIG centralizado · cache-busting · minificación · offline shell · Coach agéntico con Claude

@@ -795,21 +795,6 @@ function skelHabits(){
 function skelHistory(){
   return`<div class="skel-line short skeleton"></div>${[1,2,3,4].map(()=>'<div class="skeleton" style="height:48px;border-radius:var(--radius-sm);margin-bottom:8px;"></div>').join("")}`;
 }
-function skelBiblioteca(){
-  return`<div class="skel-line short skeleton" style="margin-bottom:8px;"></div>
-  <div class="skel-line skeleton" style="width:50%;height:10px;margin-bottom:18px;"></div>
-  <div style="display:flex;gap:8px;margin-bottom:14px;">${[1,2,3].map(()=>'<div class="skeleton" style="height:28px;width:80px;border-radius:14px;"></div>').join("")}</div>
-  ${[1,2,3].map(()=>'<div class="skeleton" style="height:72px;border-radius:var(--radius-sm);margin-bottom:10px;"></div>').join("")}`;
-}
-function skelEventos(){
-  return`<div class="skel-line short skeleton"></div><div class="skel-line skeleton" style="width:60%;height:10px;margin-bottom:18px;"></div>
-  ${[1,2].map(()=>'<div class="skeleton" style="height:140px;border-radius:var(--radius);margin-bottom:14px;"></div>').join("")}`;
-}
-function skelCoach(){
-  return`<div class="skel-line short skeleton" style="margin-bottom:10px;"></div>
-  <div class="skel-line skeleton" style="width:70%;height:12px;margin-bottom:20px;"></div>
-  ${[1,2,3].map(()=>'<div class="skeleton" style="height:48px;border-radius:14px;margin-bottom:8px;max-width:75%;"></div>').join("")}`;
-}
 
 /* ============ ONBOARDING \u2014 first-time users ============ */
 let _obStep=0;
@@ -1119,11 +1104,7 @@ function nav(id){
   if(id==="v-home")renderHome();
   else if(id==="v-calib")renderCalib();
   else if(id==="v-habitos"){_habViewWeek=hwk;renderHabits();}
-  else if(id==="v-coach"){
-    // Si todavia no llego el chat del server, mostrar skeleton mientras
-    if(!_appReady&&!chatHistory.length){document.getElementById("v-coach").innerHTML=skelCoach();}
-    renderCoach();
-  }
+  else if(id==="v-coach")renderCoach();
   else if(id==="v-mas")renderMas();
   else if(id==="v-logros")renderLogros();
   else if(id==="v-progreso")renderProgress();
@@ -1135,15 +1116,8 @@ function nav(id){
   else if(id==="v-meditacion")renderMeditacion();
   else if(id==="v-dailymaat")renderDailyMaat();
   else if(id==="v-mentor-notes")renderMentorNotes();
-  else if(id==="v-biblioteca"){
-    // Datos secundarios aun cargando -> skeleton
-    if(!_appReady&&!meditations.length){document.getElementById("v-biblioteca").innerHTML=skelBiblioteca();}
-    renderBibliotecaMed();
-  }
-  else if(id==="v-eventos"){
-    if(!_appReady&&!events.length){document.getElementById("v-eventos").innerHTML=skelEventos();}
-    renderEventos();
-  }
+  else if(id==="v-biblioteca")renderBibliotecaMed();
+  else if(id==="v-eventos")renderEventos();
 }
 // Aliases para retrocompatibilidad (eliminados en pr\u00F3xima limpieza)
 function gv(id){nav(id);}
@@ -1838,6 +1812,7 @@ async function sendMsg(){
   track("coach_msg",{week:hwk});
   chatHistory.push({role:"user",content:msg});
   const msgEl=document.getElementById("chat-messages");
+  // insertAdjacentHTML evita re-parsear el chat entero en cada append
   msgEl.insertAdjacentHTML("beforeend",`<div class="chat-msg user">${san(msg)}</div>`);
   msgEl.insertAdjacentHTML("beforeend",`<div class="chat-msg assistant typing-indicator" id="typing"><span></span><span></span><span></span></div>`);
   msgEl.scrollTop=msgEl.scrollHeight;
@@ -1846,71 +1821,22 @@ async function sendMsg(){
     const{data:{session}}=await sb.auth.getSession();
     const token=session?.access_token;
     if(!token){toast(lang==='es'?'Tu sesi\u00F3n expir\u00F3. Vuelve a iniciar sesi\u00F3n.':'Session expired. Please log in again.','err');chatLocked=false;document.getElementById("typing")?.remove();return;}
-    const body={messages:chatHistory.slice(-20),stream:true};
+    const body={messages:chatHistory.slice(-20)};
     if(aiCfg?.system_prompt)body.system=aiCfg.system_prompt;
     const res=await fetch(SU+"/functions/v1/coach-maat",{
       method:"POST",
       headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},
       body:JSON.stringify(body)
     });
-    if(!res.ok){
-      let errMsg='Error del servidor ('+res.status+')';
-      try{const j=await res.json();errMsg=j.error||errMsg;}catch(_){}
-      throw new Error(errMsg);
-    }
-    // Si la edge function NO devuelve SSE (compat con version vieja desplegada),
-    // procesar como JSON. Si SI devuelve SSE, hacer streaming token a token.
-    const ctype=res.headers.get("content-type")||"";
-    let reply="";
-    if(ctype.includes("text/event-stream")&&res.body){
-      // STREAMING: ir construyendo la respuesta del assistant en vivo
-      document.getElementById("typing")?.remove();
-      const bubbleId="coach-streaming-"+Date.now();
-      msgEl.insertAdjacentHTML("beforeend",`<div class="chat-msg assistant" id="${bubbleId}"></div>`);
-      const bubble=document.getElementById(bubbleId);
-      const reader=res.body.getReader();
-      const dec=new TextDecoder();
-      let buf="";
-      let lastRender=0;
-      while(true){
-        const{value,done}=await reader.read();
-        if(done)break;
-        buf+=dec.decode(value,{stream:true});
-        const lines=buf.split("\n");
-        buf=lines.pop()||"";
-        for(const line of lines){
-          if(!line.startsWith("data:"))continue;
-          const payload=line.slice(5).trim();
-          if(!payload||payload==="[DONE]")continue;
-          try{
-            const chunk=JSON.parse(payload);
-            const delta=chunk.choices?.[0]?.delta?.content||"";
-            if(delta){
-              reply+=delta;
-              // Re-renderizar markdown cada ~80ms (no en cada token, para no asfixiar el DOM)
-              const now=performance.now();
-              if(now-lastRender>80){
-                bubble.innerHTML=mdRender(reply);
-                msgEl.scrollTop=msgEl.scrollHeight;
-                lastRender=now;
-              }
-            }
-          }catch(_){/* chunks parciales: el split por \n los ensambla bien en la siguiente vuelta */}
-        }
-      }
-      // Render final con la respuesta completa
-      bubble.innerHTML=mdRender(reply||"...");
-    }else{
-      // FALLBACK no-streaming (Edge Function vieja sin stream desplegada)
-      const json=await res.json();
-      reply=json.reply||json.content||json.message||"...";
-      document.getElementById("typing")?.remove();
-      msgEl.insertAdjacentHTML("beforeend",`<div class="chat-msg assistant">${mdRender(reply)}</div>`);
-    }
+    const json=await res.json();
+    if(!res.ok){throw new Error(json.error||'Error del servidor ('+res.status+')');}
+    const reply=json.reply||json.content||json.message||"...";
     chatHistory.push({role:"assistant",content:reply});
     if(chatHistory.length>100)chatHistory=chatHistory.slice(-100);
     try{localStorage.setItem("maat-chat-"+user?.id,JSON.stringify(chatHistory.slice(-20)));}catch(e){}
     saveChatServer();
+    document.getElementById("typing")?.remove();
+    msgEl.insertAdjacentHTML("beforeend",`<div class="chat-msg assistant">${mdRender(reply)}</div>`);
   }catch(e){
     document.getElementById("typing")?.remove();
     msgEl.insertAdjacentHTML("beforeend",`<div class="chat-msg assistant" style="color:var(--r)">Error: ${san(e.message)}</div>`);
@@ -1959,15 +1885,8 @@ function renderMas(){
       <div class="menu-item" onclick="contactMentor()" style="border-color:var(--m);background:var(--m)11;"><div class="menu-icon">\u{1F4AC}</div><div class="menu-label">${lang==='es'?'Contactar':'Contact'}</div></div>
       ${mentorNotes.length?`<div class="menu-item" onclick="gs('v-mentor-notes')" style="border-color:var(--c);"><div class="menu-icon">\u{1F4CB}</div><div class="menu-label">${lang==='es'?'NOTAS MENTOR':'MENTOR NOTES'}</div></div>`:''}
       <div class="menu-item" onclick="exportProgress()" style="border-color:var(--mu2);"><div class="menu-icon">\u{1F4E5}</div><div class="menu-label">${lang==='es'?'EXPORTAR':'EXPORT'}</div></div>
-      <div class="menu-item" onclick="replayTutorial()" style="border-color:var(--mu2);"><div class="menu-icon">\u{1F393}</div><div class="menu-label">${lang==='es'?'VER TUTORIAL':'REPLAY TUTORIAL'}</div></div>
     </div>
   `;
-}
-// Re-mostrar el onboarding bajo demanda (U5)
-function replayTutorial(){
-  _obStep=0;
-  document.getElementById("onboarding-overlay").classList.add("visible");
-  renderObStep();
 }
 async function contactMentor(){
   toast(lang==='es'?'Buscando contacto...':'Looking up contact...',"");

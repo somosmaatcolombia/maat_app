@@ -1,11 +1,14 @@
-// Edge Function: coach-maat
-// Proxy seguro entre el frontend y Mistral API
+// Edge Function: coach-maat (con streaming SSE)
+// Proxy seguro entre el frontend y Mistral API.
+// Devuelve los tokens de Mistral en tiempo real al cliente para que la
+// respuesta aparezca como si la escribiera en vivo.
 //
 // Flujo:
 // 1. Verifica JWT del usuario
 // 2. Lee ai_config (system_prompt + api_key) con service_role
-// 3. Llama a Mistral API (mistral-large-latest, max_tokens: 600)
-// 4. Retorna la respuesta al frontend
+// 3. Llama a Mistral con stream:true y reenvia el stream SSE al cliente
+//
+// Compatibilidad: si el body trae { stream:false } responde el JSON viejo.
 //
 // Deploy: supabase functions deploy coach-maat
 
@@ -19,7 +22,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // CORS preflight
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -28,85 +30,54 @@ serve(async (req) => {
     // 1. Verify JWT
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: "No authorization header" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return jsonErr("No authorization header", 401);
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    // Client with user's JWT to verify identity
     const sbUser = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
     });
 
-    const {
-      data: { user },
-      error: authError,
-    } = await sbUser.auth.getUser();
+    const { data: { user }, error: authError } = await sbUser.auth.getUser();
+    if (authError || !user) return jsonErr("Invalid or expired token", 401);
 
-    if (authError || !user) {
-      return new Response(
-        JSON.stringify({ error: "Invalid or expired token" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // 2. Parse request body
-    const { messages } = await req.json();
+    // 2. Parse request
+    const body = await req.json();
+    const { messages, stream = true } = body;
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
-      return new Response(
-        JSON.stringify({ error: "messages array is required" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return jsonErr("messages array is required", 400);
     }
 
-    // 3. Read ai_config with service_role (bypasses RLS)
+    // 3. Read ai_config
     const sbAdmin = createClient(supabaseUrl, supabaseServiceKey);
-    const { data: config, error: configError } = await sbAdmin
+    const { data: config } = await sbAdmin
       .from("ai_config")
       .select("system_prompt, api_key")
       .eq("id", 1)
       .single();
 
-    if (configError || !config) {
-      return new Response(
-        JSON.stringify({ error: "AI config not found" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
+    if (!config) return jsonErr("AI config not found", 500);
     const apiKey = config.api_key;
     if (!apiKey || apiKey === "sk-placeholder") {
-      return new Response(
-        JSON.stringify({ error: "API key not configured. Contact admin." }),
-        { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return jsonErr("API key not configured. Contact admin.", 503);
     }
 
-    // 4. Build messages for Mistral (OpenAI-compatible format)
+    // 4. Build messages
     const mistralMessages: { role: string; content: string }[] = [];
-
-    // System prompt as first message
     if (config.system_prompt) {
-      mistralMessages.push({
-        role: "system",
-        content: config.system_prompt,
-      });
+      mistralMessages.push({ role: "system", content: config.system_prompt });
     }
-
-    // User/assistant messages (last 20, max 2000 chars each)
     messages.slice(-20).forEach((m: { role: string; content: string }) => {
       mistralMessages.push({
         role: m.role === "assistant" ? "assistant" : "user",
-        content: m.content.slice(0, 2000),
+        content: (m.content || "").slice(0, 2000),
       });
     });
 
-    // 5. Call Mistral API
+    // 5. Call Mistral
     const mistralResp = await fetch("https://api.mistral.ai/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -116,6 +87,7 @@ serve(async (req) => {
       body: JSON.stringify({
         model: "mistral-large-latest",
         max_tokens: 600,
+        stream,
         messages: mistralMessages,
       }),
     });
@@ -123,26 +95,39 @@ serve(async (req) => {
     if (!mistralResp.ok) {
       const errBody = await mistralResp.text();
       console.error("Mistral API error:", mistralResp.status, errBody);
-      return new Response(
-        JSON.stringify({ error: "AI service error" }),
-        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return jsonErr("AI service error", 502);
     }
 
-    const mistralData = await mistralResp.json();
-    const reply =
-      mistralData.choices?.[0]?.message?.content || "No pude generar una respuesta.";
+    // 6a. Streaming: passthrough SSE chunks al cliente
+    if (stream && mistralResp.body) {
+      return new Response(mistralResp.body, {
+        status: 200,
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache",
+          "Connection": "keep-alive",
+          "X-Accel-Buffering": "no", // evita buffering proxy
+        },
+      });
+    }
 
-    // 6. Return response
+    // 6b. No-stream: comportamiento original (JSON)
+    const data = await mistralResp.json();
+    const reply = data.choices?.[0]?.message?.content || "No pude generar una respuesta.";
     return new Response(JSON.stringify({ reply }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
     console.error("coach-maat error:", err);
-    return new Response(
-      JSON.stringify({ error: "Internal server error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return jsonErr("Internal server error", 500);
   }
 });
+
+function jsonErr(message: string, status: number) {
+  return new Response(JSON.stringify({ error: message }), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
