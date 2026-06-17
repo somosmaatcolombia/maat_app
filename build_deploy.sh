@@ -16,10 +16,11 @@ MINIFY=1
 rm -rf deploy
 mkdir -p deploy/app deploy/mentor deploy/onboarding
 
-# App del cliente (PWA completa: index + service worker + manifest)
+# App del cliente (PWA completa: index + service worker + manifest + iconos)
 cp src/maat_dashboard.html      deploy/app/index.html
 cp src/sw.js                    deploy/app/sw.js
 cp src/manifest.json            deploy/app/manifest.json
+cp src/icon-192.png src/icon-512.png src/icon-maskable-512.png src/apple-touch-icon.png deploy/app/
 
 # Portal del mentor
 cp src/maat_mentor_dashboard.html  deploy/mentor/index.html
