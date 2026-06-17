@@ -439,7 +439,7 @@ input:focus-visible,textarea:focus-visible,select:focus-visible{outline:none;bor
     </button>
     <button class="nav-item" data-view="v-coach" onclick="gv('v-coach')" aria-label="Coach IA">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-      <span>Maar GPT</span>
+      <span>IA MAAT</span>
     </button>
     <button class="nav-item" data-view="v-mas" onclick="gv('v-mas')" aria-label="M&aacute;s opciones">
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
@@ -1812,7 +1812,7 @@ function renderCoach(){
     const intro=document.createElement("div");
     intro.className="coach-intro";
     intro.style.cssText="padding:0 0 12px;border-bottom:1px solid var(--bd);margin-bottom:4px;";
-    intro.innerHTML=`<p style="font-size:13px;color:var(--mu);line-height:1.6;">${lang==='es'?'MAAT GPT es tu coach de inteligencia artificial disponible las 24 horas. Est\u00E1 entrenado con el m\u00E9todo MAAT y tiene contexto de tu proceso. \u00DAsalo para reflexionar, resolver dudas, preparar tu pr\u00F3xima sesi\u00F3n o procesar lo que est\u00E1s viviendo.':'MAAT GPT is your AI coach available 24 hours a day. It is trained with the MAAT method and has context of your process. Use it to reflect, answer questions, prepare for your next session, or process what you are experiencing.'}</p>`;
+    intro.innerHTML=`<p style="font-size:13px;color:var(--mu);line-height:1.6;">${lang==='es'?'IA MAAT es tu coach de inteligencia artificial disponible las 24 horas. Est\u00E1 entrenado con el m\u00E9todo MAAT y tiene contexto de tu proceso. \u00DAsalo para reflexionar, resolver dudas, preparar tu pr\u00F3xima sesi\u00F3n o procesar lo que est\u00E1s viviendo.':'IA MAAT is your AI coach available 24 hours a day. It is trained with the MAAT method and has context of your process. Use it to reflect, answer questions, prepare for your next session, or process what you are experiencing.'}</p>`;
     container.insertBefore(intro,container.firstChild);
   }
   // Restore chat from localStorage
