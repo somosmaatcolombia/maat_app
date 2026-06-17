@@ -70,7 +70,33 @@ Subir `deploy/app/index.html` y `deploy/mentor/index.html` al servidor (FTP/cPan
 - `reminders_sent` evita reenviar el mismo recordatorio; la ventana de gracia evita
   disparar un recordatorio "tarde" si la sesion se creo con poco margen.
 
-## Siguiente (Sprint B, no incluido)
+## Sprint B - Notas/tareas grupales (broadcast) - APLICADO
 
-Broadcast de **conclusiones/ejercicios** a todo el grupo desde `+ Sesion` (escribe una
-`session_notes` por miembro con el mismo contenido). Hoy `+ Sesion` sigue siendo 1:1.
+El mentor escribe **una vez** las notas y la tarea de una sesion grupal y se guardan
+para **todos los miembros activos** del grupo (una `session_notes` por miembro), con
+push opcional. Cada cliente las ve en su app en "Notas de mi Mentor" (en vivo si la
+app esta abierta, via realtime).
+
+| Pieza | Archivo | Que hace |
+|-------|---------|----------|
+| Schema | `sql/maat_session_notes_grupales.sql` | `session_notes.group_id` (FK, nullable) + indice |
+| Edge fn | `supabase/functions/broadcast-session-notes/index.ts` | Valida que el mentor sea duenno del grupo, inserta 1 nota por miembro, push opcional |
+| Portal mentor | boton **Notas/Tareas** en cada grupo + modal (fecha, notas, tarea, checkbox push) + historial de envios por grupo. La pestana "Notas de Sesion" ahora muestra solo 1:1 |
+| App cliente | etiqueta amigable ("Sesion grupal"/"1:1") en Notas de mi Mentor; el push aterriza en esa vista |
+
+### Activacion Sprint B (pasos del usuario)
+
+1. **SQL:** correr `sql/maat_session_notes_grupales.sql` en Supabase. Idempotente.
+2. **Edge function (con verificacion JWT, SIN --no-verify-jwt):**
+   ```bash
+   supabase functions deploy broadcast-session-notes --project-ref pcclptmojjzqmfmzftot
+   ```
+3. **Re-desplegar apps:** `./build_deploy.sh` y subir `deploy/app/index.html` +
+   `deploy/mentor/index.html`.
+
+### QA Sprint B
+1. Portal mentor > Mentorias Grupales > en un grupo con miembros, **Notas/Tareas**.
+2. Escribir notas + tarea, dejar el push marcado, **ENVIAR A TODOS**.
+3. Toast confirma "Enviado a N miembro(s)". El historial aparece en la tarjeta del grupo.
+4. App de un miembro: la nota aparece en "Notas de mi Mentor" (toast en vivo si esta
+   abierta) y, si concedio permiso, llega el push.

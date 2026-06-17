@@ -416,6 +416,21 @@ dialog.m-dialog[open]{display:flex;align-items:flex-start;justify-content:center
     <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modal-schedule')">Cancelar</button><button class="btn btn-c" id="sc-btn" onclick="saveSchedule()">AGENDAR</button></div>
   </div>
 </dialog>
+<dialog class="m-dialog" id="modal-gnotes">
+  <div class="maat-modal">
+    <h3>Notas y tareas de la sesi&oacute;n grupal</h3>
+    <div id="gn-group-name" style="font-weight:600;color:var(--c);margin-bottom:6px;"></div>
+    <p style="font-size:12px;color:var(--mu);margin-bottom:10px;">Se guardan para <strong>todos los miembros activos</strong> del grupo. Cada uno las ver&aacute; en su app, en &laquo;Notas de mi Mentor&raquo;.</p>
+    <div class="session-form">
+      <div><label>Fecha de la sesi&oacute;n</label><input type="date" id="gn-date"></div>
+      <div><label>Notas / conclusiones</label><textarea id="gn-notes" rows="4" placeholder="Lo que trabajamos y las conclusiones de la sesi&oacute;n..."></textarea></div>
+      <div><label>Tarea / ejercicio para la semana</label><textarea id="gn-plan" rows="3" placeholder="Qu&eacute; deben practicar antes de la pr&oacute;xima sesi&oacute;n..."></textarea></div>
+      <div><label style="display:flex;align-items:center;gap:6px;font-weight:400;letter-spacing:0;text-transform:none;"><input type="checkbox" id="gn-notify" checked style="width:auto;"> Enviar notificaci&oacute;n push a los miembros</label></div>
+    </div>
+    <input type="hidden" id="gn-group-id">
+    <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modal-gnotes')">Cancelar</button><button class="btn btn-c" id="gn-btn" onclick="saveGroupNotes()">ENVIAR A TODOS</button></div>
+  </div>
+</dialog>
 <dialog class="m-dialog" id="modal-role">
   <div class="maat-modal">
     <h3>Cambiar Rol</h3>
@@ -663,10 +678,10 @@ async function loadData(){
       .order("updated_at",{ascending:false})
       .limit(500),
     sb.from("session_notes")
-      .select("id,client_id,session_type,session_date,notes,next_plan,client_week,created_at")
+      .select("id,client_id,session_type,session_date,notes,next_plan,client_week,group_id,created_at")
       .eq("mentor_id",uid)
       .order("created_at",{ascending:false})
-      .limit(50),
+      .limit(80),
   ]);
   _allCals=r1.status==="fulfilled"?(r1.value.data||[]):[];
   _allWkp=r2.status==="fulfilled"?(r2.value.data||[]):[];
@@ -1102,7 +1117,8 @@ function renderAlerts(){
 /* ============================================ */
 function renderSessions(){
   const grouped={};
-  _allSessions.forEach(s=>{const m=_clientMetrics[s.client_id];const name=m?m.name:s.client_id.slice(0,8);if(!grouped[s.client_id])grouped[s.client_id]={name,sessions:[]};grouped[s.client_id].sessions.push(s);});
+  // Solo notas 1:1 aqui; las grupales viven en la pestana Mentorias Grupales.
+  _allSessions.filter(s=>!s.group_id).forEach(s=>{const m=_clientMetrics[s.client_id];const name=m?m.name:s.client_id.slice(0,8);if(!grouped[s.client_id])grouped[s.client_id]={name,sessions:[]};grouped[s.client_id].sessions.push(s);});
   const groups=Object.entries(grouped);
   document.getElementById("v-sessions").innerHTML=groups.length?groups.map(([uid,g])=>`
     <div class="card"><div class="card-title" style="cursor:pointer;" onclick="openProfile('${uid}')">${san(g.name)}</div>
@@ -1196,6 +1212,7 @@ function renderGrupos(){
 
   const groupsHtml=_allGroups.length?_allGroups.map(g=>{
     const st=groupStats(g.id);
+    const bc=groupBroadcasts(g.id);
     const chips=st.members.map(m=>{const nm=clientName(m.client_id);const c=(_clientMetrics[m.client_id]||{}).coherence;return`<span class="badge badge-info" style="font-size:11px;">${san(nm)}${(c!==null&&c!==undefined)?' \u00B7 '+c+'%':''}</span>`;}).join(" ")||'<span style="color:var(--mu);font-size:12px;">Sin miembros</span>';
     return`<div class="card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
@@ -1204,7 +1221,9 @@ function renderGrupos(){
       </div>
       <div style="font-size:12px;color:var(--mu);margin:8px 0;">${st.count} miembro${st.count!==1?'s':''}${st.alerts?' \u00B7 <span style="color:var(--r);">'+st.alerts+' en alerta</span>':''}</div>
       <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px;">${chips}</div>
+      ${bc.length?`<div style="margin-bottom:12px;">${bc.slice(0,2).map(b=>`<div style="padding:8px 10px;background:rgba(57,161,201,.05);border-left:3px solid var(--c);border-radius:0 8px 8px 0;margin-bottom:6px;"><div style="font-size:11px;color:var(--mu);">\u{1F4DD} ${san(b.session_date||'')} \u00B7 ${b.count} miembro${b.count!==1?'s':''}</div>${b.notes?`<div style="font-size:12px;color:var(--text);">${san(b.notes.slice(0,90))}${b.notes.length>90?'\u2026':''}</div>`:''}${b.next_plan?`<div style="font-size:12px;color:var(--c);">\u279C ${san(b.next_plan.slice(0,80))}${b.next_plan.length>80?'\u2026':''}</div>`:''}</div>`).join('')}</div>`:''}
       <div class="cc-actions" style="display:flex;flex-wrap:wrap;gap:8px;">
+        <button onclick="openGroupNotesModal('${g.id}')" style="color:var(--c);">\u{1F4DD} Notas/Tareas</button>
         <button onclick="openMembersModal('${g.id}')">Miembros</button>
         <button onclick="openScheduleModal('${g.id}')">+ Agendar</button>
         <button onclick="openGroupModal('${g.id}')">Editar</button>
@@ -1348,6 +1367,48 @@ async function deleteSchedule(id){
   if(error){if(!chkAuthErr(error))toast(error.message,"err");return;}
   _schedSessions=_schedSessions.filter(s=>s.id!==id);toast("Sesi\u00F3n eliminada","ok");
   if(_currentView==="grupos")renderGrupos();
+}
+
+/* ---- Notas/tareas grupales (broadcast a todos los miembros) ---- */
+// Deriva los envios de notas a un grupo desde _allSessions (cada broadcast son N
+// filas con el mismo group_id+fecha+contenido). Las colapsa a 1 con su conteo.
+function groupBroadcasts(groupId){
+  const rows=_allSessions.filter(s=>s.group_id===groupId);
+  const map={};
+  rows.forEach(s=>{const k=(s.session_date||'')+'|'+(s.notes||'')+'|'+(s.next_plan||'');if(!map[k])map[k]={session_date:s.session_date,notes:s.notes||'',next_plan:s.next_plan||'',count:0,created_at:s.created_at};map[k].count++;});
+  return Object.values(map).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+}
+function openGroupNotesModal(groupId){
+  const g=_allGroups.find(x=>x.id===groupId);
+  document.getElementById("gn-group-id").value=groupId;
+  document.getElementById("gn-group-name").textContent=g?g.name:"";
+  document.getElementById("gn-date").value=new Date().toISOString().split("T")[0];
+  document.getElementById("gn-notes").value="";
+  document.getElementById("gn-plan").value="";
+  document.getElementById("gn-notify").checked=true;
+  openModal("modal-gnotes");
+}
+async function saveGroupNotes(){
+  const groupId=document.getElementById("gn-group-id").value;
+  const notes=document.getElementById("gn-notes").value.trim();
+  const plan=document.getElementById("gn-plan").value.trim();
+  if(!notes&&!plan){toast("Escribe notas o una tarea","err");return;}
+  const btn=document.getElementById("gn-btn");btn.disabled=true;btn.textContent="ENVIANDO...";
+  try{
+    const session=await sb.auth.getSession();const token=session?.data?.session?.access_token;
+    const res=await fetch(CONFIG.SUPABASE_URL+"/functions/v1/broadcast-session-notes",{
+      method:"POST",
+      headers:{"Content-Type":"application/json","Authorization":"Bearer "+token,"apikey":CONFIG.SUPABASE_ANON_KEY},
+      body:JSON.stringify({group_id:groupId,session_date:document.getElementById("gn-date").value,notes,next_plan:plan,notify:document.getElementById("gn-notify").checked})
+    });
+    const out=await res.json().catch(()=>({}));
+    if(!res.ok){toast(out.error||"No se pudo enviar","err");return;}
+    closeModal("modal-gnotes");
+    toast("Enviado a "+(out.inserted||0)+" miembro(s)"+(out.sent?" \u00B7 "+out.sent+" push":"")+" \u2713","ok");
+    await loadData();
+    if(_currentView==="grupos")renderGrupos();
+  }catch(e){toast(e.message||"Error de red","err");}
+  finally{btn.disabled=false;btn.textContent="ENVIAR A TODOS";}
 }
 
 /* ============================================ */

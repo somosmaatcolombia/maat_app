@@ -3045,13 +3045,20 @@ function scheduleNotifications(){
 }
 
 /* ============ NOTAS DEL MENTOR ============ */
+// Etiqueta amigable del tipo de sesion (en vez del valor crudo group/1on1).
+function sesTypeLabel(t){
+  if(t==="group")return lang==='es'?"Sesi\u00F3n grupal":"Group session";
+  if(t==="1on1")return lang==='es'?"Sesi\u00F3n 1:1":"1:1 session";
+  if(t==="async")return "Async";
+  return san(t||(lang==='es'?"Sesi\u00F3n":"Session"));
+}
 function renderMentorNotes(){
   document.getElementById("v-mentor-notes").innerHTML=`
     <div class="sv-header"><button class="btn-back" onclick="gv('v-mas')">\u2039</button><h2>${lang==='es'?'Notas de mi Mentor':'Mentor Notes'}</h2></div>
     ${mentorNotes.length?mentorNotes.map(s=>`
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-          <span style="font-family:var(--font-title);font-size:14px;font-weight:600;">${san(s.session_type||"")} \u2014 ${san(s.session_date||"")}</span>
+          <span style="font-family:var(--font-title);font-size:14px;font-weight:600;">${sesTypeLabel(s.session_type)} \u2014 ${san(s.session_date||"")}</span>
           <span style="font-size:11px;color:var(--mu);">${lang==='es'?'Sem':'Week'} ${s.client_week||"?"}</span>
         </div>
         ${s.notes?`<p style="font-size:13px;color:var(--mu);line-height:1.6;margin-bottom:8px;">${san(s.notes)}</p>`:''}
