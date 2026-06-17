@@ -419,6 +419,7 @@ input:focus-visible,textarea:focus-visible,select:focus-visible{outline:none;bor
     <section id="v-meditacion" class="view" aria-label="Meditaci&oacute;n"></section>
     <section id="v-dailymaat" class="view" aria-label="Daily MAAT"></section>
     <section id="v-mentor-notes" class="view" aria-label="Notas del mentor"></section>
+    <section id="v-sesiones" class="view" aria-label="Pr&oacute;ximas sesiones de mentor&iacute;a"></section>
     <section id="v-biblioteca" class="view" aria-label="Biblioteca de Meditaciones"></section>
     <section id="v-eventos" class="view" aria-label="Pr&oacute;ximos Eventos"></section>
     <section id="v-logros" class="view" aria-label="Logros"></section>
@@ -510,6 +511,7 @@ let _habViewWeek=1;
 let _habitSaveTimer=null;
 let mentorWhatsapp=null;
 let mentorNotes=[];
+let mySessions=[];
 let _belFilter="all";
 let meditations=[],events=[],myEventRegs=[];
 let communityPulse=null;
@@ -770,7 +772,7 @@ async function doLogout(){
   if(_notifTimer){clearInterval(_notifTimer);_notifTimer=null;}
   await sb.auth.signOut();
   user=null;prof=null;cals=[];bels=[];wkp={};ht={};sh=null;chatHistory=[];
-  mentorNotes=[];mentorWhatsapp=null;aiCfg={};_appReady=false;
+  mentorNotes=[];mySessions=[];mentorWhatsapp=null;aiCfg={};_appReady=false;
   document.getElementById("app").style.display="none";
   document.getElementById("auth-screen").classList.add("visible");
 }
@@ -1091,6 +1093,7 @@ async function loadDataSecondary(){
       sb.from("events").select("*").eq("is_active",true).order("event_date",{ascending:true}),
       sb.from("event_registrations").select("event_id,status").eq("user_id",uid),
       sb.rpc("get_community_pulse"),
+      sb.from("mentor_sessions").select("modality,group_id,client_id,title,scheduled_at,location,status").eq("status","scheduled").gte("scheduled_at",new Date().toISOString()).order("scheduled_at",{ascending:true}).limit(20),
     ]);
     if(results[0]?.status==="fulfilled"){const{data,error}=results[0].value;if(!error)bels=data||[];}
     if(results[1]?.status==="fulfilled"){const{data}=results[1].value;if(data)sh=data;}
@@ -1100,6 +1103,7 @@ async function loadDataSecondary(){
     if(results[6]?.status==="fulfilled"){const{data}=results[6].value;if(data)events=data||[];}
     if(results[7]?.status==="fulfilled"){const{data}=results[7].value;if(data)myEventRegs=data||[];}
     if(results[8]?.status==="fulfilled"){const{data}=results[8].value;if(data)communityPulse=data;}
+    if(results[9]?.status==="fulfilled"){const{data}=results[9].value;if(data)mySessions=data||[];}
   }catch(e){_w("loadDataSecondary:",e.message);}
 }
 
@@ -1143,6 +1147,7 @@ function nav(id){
   else if(id==="v-meditacion")renderMeditacion();
   else if(id==="v-dailymaat")renderDailyMaat();
   else if(id==="v-mentor-notes")renderMentorNotes();
+  else if(id==="v-sesiones")renderSesiones();
   else if(id==="v-biblioteca"){
     // Datos secundarios aun cargando -> skeleton
     if(!_appReady&&!meditations.length){document.getElementById("v-biblioteca").innerHTML=skelBiblioteca();}
@@ -1269,6 +1274,8 @@ function renderHome(){
   // Eventos pr\u00F3ximos para graduados
   const now=new Date();
   const upcomingEvents=isGrad?events.filter(e=>new Date(e.event_date)>now&&(e.visible_to==='all'||e.visible_to==='graduates')).slice(0,2):[];
+  // Proxima sesion de mentoria agendada (grupal o 1:1) para el banner de home.
+  const nextSes=(mySessions||[]).filter(s=>s.status!=="cancelled"&&new Date(s.scheduled_at).getTime()>now.getTime()).sort((a,b)=>new Date(a.scheduled_at)-new Date(b.scheduled_at))[0]||null;
   // Hook contextual del Coach IA segun la fase del proceso
   const _coachHooksES=[
     "\u00BFQu\u00E9 est\u00E1s descubriendo sobre ti esta semana?",
@@ -1301,6 +1308,7 @@ function renderHome(){
       <div class="stat-box"><div class="coh-ring-wrap"><svg width="56" height="56"><circle cx="28" cy="28" r="22" fill="none" stroke="var(--bd)" stroke-width="4"/><circle cx="28" cy="28" r="22" fill="none" stroke="${cohColor(coherence)}" stroke-width="4" stroke-dasharray="${Math.round(2*Math.PI*22)}" stroke-dashoffset="${Math.round(2*Math.PI*22*(1-coherence/100))}" stroke-linecap="round"/></svg><span class="coh-ring-val" style="color:${cohColor(coherence)}">${coherence}%</span></div><div class="stat-label" style="cursor:pointer;" onclick="showCohInfo()">${t("coherence_pct")} \u24D8</div></div>
       <div class="stat-box"><div class="stat-val" style="color:${attAvg?attColor(parseFloat(attAvg)):'var(--mu)'}">${attAvg||"\u2014"}</div><div class="stat-label">${t("attitude_avg")}</div></div>
     </div>
+    ${nextSes?`<div class="card" style="margin-top:16px;border-left:3px solid var(--o);cursor:pointer;background:linear-gradient(135deg,rgba(235,160,85,.08),transparent);" onclick="gv('v-sesiones')"><div style="display:flex;align-items:center;gap:12px;"><span style="font-size:22px;">\u{1F4C5}</span><div><div style="font-family:var(--font-title);font-size:14px;font-weight:600;color:var(--text);">${nextSes.modality==='group'?(lang==='es'?'Pr\u00F3xima sesi\u00F3n grupal':'Next group session'):(lang==='es'?'Pr\u00F3xima sesi\u00F3n 1:1':'Next 1:1 session')}</div><div style="font-size:12px;color:var(--o);">${fmtSesDateTime(nextSes.scheduled_at)}</div></div></div></div>`:''}
     ${cals.length===0?`<div class="onboarding-card"><h3>${lang==='es'?'\u00A1Bienvenido a MAAT! \u{1F44B}':'Welcome to MAAT! \u{1F44B}'}</h3><p>${lang==='es'?'Tu primer paso es calibrar tu d\u00EDa. Toma solo 30 segundos y es el inicio de todo tu proceso.':'Your first step is to calibrate your day. It takes just 30 seconds and is the start of your whole journey.'}</p><button class="btn-action" style="width:auto;padding:10px 24px;margin:0;" onclick="gv(\'v-calib\')">${lang==='es'?'Hacer mi primera calibraci\u00F3n \u2192':'Do my first calibration \u2192'}</button></div>`:''}
     ${journeyCard()}
     <div class="cta-calib" onclick="gv('v-calib')"><h3>${t("cta_calib")}</h3><p>${t("cta_calib_sub")}</p></div>
@@ -1966,6 +1974,7 @@ function renderMas(){
       ${prof?.graduated?`<div class="menu-item" onclick="nav('v-eventos')" style="border-color:var(--o);background:var(--o)11;"><div class="menu-icon">\u{1F4C5}</div><div class="menu-label">${lang==='es'?'EVENTOS':'EVENTS'}</div></div>`:''}
       <div class="menu-item" onclick="contactMentor()" style="border-color:var(--m);background:var(--m)11;"><div class="menu-icon">\u{1F4AC}</div><div class="menu-label">${lang==='es'?'Contactar':'Contact'}</div></div>
       ${mentorNotes.length?`<div class="menu-item" onclick="gs('v-mentor-notes')" style="border-color:var(--c);"><div class="menu-icon">\u{1F4CB}</div><div class="menu-label">${lang==='es'?'NOTAS MENTOR':'MENTOR NOTES'}</div></div>`:''}
+      ${mySessions.length?`<div class="menu-item" onclick="gs('v-sesiones')" style="border-color:var(--o);"><div class="menu-icon">\u{1F4C5}</div><div class="menu-label">${lang==='es'?'MIS SESIONES':'MY SESSIONS'}</div></div>`:''}
       <div class="menu-item" onclick="exportProgress()" style="border-color:var(--mu2);"><div class="menu-icon">\u{1F4E5}</div><div class="menu-label">${lang==='es'?'EXPORTAR':'EXPORT'}</div></div>
       <div class="menu-item" onclick="replayTutorial()" style="border-color:var(--mu2);"><div class="menu-icon">\u{1F393}</div><div class="menu-label">${lang==='es'?'VER TUTORIAL':'REPLAY TUTORIAL'}</div></div>
     </div>
@@ -3050,6 +3059,36 @@ function renderMentorNotes(){
       </div>
     `).join(""):`<div class="text-center text-mu" style="padding:40px 0;"><p style="font-size:28px;margin-bottom:8px;">\u{1F4CB}</p><p>${lang==='es'?'Tu mentor a\u00FAn no ha registrado sesiones':'Your mentor has no sessions recorded yet'}</p></div>`}
   `;
+}
+
+// Proximas sesiones agendadas por el mentor (grupales o 1:1). El push de recordatorio
+// aterriza aqui (data.view="sesiones" -> gv("v-sesiones")).
+function renderSesiones(){
+  const now=Date.now();
+  const up=(mySessions||[]).filter(s=>s.status!=="cancelled"&&new Date(s.scheduled_at).getTime()>now-3600000);
+  document.getElementById("v-sesiones").innerHTML=`
+    <div class="sv-header"><button class="btn-back" onclick="gv('v-mas')">\u2039</button><h2>${lang==='es'?'Pr\u00F3ximas sesiones':'Upcoming sessions'}</h2></div>
+    ${up.length?up.map(s=>{
+      const isGroup=s.modality==="group";
+      return `<div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:8px;">
+          <span style="font-family:var(--font-title);font-size:14px;font-weight:600;">${isGroup?(lang==='es'?'Sesi\u00F3n grupal':'Group session'):(lang==='es'?'Sesi\u00F3n 1:1':'1:1 session')}</span>
+          <span style="font-size:11px;color:var(--c);white-space:nowrap;">${fmtSesDateTime(s.scheduled_at)}</span>
+        </div>
+        ${s.title?`<p style="font-size:13px;color:var(--text);margin-bottom:4px;">${san(s.title)}</p>`:''}
+        ${s.location?`<div style="font-size:12px;color:var(--mu);">\u{1F4CD} ${san(s.location)}</div>`:''}
+      </div>`;
+    }).join(""):`<div class="text-center text-mu" style="padding:40px 0;"><p style="font-size:28px;margin-bottom:8px;">\u{1F4C5}</p><p>${lang==='es'?'No tienes sesiones agendadas':'No sessions scheduled'}</p></div>`}
+  `;
+}
+// Formato ASCII de fecha+hora local: "Lun 16 Jun, 7:00 PM"
+function fmtSesDateTime(iso){
+  const d=new Date(iso);
+  const dd=["Dom","Lun","Mar","Mie","Jue","Vie","Sab"];
+  const mm=["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+  let h=d.getHours();const mi=String(d.getMinutes()).padStart(2,"0");
+  const ap=h>=12?"PM":"AM";h=h%12;if(h===0)h=12;
+  return dd[d.getDay()]+" "+d.getDate()+" "+mm[d.getMonth()]+", "+h+":"+mi+" "+ap;
 }
 
 // Offline/online detection

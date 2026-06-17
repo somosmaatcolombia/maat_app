@@ -274,6 +274,10 @@ dialog.m-dialog[open]{display:flex;align-items:flex-start;justify-content:center
         <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
         Notas de Sesi&oacute;n
       </div>
+      <div class="nav-link" data-view="grupos" onclick="goView('grupos')">
+        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        Mentorias Grupales
+      </div>
       <div class="nav-link" data-view="graduados" onclick="goView('graduados')">
         <svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
         Graduados
@@ -328,6 +332,7 @@ dialog.m-dialog[open]{display:flex;align-items:flex-start;justify-content:center
       <div id="v-profile" class="view"></div>
       <div id="v-alerts" class="view"></div>
       <div id="v-sessions" class="view"></div>
+      <div id="v-grupos" class="view"></div>
       <div id="v-mentor-config" class="view"></div>
       <div id="v-traccion" class="view"></div>
       <div id="v-admin-users" class="view"></div>
@@ -364,6 +369,51 @@ dialog.m-dialog[open]{display:flex;align-items:flex-start;justify-content:center
     </div>
     <input type="hidden" id="ms-client-id">
     <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modal-session')">Cancelar</button><button class="btn btn-c" id="ms-btn" onclick="saveSessionNote()">GUARDAR</button></div>
+  </div>
+</dialog>
+<dialog class="m-dialog" id="modal-group">
+  <div class="maat-modal">
+    <h3 id="mg-title">Nuevo Grupo</h3>
+    <div class="session-form">
+      <div><label>Nombre del grupo</label><input type="text" id="mg-name" placeholder="Cohort Enero 2026"></div>
+      <div><label>Descripci&oacute;n (opcional)</label><input type="text" id="mg-desc" placeholder="Grupo de los martes 7pm"></div>
+      <div><label>Fecha de inicio</label><input type="date" id="mg-start"></div>
+      <div><label>Semana inicial</label><input type="number" id="mg-week" min="1" max="16" value="1"></div>
+    </div>
+    <input type="hidden" id="mg-id">
+    <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modal-group')">Cancelar</button><button class="btn btn-c" id="mg-btn" onclick="saveGroup()">GUARDAR</button></div>
+  </div>
+</dialog>
+<dialog class="m-dialog" id="modal-members">
+  <div class="maat-modal">
+    <h3>Miembros del Grupo</h3>
+    <div id="mm-group-name" style="font-weight:600;color:var(--c);margin-bottom:10px;"></div>
+    <p style="font-size:12px;color:var(--mu);margin-bottom:10px;">Un cliente solo puede estar en un grupo activo. Los que ya pertenecen a otro grupo aparecen deshabilitados.</p>
+    <div id="mm-list" style="max-height:50vh;overflow-y:auto;"></div>
+    <input type="hidden" id="mm-group-id">
+    <div class="modal-actions"><button class="btn btn-c" onclick="closeModal('modal-members')">LISTO</button></div>
+  </div>
+</dialog>
+<dialog class="m-dialog" id="modal-schedule">
+  <div class="maat-modal">
+    <h3>Agendar Sesi&oacute;n</h3>
+    <div class="session-form">
+      <div><label>Modalidad</label><select id="sc-modality" onchange="onScheduleModalityChange()"><option value="group">Grupal</option><option value="1on1">Individual (1:1)</option></select></div>
+      <div id="sc-group-wrap"><label>Grupo</label><select id="sc-group"></select></div>
+      <div id="sc-client-wrap" style="display:none;"><label>Cliente</label><select id="sc-client"></select></div>
+      <div><label>T&iacute;tulo (opcional)</label><input type="text" id="sc-title" placeholder="Sesi&oacute;n 3 &middot; Reescribir creencias"></div>
+      <div style="display:flex;gap:10px;"><div style="flex:1;"><label>Fecha</label><input type="date" id="sc-date"></div><div style="flex:1;"><label>Hora</label><input type="time" id="sc-time" value="19:00"></div></div>
+      <div style="display:flex;gap:10px;"><div style="flex:1;"><label>Duraci&oacute;n (min)</label><input type="number" id="sc-dur" min="15" step="15" value="60"></div><div style="flex:1;"><label>Lugar / link</label><input type="text" id="sc-loc" placeholder="Zoom, Meet..."></div></div>
+      <div><label>Recordatorios push</label>
+        <div style="display:flex;flex-wrap:wrap;gap:12px;font-size:13px;color:var(--text);padding:4px 0;">
+          <label style="display:flex;align-items:center;gap:5px;font-weight:400;letter-spacing:0;text-transform:none;"><input type="checkbox" id="sc-r1440" checked style="width:auto;"> 24 horas antes</label>
+          <label style="display:flex;align-items:center;gap:5px;font-weight:400;letter-spacing:0;text-transform:none;"><input type="checkbox" id="sc-r60" checked style="width:auto;"> 1 hora antes</label>
+          <label style="display:flex;align-items:center;gap:5px;font-weight:400;letter-spacing:0;text-transform:none;"><input type="checkbox" id="sc-r15" style="width:auto;"> 15 min antes</label>
+        </div>
+      </div>
+    </div>
+    <input type="hidden" id="sc-id">
+    <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modal-schedule')">Cancelar</button><button class="btn btn-c" id="sc-btn" onclick="saveSchedule()">AGENDAR</button></div>
   </div>
 </dialog>
 <dialog class="m-dialog" id="modal-role">
@@ -405,6 +455,7 @@ const sb=supabase.createClient(CONFIG.SUPABASE_URL,CONFIG.SUPABASE_ANON_KEY);
 /* ============================================ */
 let user=null,prof=null,myRole="client";
 let _allProfiles=[],_clientIds=[],_allCals=[],_allWkp=[],_allHt=[],_allSessions=[],_allUsers=[];
+let _allGroups=[],_allMembers=[],_schedSessions=[];
 let _clientMetrics={};
 let _currentView="overview",_selectedClient=null;
 let theme=localStorage.getItem("maat-m-theme")||(window.matchMedia('(prefers-color-scheme:light)').matches?'light':'dark');
@@ -587,6 +638,9 @@ async function loadData(){
       _allProfiles=profs||[];
     }else _allProfiles=[];
   }
+  // Grupos, membresias y sesiones agendadas (siempre, aunque no haya clientes aun)
+  await loadGroupsAndSchedule();
+
   if(!_clientIds.length){_allCals=[];_allWkp=[];_allHt=[];_allSessions=[];_clientMetrics={};return;}
 
   // Ventana de 90 dias: las metricas (coherencia, racha, alertas) solo miran lo reciente.
@@ -619,6 +673,25 @@ async function loadData(){
   _allHt=r3.status==="fulfilled"?(r3.value.data||[]):[];
   _allSessions=r4.status==="fulfilled"?(r4.value.data||[]):[];
   computeMetrics();
+}
+
+// Grupos (cohortes), membresias y sesiones agendadas del mentor.
+// Carga en paralelo con allSettled (Regla 6) para que un fallo no rompa el resto.
+async function loadGroupsAndSchedule(){
+  const uid=user.id;
+  const isAdmin=myRole==="admin";
+  const gq=sb.from("mentor_groups").select("id,mentor_id,name,description,active,start_date,start_week,created_at").order("created_at",{ascending:false});
+  const sq=sb.from("mentor_sessions").select("id,mentor_id,modality,group_id,client_id,title,scheduled_at,duration_min,location,status,reminder_offsets").order("scheduled_at",{ascending:true}).limit(200);
+  if(!isAdmin){gq.eq("mentor_id",uid);sq.eq("mentor_id",uid);}
+  const[rg,rs]=await Promise.allSettled([gq,sq]);
+  _allGroups=rg.status==="fulfilled"?(rg.value.data||[]):[];
+  _schedSessions=rs.status==="fulfilled"?(rs.value.data||[]):[];
+  // Miembros de los grupos cargados
+  const gids=_allGroups.map(g=>g.id);
+  if(gids.length){
+    const{data:mem}=await sb.from("mentor_group_members").select("id,group_id,client_id,active,joined_at").in("group_id",gids);
+    _allMembers=mem||[];
+  }else _allMembers=[];
 }
 
 // Carga bajo demanda: textos completos de las ultimas 10 calibraciones de UN cliente.
@@ -686,12 +759,13 @@ function goView(viewId){
   const el=document.getElementById("v-"+viewId);if(el)el.classList.add("active");
   document.querySelectorAll(".nav-link").forEach(n=>{n.classList.toggle("active",n.dataset.view===viewId);});
   closeSidebar();
-  const titles={overview:"Resumen",clients:"Mis Clientes",profile:"Perfil del Cliente",alerts:"Alertas",sessions:"Notas de Sesi\u00F3n","mentor-config":"Mi Configuraci\u00F3n","admin-users":"Usuarios","admin-prompt":"Coach IA Config",graduados:"Graduados",meditaciones:"Meditaciones",eventos:"Eventos",traccion:"Traccion / Metricas"};
+  const titles={overview:"Resumen",clients:"Mis Clientes",profile:"Perfil del Cliente",alerts:"Alertas",sessions:"Notas de Sesi\u00F3n",grupos:"Mentorias Grupales","mentor-config":"Mi Configuraci\u00F3n","admin-users":"Usuarios","admin-prompt":"Coach IA Config",graduados:"Graduados",meditaciones:"Meditaciones",eventos:"Eventos",traccion:"Traccion / Metricas"};
   document.getElementById("topbar-title").textContent=titles[viewId]||"MAAT";
   if(viewId==="overview")renderOverview();
   else if(viewId==="clients")renderClients();
   else if(viewId==="alerts")renderAlerts();
   else if(viewId==="sessions")renderSessions();
+  else if(viewId==="grupos")renderGrupos();
   else if(viewId==="mentor-config")renderMentorConfig();
   else if(viewId==="admin-users")renderAdminUsers();
   else if(viewId==="admin-prompt")loadAIPrompt();
@@ -768,12 +842,13 @@ function renderClients(){
       const m=_clientMetrics[p.id]||{};
       const phase=getPhase(m.week||1);
       const isInactive=p.active===false;
+      const gname=clientGroupName(p.id);
       return`<div class="client-card" style="${isInactive?'opacity:.55;border-color:var(--r)!important;':''}">
         ${m.hasAlert?'<div class="cc-alert"></div>':""}
         ${isInactive?'<div style="position:absolute;top:10px;right:10px;background:var(--r);color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;letter-spacing:.5px;">DESACTIVADO</div>':''}
         <div class="cc-top">
           <div class="cc-avatar" style="background:${getPhaseHex(phase)}">${san((m.name||"?")[0].toUpperCase())}</div>
-          <div><div class="cc-name">${san(m.name)}${p.graduated?' \u{1F393}':''}</div><div class="cc-week">${p.graduated?'Graduado':'Semana '+m.week+' \u00B7 Fase '+phase}</div></div>
+          <div><div class="cc-name">${san(m.name)}${p.graduated?' \u{1F393}':''}</div><div class="cc-week">${p.graduated?'Graduado':'Semana '+m.week+' \u00B7 Fase '+phase}</div>${gname?`<div style="font-size:10px;color:var(--c);margin-top:2px;">\u{1F465} ${san(gname)}</div>`:'<div style="font-size:10px;color:var(--mu);margin-top:2px;">Individual 1:1</div>'}</div>
         </div>
         <div class="cc-metrics">
           <div class="cc-metric"><div class="val" style="color:${m.coherence!==null?cohColor(m.coherence):'var(--mu)'}">${m.coherence!==null?m.coherence+'%':'\u2014'}</div><div class="lbl">Coherencia</div></div>
@@ -1068,6 +1143,211 @@ async function saveSessionNote(){
     if(_currentView==="profile")renderProfile();
     else if(_currentView==="sessions")renderSessions();
   }finally{btn.disabled=false;btn.textContent="GUARDAR";}
+}
+
+/* ============================================ */
+/* MENTORIAS GRUPALES (grupos + agenda)         */
+/* ============================================ */
+function clientName(id){
+  if(!id)return "Cliente";
+  const m=_clientMetrics[id];if(m&&m.name)return m.name;
+  const p=_allProfiles.find(x=>x.id===id);return p?(p.full_name||"Sin nombre"):"Cliente";
+}
+// Grupo activo de un cliente (o null) -> usado para el badge en la lista de clientes.
+function clientGroupName(clientId){
+  const m=_allMembers.find(x=>x.client_id===clientId&&x.active!==false);
+  if(!m)return null;
+  const g=_allGroups.find(x=>x.id===m.group_id);
+  return g?g.name:null;
+}
+// Estadisticas del cohort: # miembros, coherencia promedio, # en alerta.
+function groupStats(groupId){
+  const members=_allMembers.filter(m=>m.group_id===groupId&&m.active!==false);
+  const cohs=members.map(m=>(_clientMetrics[m.client_id]||{}).coherence).filter(v=>v!==null&&v!==undefined);
+  const avg=cohs.length?Math.round(cohs.reduce((a,b)=>a+b,0)/cohs.length):null;
+  const alerts=members.filter(m=>(_clientMetrics[m.client_id]||{}).hasAlert).length;
+  return{count:members.length,avgCoh:avg,alerts,members};
+}
+// Formato ASCII de fecha+hora local: "Lun 16 Jun, 7:00 PM"
+function fmtDateTime(iso){
+  const d=new Date(iso);
+  const days=["Dom","Lun","Mar","Mie","Jue","Vie","Sab"];
+  const mons=["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+  let h=d.getHours();const mi=String(d.getMinutes()).padStart(2,"0");
+  const ap=h>=12?"PM":"AM";h=h%12;if(h===0)h=12;
+  return days[d.getDay()]+" "+d.getDate()+" "+mons[d.getMonth()]+", "+h+":"+mi+" "+ap;
+}
+
+function renderGrupos(){
+  const now=Date.now();
+  const upcoming=_schedSessions.filter(s=>s.status!=="cancelled"&&new Date(s.scheduled_at).getTime()>now-3600000).slice(0,12);
+  const agendaHtml=upcoming.length?upcoming.map(s=>{
+    const isGroup=s.modality==="group";
+    const target=isGroup?((_allGroups.find(g=>g.id===s.group_id)||{}).name||"Grupo"):clientName(s.client_id);
+    return`<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--bd);">
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;"><span class="badge ${isGroup?'badge-info':'badge-ok'}">${isGroup?'Grupal':'1:1'}</span><strong>${san(target)}</strong></div>
+        <div style="font-size:12px;color:var(--mu);margin-top:3px;">\u{1F4C5} ${fmtDateTime(s.scheduled_at)}${s.location?' \u00B7 '+san(s.location):''}</div>
+        ${s.title?`<div style="font-size:12px;color:var(--c);">${san(s.title)}</div>`:''}
+      </div>
+      <button class="btn btn-outline" style="padding:4px 10px;font-size:12px;" onclick="deleteSchedule('${s.id}')" title="Eliminar">\u2715</button>
+    </div>`;
+  }).join(""):'<p style="color:var(--mu);font-size:13px;">No hay sesiones agendadas.</p>';
+
+  const groupsHtml=_allGroups.length?_allGroups.map(g=>{
+    const st=groupStats(g.id);
+    const chips=st.members.map(m=>{const nm=clientName(m.client_id);const c=(_clientMetrics[m.client_id]||{}).coherence;return`<span class="badge badge-info" style="font-size:11px;">${san(nm)}${(c!==null&&c!==undefined)?' \u00B7 '+c+'%':''}</span>`;}).join(" ")||'<span style="color:var(--mu);font-size:12px;">Sin miembros</span>';
+    return`<div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+        <div><div class="card-title">${san(g.name)}${g.active===false?' <span class="badge badge-alert">inactivo</span>':''}</div>${g.description?`<div style="font-size:12px;color:var(--mu);">${san(g.description)}</div>`:''}</div>
+        <div style="text-align:right;white-space:nowrap;"><div style="font-size:22px;font-weight:700;color:${st.avgCoh!==null?cohColor(st.avgCoh):'var(--mu)'}">${st.avgCoh!==null?st.avgCoh+'%':'\u2014'}</div><div style="font-size:10px;color:var(--mu);">Coherencia cohort</div></div>
+      </div>
+      <div style="font-size:12px;color:var(--mu);margin:8px 0;">${st.count} miembro${st.count!==1?'s':''}${st.alerts?' \u00B7 <span style="color:var(--r);">'+st.alerts+' en alerta</span>':''}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px;">${chips}</div>
+      <div class="cc-actions" style="display:flex;flex-wrap:wrap;gap:8px;">
+        <button onclick="openMembersModal('${g.id}')">Miembros</button>
+        <button onclick="openScheduleModal('${g.id}')">+ Agendar</button>
+        <button onclick="openGroupModal('${g.id}')">Editar</button>
+        <button onclick="deleteGroup('${g.id}')" style="color:var(--r);">Eliminar</button>
+      </div>
+    </div>`;
+  }).join(""):'<div class="empty"><div class="icon">\u{1F465}</div><p>Aun no has creado grupos. Crea el primero para gestionar tus mentorias grupales.</p></div>';
+
+  document.getElementById("v-grupos").innerHTML=`
+    <div class="search-bar">
+      <button class="btn btn-c" onclick="openGroupModal('')">+ Crear Grupo</button>
+      <button class="btn btn-outline" onclick="openScheduleModal('')">+ Agendar Sesi\u00F3n</button>
+    </div>
+    <div class="card"><div class="card-title">\u{1F4C5} Pr\u00F3ximas sesiones</div>${agendaHtml}</div>
+    ${groupsHtml}`;
+}
+
+/* ---- Grupo: crear / editar / eliminar ---- */
+function openGroupModal(id){
+  const g=id?_allGroups.find(x=>x.id===id):null;
+  document.getElementById("mg-title").textContent=g?"Editar Grupo":"Nuevo Grupo";
+  document.getElementById("mg-id").value=g?g.id:"";
+  document.getElementById("mg-name").value=g?g.name:"";
+  document.getElementById("mg-desc").value=g?(g.description||""):"";
+  document.getElementById("mg-start").value=(g&&g.start_date)?g.start_date:new Date().toISOString().split("T")[0];
+  document.getElementById("mg-week").value=g?(g.start_week||1):1;
+  openModal("modal-group");
+}
+async function saveGroup(){
+  const name=document.getElementById("mg-name").value.trim();
+  if(!name){toast("Nombre requerido","err");return;}
+  const id=document.getElementById("mg-id").value;
+  const payload={name,description:document.getElementById("mg-desc").value.trim(),start_date:document.getElementById("mg-start").value||null,start_week:parseInt(document.getElementById("mg-week").value)||1};
+  const btn=document.getElementById("mg-btn");btn.disabled=true;btn.textContent="GUARDANDO...";
+  try{
+    let error;
+    if(id){({error}=await sb.from("mentor_groups").update(payload).eq("id",id));}
+    else{({error}=await sb.from("mentor_groups").insert({...payload,mentor_id:user.id}));}
+    if(error){if(!chkAuthErr(error))toast(error.message,"err");return;}
+    await loadGroupsAndSchedule();closeModal("modal-group");toast("Grupo guardado \u2713","ok");
+    if(_currentView==="grupos")renderGrupos();
+  }finally{btn.disabled=false;btn.textContent="GUARDAR";}
+}
+async function deleteGroup(id){
+  if(!confirm("Eliminar este grupo? Se quitaran sus miembros y sesiones agendadas."))return;
+  const{error}=await sb.from("mentor_groups").delete().eq("id",id);
+  if(error){if(!chkAuthErr(error))toast(error.message,"err");return;}
+  await loadGroupsAndSchedule();toast("Grupo eliminado","ok");
+  if(_currentView==="grupos")renderGrupos();
+}
+
+/* ---- Miembros del grupo (1 grupo activo por cliente) ---- */
+function openMembersModal(groupId){renderMembersList(groupId);openModal("modal-members");}
+function renderMembersList(groupId){
+  document.getElementById("mm-group-id").value=groupId;
+  const g=_allGroups.find(x=>x.id===groupId);
+  document.getElementById("mm-group-name").textContent=g?g.name:"";
+  const rows=_allProfiles.map(p=>{
+    const inThis=_allMembers.some(m=>m.group_id===groupId&&m.client_id===p.id&&m.active!==false);
+    const other=_allMembers.find(m=>m.client_id===p.id&&m.active!==false&&m.group_id!==groupId);
+    const disabled=other&&!inThis;
+    const otherName=other?((_allGroups.find(x=>x.id===other.group_id)||{}).name||"otro grupo"):"";
+    return`<label style="display:flex;align-items:center;gap:8px;padding:8px 4px;border-bottom:1px solid var(--bd);${disabled?'opacity:.5;':''}">
+      <input type="checkbox" style="width:auto;" ${inThis?'checked':''} ${disabled?'disabled':''} onchange="toggleMember('${groupId}','${p.id}',this.checked)">
+      <span>${san(p.full_name||"Sin nombre")}</span>
+      ${disabled?`<span class="badge badge-alert" style="margin-left:auto;font-size:10px;">en ${san(otherName)}</span>`:''}
+    </label>`;
+  }).join("");
+  document.getElementById("mm-list").innerHTML=rows||'<p style="color:var(--mu);">No tienes clientes aun.</p>';
+}
+async function toggleMember(groupId,clientId,checked){
+  if(checked){
+    const{error}=await sb.from("mentor_group_members").insert({group_id:groupId,client_id:clientId,active:true});
+    if(error){if(!chkAuthErr(error))toast(error.message,"err");renderMembersList(groupId);return;}
+  }else{
+    const{error}=await sb.from("mentor_group_members").delete().eq("group_id",groupId).eq("client_id",clientId);
+    if(error){if(!chkAuthErr(error))toast(error.message,"err");return;}
+  }
+  await loadGroupsAndSchedule();renderMembersList(groupId);
+  if(_currentView==="grupos")renderGrupos();
+}
+
+/* ---- Agendar sesion (grupal o 1:1) con recordatorios ---- */
+function openScheduleModal(presetGroupId){
+  document.getElementById("sc-id").value="";
+  const activeGroups=_allGroups.filter(g=>g.active!==false);
+  document.getElementById("sc-group").innerHTML=activeGroups.map(g=>`<option value="${g.id}">${san(g.name)}</option>`).join("")||'<option value="">(sin grupos)</option>';
+  document.getElementById("sc-client").innerHTML=_allProfiles.map(p=>`<option value="${p.id}">${san(p.full_name||"Sin nombre")}</option>`).join("")||'<option value="">(sin clientes)</option>';
+  document.getElementById("sc-modality").value=presetGroupId?"group":(activeGroups.length?"group":"1on1");
+  if(presetGroupId)document.getElementById("sc-group").value=presetGroupId;
+  document.getElementById("sc-title").value="";
+  document.getElementById("sc-date").value=new Date().toISOString().split("T")[0];
+  document.getElementById("sc-time").value="19:00";
+  document.getElementById("sc-dur").value="60";
+  document.getElementById("sc-loc").value="";
+  document.getElementById("sc-r1440").checked=true;
+  document.getElementById("sc-r60").checked=true;
+  document.getElementById("sc-r15").checked=false;
+  onScheduleModalityChange();openModal("modal-schedule");
+}
+function onScheduleModalityChange(){
+  const isGroup=document.getElementById("sc-modality").value==="group";
+  document.getElementById("sc-group-wrap").style.display=isGroup?"":"none";
+  document.getElementById("sc-client-wrap").style.display=isGroup?"none":"";
+}
+async function saveSchedule(){
+  const modality=document.getElementById("sc-modality").value;
+  const dateStr=document.getElementById("sc-date").value;
+  const timeStr=document.getElementById("sc-time").value;
+  if(!dateStr||!timeStr){toast("Fecha y hora requeridas","err");return;}
+  const groupId=document.getElementById("sc-group").value;
+  const clientId=document.getElementById("sc-client").value;
+  if(modality==="group"&&!groupId){toast("Selecciona un grupo","err");return;}
+  if(modality==="1on1"&&!clientId){toast("Selecciona un cliente","err");return;}
+  const scheduled=new Date(dateStr+"T"+timeStr).toISOString();
+  const offs=[];
+  if(document.getElementById("sc-r1440").checked)offs.push(1440);
+  if(document.getElementById("sc-r60").checked)offs.push(60);
+  if(document.getElementById("sc-r15").checked)offs.push(15);
+  const btn=document.getElementById("sc-btn");btn.disabled=true;btn.textContent="AGENDANDO...";
+  try{
+    const{data,error}=await sb.from("mentor_sessions").insert({
+      mentor_id:user.id,modality,
+      group_id:modality==="group"?groupId:null,
+      client_id:modality==="1on1"?clientId:null,
+      title:document.getElementById("sc-title").value.trim(),
+      scheduled_at:scheduled,
+      duration_min:parseInt(document.getElementById("sc-dur").value)||60,
+      location:document.getElementById("sc-loc").value.trim(),
+      reminder_offsets:offs
+    }).select().single();
+    if(error){if(!chkAuthErr(error))toast(error.message,"err");return;}
+    _schedSessions.push(data);_schedSessions.sort((a,b)=>new Date(a.scheduled_at)-new Date(b.scheduled_at));
+    closeModal("modal-schedule");toast("Sesi\u00F3n agendada \u2713","ok");
+    if(_currentView==="grupos")renderGrupos();
+  }finally{btn.disabled=false;btn.textContent="AGENDAR";}
+}
+async function deleteSchedule(id){
+  if(!confirm("Eliminar esta sesi\u00F3n agendada?"))return;
+  const{error}=await sb.from("mentor_sessions").delete().eq("id",id);
+  if(error){if(!chkAuthErr(error))toast(error.message,"err");return;}
+  _schedSessions=_schedSessions.filter(s=>s.id!==id);toast("Sesi\u00F3n eliminada","ok");
+  if(_currentView==="grupos")renderGrupos();
 }
 
 /* ============================================ */
