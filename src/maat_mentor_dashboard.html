@@ -772,6 +772,7 @@ function computeMetrics(){
       coherence,habPct,attAvg,daysSince,hasAlert,attHist,progressPct,learningNotes,
       name:p.full_name||"Sin nombre",
       week:p.current_week||1,
+      suspended:p.active===false,
     };
   });
 }
@@ -806,17 +807,19 @@ function goView(viewId){
 /* OVERVIEW                                     */
 /* ============================================ */
 function renderOverview(){
-  const total=_allProfiles.length;
-  const alertCount=Object.values(_clientMetrics).filter(m=>m.hasAlert).length;
-  const allCoh=Object.values(_clientMetrics).filter(m=>m.coherence!==null);
+  // Los clientes suspendidos (pago pausado) no cuentan en las metricas generales.
+  const liveMetrics=Object.values(_clientMetrics).filter(m=>!m.suspended);
+  const total=liveMetrics.length;
+  const alertCount=liveMetrics.filter(m=>m.hasAlert).length;
+  const allCoh=liveMetrics.filter(m=>m.coherence!==null);
   const avgCoh=allCoh.length?Math.round(allCoh.reduce((s,m)=>s+m.coherence,0)/allCoh.length):null;
-  const allAtt=Object.values(_clientMetrics).filter(m=>m.attAvg!==null);
+  const allAtt=liveMetrics.filter(m=>m.attAvg!==null);
   const avgAtt=allAtt.length?(allAtt.reduce((s,m)=>s+m.attAvg,0)/allAtt.length).toFixed(1):null;
 
   const today=new Date();today.setHours(0,0,0,0);
   const activeToday=new Set(_allCals.filter(c=>{const d=new Date(c.created_at);d.setHours(0,0,0,0);return d.getTime()===today.getTime();}).map(c=>c.user_id));
 
-  const alerts=Object.entries(_clientMetrics).filter(([_,m])=>m.hasAlert).slice(0,5);
+  const alerts=Object.entries(_clientMetrics).filter(([_,m])=>m.hasAlert&&!m.suspended).slice(0,5);
   const recentCals=_allCals.slice(0,8);
 
   document.getElementById("v-overview").innerHTML=`
@@ -1190,12 +1193,16 @@ function clientGroupName(clientId){
   return g?g.name:null;
 }
 // Estadisticas del cohort: # miembros, coherencia promedio, # en alerta.
+// Los clientes suspendidos (pago pausado) no cuentan en coherencia ni alertas,
+// pero siguen apareciendo en la lista de miembros (marcados).
 function groupStats(groupId){
   const members=_allMembers.filter(m=>m.group_id===groupId&&m.active!==false);
-  const cohs=members.map(m=>(_clientMetrics[m.client_id]||{}).coherence).filter(v=>v!==null&&v!==undefined);
+  const live=members.filter(m=>!(_clientMetrics[m.client_id]||{}).suspended);
+  const cohs=live.map(m=>(_clientMetrics[m.client_id]||{}).coherence).filter(v=>v!==null&&v!==undefined);
   const avg=cohs.length?Math.round(cohs.reduce((a,b)=>a+b,0)/cohs.length):null;
-  const alerts=members.filter(m=>(_clientMetrics[m.client_id]||{}).hasAlert).length;
-  return{count:members.length,avgCoh:avg,alerts,members};
+  const alerts=live.filter(m=>(_clientMetrics[m.client_id]||{}).hasAlert).length;
+  const suspended=members.length-live.length;
+  return{count:live.length,total:members.length,suspended,avgCoh:avg,alerts,members};
 }
 // Formato ASCII de fecha+hora local: "Lun 16 Jun, 7:00 PM"
 function fmtDateTime(iso){
@@ -1226,13 +1233,13 @@ function renderGrupos(){
   const groupsHtml=_allGroups.length?_allGroups.map(g=>{
     const st=groupStats(g.id);
     const bc=groupBroadcasts(g.id);
-    const chips=st.members.map(m=>{const nm=clientName(m.client_id);const c=(_clientMetrics[m.client_id]||{}).coherence;return`<span class="badge badge-info" style="font-size:11px;">${san(nm)}${(c!==null&&c!==undefined)?' \u00B7 '+c+'%':''}</span>`;}).join(" ")||'<span style="color:var(--mu);font-size:12px;">Sin miembros</span>';
+    const chips=st.members.map(m=>{const cm=_clientMetrics[m.client_id]||{};const nm=clientName(m.client_id);const c=cm.coherence;const sus=cm.suspended;return`<span class="badge ${sus?'badge-alert':'badge-info'}" style="font-size:11px;${sus?'opacity:.7;':''}">${san(nm)}${sus?' \u23F8':((c!==null&&c!==undefined)?' \u00B7 '+c+'%':'')}</span>`;}).join(" ")||'<span style="color:var(--mu);font-size:12px;">Sin miembros</span>';
     return`<div class="card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
         <div><div class="card-title">${san(g.name)}${g.active===false?' <span class="badge badge-alert">inactivo</span>':''}</div>${g.description?`<div style="font-size:12px;color:var(--mu);">${san(g.description)}</div>`:''}</div>
         <div style="text-align:right;white-space:nowrap;"><div style="font-size:22px;font-weight:700;color:${st.avgCoh!==null?cohColor(st.avgCoh):'var(--mu)'}">${st.avgCoh!==null?st.avgCoh+'%':'\u2014'}</div><div style="font-size:10px;color:var(--mu);">Coherencia cohort</div></div>
       </div>
-      <div style="font-size:12px;color:var(--mu);margin:8px 0;">${st.count} miembro${st.count!==1?'s':''}${st.alerts?' \u00B7 <span style="color:var(--r);">'+st.alerts+' en alerta</span>':''}</div>
+      <div style="font-size:12px;color:var(--mu);margin:8px 0;">${st.count} miembro${st.count!==1?'s':''} activo${st.count!==1?'s':''}${st.suspended?' \u00B7 '+st.suspended+' suspendido'+(st.suspended!==1?'s':''):''}${st.alerts?' \u00B7 <span style="color:var(--r);">'+st.alerts+' en alerta</span>':''}</div>
       <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px;">${chips}</div>
       ${bc.length?`<div style="margin-bottom:12px;">${bc.slice(0,2).map(b=>`<div style="padding:8px 10px;background:rgba(57,161,201,.05);border-left:3px solid var(--c);border-radius:0 8px 8px 0;margin-bottom:6px;"><div style="font-size:11px;color:var(--mu);">\u{1F4DD} ${san(b.session_date||'')} \u00B7 ${b.count} miembro${b.count!==1?'s':''}</div>${b.notes?`<div style="font-size:12px;color:var(--text);">${san(b.notes.slice(0,90))}${b.notes.length>90?'\u2026':''}</div>`:''}${b.next_plan?`<div style="font-size:12px;color:var(--c);">\u279C ${san(b.next_plan.slice(0,80))}${b.next_plan.length>80?'\u2026':''}</div>`:''}</div>`).join('')}</div>`:''}
       <div class="cc-actions" style="display:flex;flex-wrap:wrap;gap:8px;">
