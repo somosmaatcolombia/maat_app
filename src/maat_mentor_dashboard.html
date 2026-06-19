@@ -442,6 +442,18 @@ dialog.m-dialog[open]{display:flex;align-items:flex-start;justify-content:center
     <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modal-role')">Cancelar</button><button class="btn btn-c" id="mr-btn" onclick="saveRole()">CONFIRMAR</button></div>
   </div>
 </dialog>
+<dialog class="m-dialog" id="modal-suspend">
+  <div class="maat-modal">
+    <h3>Suspender acceso</h3>
+    <div id="su-name" style="font-weight:600;color:var(--text);margin-bottom:6px;"></div>
+    <p style="font-size:12px;color:var(--mu);margin-bottom:10px;">El cliente no podr&aacute; iniciar sesi&oacute;n en la app hasta reactivarlo. Queda registrado el motivo y la fecha.</p>
+    <div class="session-form">
+      <div><label>Motivo</label><input type="text" id="su-reason" placeholder="Pago pendiente"></div>
+    </div>
+    <input type="hidden" id="su-uid">
+    <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modal-suspend')">Cancelar</button><button class="btn btn-c" id="su-btn" style="background:var(--r);border-color:var(--r);" onclick="confirmSuspend()">SUSPENDER</button></div>
+  </div>
+</dialog>
 <div id="offline-banner">&#128225; Sin conexi&oacute;n &#8212; revisando...</div>
 <div id="pwa-banner">
   <p>&#128242; Agrega MAAT Mentor a tu pantalla de inicio para una mejor experiencia</p>
@@ -638,7 +650,7 @@ async function loadData(){
     // Filtra clientes en el servidor (la BD comparte con CRM: no traer otros roles)
     // Solo los campos necesarios para listar/buscar
     const{data}=await sb.from("profiles")
-      .select("id,full_name,email,role,active,current_week,graduated,graduated_at,cycle,whatsapp_number,phone,avatar_url,created_at")
+      .select("id,full_name,email,role,active,current_week,graduated,graduated_at,cycle,whatsapp_number,phone,avatar_url,created_at,paid_through,suspended_at,suspended_reason")
       .eq("role","client")
       .order("full_name");
     _allProfiles=data||[];_allUsers=_allProfiles;_clientIds=_allProfiles.map(u=>u.id);
@@ -648,7 +660,7 @@ async function loadData(){
     _clientIds=(mc||[]).map(r=>r.client_id);
     if(_clientIds.length){
       const{data:profs}=await sb.from("profiles")
-        .select("id,full_name,email,role,active,current_week,graduated,graduated_at,cycle,whatsapp_number,phone,avatar_url,created_at")
+        .select("id,full_name,email,role,active,current_week,graduated,graduated_at,cycle,whatsapp_number,phone,avatar_url,created_at,paid_through,suspended_at,suspended_reason")
         .in("id",_clientIds).order("full_name");
       _allProfiles=profs||[];
     }else _allProfiles=[];
@@ -839,6 +851,7 @@ function renderOverview(){
 /* CLIENTS                                      */
 /* ============================================ */
 let _clientSearch="";
+let _adminFilter="todos",_adminSearch="";
 async function reloadClients(){
   toast("Recargando...","");
   await loadData();
@@ -1565,17 +1578,99 @@ async function renderTraccion(){
 /* ============================================ */
 /* ADMIN: USERS                                 */
 /* ============================================ */
+// Dias de vencimiento del pago (positivo = vencido hace N dias). null si no aplica.
+function overdueDays(u){
+  if(!u.paid_through)return null;
+  const today=new Date();today.setHours(0,0,0,0);
+  const pt=new Date(u.paid_through+"T00:00:00");
+  return Math.round((today-pt)/86400000);
+}
 function renderAdminUsers(){
   if(myRole!=="admin")return;
-  document.getElementById("v-admin-users").innerHTML=`<div class="card"><table class="tbl">
-    <thead><tr><th>Nombre</th><th>ID</th><th>Rol</th><th>Semana</th><th>Acci\u00F3n</th></tr></thead>
-    <tbody>${_allUsers.map(u=>`<tr>
-      <td><strong>${san(u.full_name||"\u2014")}</strong></td>
-      <td style="font-family:monospace;font-size:11px;color:var(--mu)">${u.id.slice(0,8)}</td>
-      <td><span class="badge ${u.role==='admin'?'badge-alert':u.role==='mentor'?'badge-info':'badge-ok'}">${u.role||"client"}</span></td>
+  const q=_adminSearch.toLowerCase();
+  let list=_allUsers.filter(u=>!q||(u.full_name||"").toLowerCase().includes(q)||(u.email||"").toLowerCase().includes(q));
+  const nOverdue=_allUsers.filter(u=>u.active!==false&&overdueDays(u)>0).length;
+  const nSusp=_allUsers.filter(u=>u.active===false).length;
+  if(_adminFilter==="vencidos")list=list.filter(u=>u.active!==false&&overdueDays(u)>0);
+  else if(_adminFilter==="suspendidos")list=list.filter(u=>u.active===false);
+  const chip=(id,label,extra)=>`<button class="btn ${_adminFilter===id?'btn-c':'btn-outline'}" style="padding:6px 12px;font-size:12px;" onclick="_adminFilter='${id}';renderAdminUsers()">${label}${extra?' ('+extra+')':''}</button>`;
+  const rows=list.map(u=>{
+    const susp=u.active===false;
+    const od=overdueDays(u);
+    let pago;
+    if(susp)pago=`<span class="badge badge-alert">Suspendido</span>`;
+    else if(od!==null&&od>0)pago=`<span class="badge badge-alert">Vencido ${od}d</span>`;
+    else if(od!==null&&od>=-7)pago=`<span class="badge" style="background:rgba(235,160,85,.15);color:var(--o);">Vence pronto</span>`;
+    else pago=`<span class="badge badge-ok">Al dia</span>`;
+    const pt=u.paid_through?`<div style="font-size:11px;color:var(--mu);margin-top:2px;">paga hasta ${san(u.paid_through)}</div>`:"";
+    const reason=(susp&&u.suspended_reason)?`<div style="font-size:11px;color:var(--r);margin-top:2px;">${san(u.suspended_reason)}</div>`:"";
+    const actions=susp
+      ?`<button class="btn btn-c" style="padding:4px 10px;font-size:11px;" onclick="reactivateUser('${u.id}')">Reactivar</button>`
+      :`<button class="btn btn-outline" style="padding:4px 10px;font-size:11px;color:var(--r);border-color:var(--r);" onclick="openSuspendModal('${u.id}','${san((u.full_name||'').replace(/'/g,""))}')">Suspender</button>`;
+    return`<tr>
+      <td><strong>${san(u.full_name||"\u2014")}</strong><div style="font-size:11px;color:var(--mu);">${san(u.email||"")}</div></td>
+      <td>${pago}${pt}${reason}</td>
       <td>${u.current_week||1}</td>
-      <td><button class="btn btn-outline" style="padding:4px 10px;font-size:11px;" data-uid="${u.id}" data-name="${san(u.full_name||'')}" data-role="${u.role||'client'}" onclick="openRoleModal(this)">Cambiar rol</button></td>
-    </tr>`).join("")}</tbody></table></div>`;
+      <td style="white-space:nowrap;">
+        ${actions}
+        <button class="btn btn-outline" style="padding:4px 10px;font-size:11px;" onclick="registerPayment('${u.id}')" title="Registrar pago (+1 mes)">+ Pago</button>
+        <button class="btn btn-outline" style="padding:4px 10px;font-size:11px;" data-uid="${u.id}" data-name="${san(u.full_name||'')}" data-role="${u.role||'client'}" onclick="openRoleModal(this)">Rol</button>
+      </td>
+    </tr>`;
+  }).join("");
+  document.getElementById("v-admin-users").innerHTML=`
+    <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px;">
+      <input type="text" placeholder="Buscar por nombre o email..." value="${san(_adminSearch)}" oninput="_adminSearch=this.value;renderAdminUsers()" style="flex:1;min-width:200px;padding:8px 12px;background:var(--bg2);border:1px solid var(--bd);border-radius:8px;color:var(--text);">
+      ${chip("todos","Todos")}
+      ${chip("vencidos","Vencidos",nOverdue||"")}
+      ${chip("suspendidos","Suspendidos",nSusp||"")}
+    </div>
+    <div class="card"><table class="tbl">
+      <thead><tr><th>Cliente</th><th>Pago</th><th>Sem</th><th>Acciones</th></tr></thead>
+      <tbody>${rows||`<tr><td colspan="4" style="text-align:center;color:var(--mu);padding:20px;">Sin resultados</td></tr>`}</tbody>
+    </table></div>`;
+}
+// Avanza paid_through un mes desde hoy (o desde la fecha vigente si es futura) y reactiva.
+function nextPaidThrough(current){
+  const today=new Date();today.setHours(0,0,0,0);
+  let base=today;
+  if(current){const c=new Date(current+"T00:00:00");if(c>today)base=c;}
+  const d=new Date(base);d.setMonth(d.getMonth()+1);
+  return d.toISOString().slice(0,10);
+}
+async function registerPayment(uid){
+  const u=_allUsers.find(x=>x.id===uid);if(!u)return;
+  const pt=nextPaidThrough(u.paid_through);
+  if(!confirm("Registrar pago de "+(u.full_name||"este cliente")+"? Quedara al dia hasta "+pt+(u.active===false?" y se reactivara el acceso.":".")))return;
+  const{error}=await sb.from("profiles").update({paid_through:pt,active:true,suspended_at:null,suspended_reason:null,suspended_by:null}).eq("id",uid);
+  if(error){if(!chkAuthErr(error))toast(error.message,"err");return;}
+  u.paid_through=pt;u.active=true;u.suspended_at=null;u.suspended_reason=null;
+  toast("Pago registrado \u2713","ok");renderAdminUsers();
+}
+function openSuspendModal(uid,name){
+  document.getElementById("su-uid").value=uid;
+  document.getElementById("su-name").textContent=name||uid.slice(0,8);
+  document.getElementById("su-reason").value="Pago pendiente";
+  openModal("modal-suspend");
+}
+async function confirmSuspend(){
+  const uid=document.getElementById("su-uid").value;
+  const reason=document.getElementById("su-reason").value.trim()||"Pago pendiente";
+  const btn=document.getElementById("su-btn");btn.disabled=true;btn.textContent="SUSPENDIENDO...";
+  try{
+    const{error}=await sb.from("profiles").update({active:false,suspended_at:new Date().toISOString(),suspended_reason:reason,suspended_by:user.id}).eq("id",uid);
+    if(error){if(!chkAuthErr(error))toast(error.message,"err");return;}
+    const u=_allUsers.find(x=>x.id===uid);if(u){u.active=false;u.suspended_reason=reason;u.suspended_at=new Date().toISOString();}
+    closeModal("modal-suspend");toast("Acceso suspendido","ok");renderAdminUsers();
+  }finally{btn.disabled=false;btn.textContent="SUSPENDER";}
+}
+async function reactivateUser(uid){
+  const u=_allUsers.find(x=>x.id===uid);if(!u)return;
+  if(!confirm("Reactivar el acceso de "+(u.full_name||"este cliente")+"?"))return;
+  const{error}=await sb.from("profiles").update({active:true,suspended_at:null,suspended_reason:null,suspended_by:null}).eq("id",uid);
+  if(error){if(!chkAuthErr(error))toast(error.message,"err");return;}
+  u.active=true;u.suspended_reason=null;u.suspended_at=null;
+  toast("Acceso reactivado \u2713","ok");renderAdminUsers();
 }
 function openRoleModal(el){
   document.getElementById("mr-user").textContent=el.dataset.name||el.dataset.uid.slice(0,8);
