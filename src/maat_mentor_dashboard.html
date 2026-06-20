@@ -9,10 +9,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@400;600;700&family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
-  --c:#39A1C9;--o:#EBA055;--m:#7DCD93;--v:#89608E;--r:#D76B6E;
+  --c:#39A1C9;--o:#EBA055;--m:#7DCD93;--v:#896C8E;--r:#D76B6E;
   --bg:#0d1117;--bg2:#111827;--text:#e8eaf0;--mu:#8892a4;--mu2:#6b7280;
   --bd:rgba(255,255,255,0.08);
-  --phase1:#39A1C9;--phase2:#EBA055;--phase3:#7DCD93;--phase4:#89608E;
+  --phase1:#39A1C9;--phase2:#EBA055;--phase3:#7DCD93;--phase4:#896C8E;
   --radius:14px;--radius-sm:8px;
   --font-title:'Saira Condensed',sans-serif;
   --font-body:'Sora',sans-serif;
@@ -490,7 +490,7 @@ let _pwaPrompt=null;
 
 const PHASE_NAMES=["GRATITUD","AMOR","INTENCI\u00D3N","VOLUNTAD"];
 const PHASE_KEYS=["UNCOVER","REWRITE","REBUILD","INTEGRATE"];
-const PHASE_HEXES=["#39A1C9","#EBA055","#7DCD93","#89608E"];
+const PHASE_HEXES=["#39A1C9","#EBA055","#7DCD93","#896C8E"];
 
 /* ============================================ */
 /* UTILITIES                                    */
@@ -931,7 +931,7 @@ function renderProfile(){
     <div class="profile-header">
       <div class="p-avatar" style="background:${getPhaseHex(phase)}">${san((m.name||"?")[0].toUpperCase())}</div>
       <div class="p-info">
-        <h3>${san(m.name)}${p.graduated?' <span class="badge" style="background:#89608E22;color:#89608E;font-size:10px;">\u{1F393} Graduado</span>':''}</h3>
+        <h3>${san(m.name)}${p.graduated?' <span class="badge" style="background:#896C8E22;color:#896C8E;font-size:10px;">\u{1F393} Graduado</span>':''}</h3>
         <p>${p.graduated?`Graduado el ${p.graduated_at?new Date(p.graduated_at).toLocaleDateString('es-CO'):'\u2014'} \u00B7 Ciclo ${p.cycle||1}`:`Semana ${m.week} \u00B7 Fase ${phase}: ${PHASE_NAMES[phase-1]}`} ${m.hasAlert?'<span class="badge badge-alert">Requiere Atenci\u00F3n</span>':''}</p>
       </div>
     </div>
@@ -973,7 +973,7 @@ function renderProfile(){
     <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
       <button class="btn btn-c" onclick="openSessionModal('${uid}','${san(m.name)}')">+ Nueva Sesi\u00F3n</button>
       <button class="btn btn-outline" id="btn-ai-summary" onclick="genAI('${uid}')">\u{1F916} Resumen IA</button>
-      ${!p.graduated&&(m.week||1)>=16?`<button class="btn" style="background:#89608E;color:#fff;border:none;" onclick="graduateClient('${uid}','${san(m.name)}')">\u{1F393} Graduar</button>`:''}
+      ${!p.graduated&&(m.week||1)>=16?`<button class="btn" style="background:#896C8E;color:#fff;border:none;" onclick="graduateClient('${uid}','${san(m.name)}')">\u{1F393} Graduar</button>`:''}
       ${p.graduated?`<button class="btn btn-outline" onclick="newCycleClient('${uid}','${san(m.name)}')" style="color:var(--o);border-color:var(--o);">\u27F3 Nuevo Ciclo</button>`:''}
       <button class="btn" id="btn-toggle-active" onclick="toggleClientActive('${uid}','${san(m.name)}')" style="background:${p.active===false?'rgba(215,107,110,.15)':'rgba(125,205,147,.15)'};color:${p.active===false?'var(--r)':'var(--m)'};border:1px solid ${p.active===false?'var(--r)':'var(--m)'};">${p.active===false?'\u{1F6AB} Desactivado':'\u2713 Activo'}</button>
     </div>
@@ -1096,9 +1096,9 @@ function renderGraduados(){
       ${grads.map(p=>{
         const m=_clientMetrics[p.id]||{};
         const gradDate=p.graduated_at?new Date(p.graduated_at).toLocaleDateString('es-CO'):'\u2014';
-        return`<div class="client-card" onclick="openProfile('${p.id}')" style="cursor:pointer;border-left:3px solid #89608E;">
+        return`<div class="client-card" onclick="openProfile('${p.id}')" style="cursor:pointer;border-left:3px solid #896C8E;">
           <div style="display:flex;align-items:center;gap:12px;">
-            <div class="c-avatar" style="background:#89608E;font-size:16px;">\u{1F393}</div>
+            <div class="c-avatar" style="background:#896C8E;font-size:16px;">\u{1F393}</div>
             <div style="flex:1;">
               <div style="font-weight:600;color:var(--text);">${san(p.full_name||p.email)}</div>
               <div style="font-size:12px;color:var(--mu);">Graduado ${gradDate} \u00B7 Ciclo ${p.cycle||1}</div>
@@ -1523,7 +1523,7 @@ async function renderTraccion(){
     const w=p.current_week||1;const ph=w<=4?0:w<=8?1:w<=12?2:3;phaseCount[ph]++;
   });
   const phaseNames=["Fase 1: Gratitud","Fase 2: Amor","Fase 3: Intencion","Fase 4: Voluntad"];
-  const phaseHex=["#39A1C9","#EBA055","#7DCD93","#89608E"];
+  const phaseHex=["#39A1C9","#EBA055","#7DCD93","#896C8E"];
   const maxPhase=Math.max(1,...phaseCount,grad);
   // Grafico de actividad diaria
   const maxU=Math.max(1,...series.map(d=>d.users||0));

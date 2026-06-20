@@ -16,10 +16,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@400;600;700&family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
-  --c:#39A1C9;--o:#EBA055;--m:#7DCD93;--v:#89608E;--r:#D76B6E;
+  --c:#39A1C9;--o:#EBA055;--m:#7DCD93;--v:#896C8E;--r:#D76B6E;
   --bg:#0d1117;--bg2:#161b22;--text:#e8eaf0;--mu:#b8c0cc;--mu2:#9aa0ae;
   --bd:rgba(255,255,255,0.12);
-  --phase1:#39A1C9;--phase2:#EBA055;--phase3:#7DCD93;--phase4:#89608E;
+  --phase1:#39A1C9;--phase2:#EBA055;--phase3:#7DCD93;--phase4:#896C8E;
   --radius:14px;--radius-sm:8px;
   --font-title:'Saira Condensed',sans-serif;
   --font-body:'Sora',sans-serif;
@@ -1202,7 +1202,7 @@ function journeyMessage(w){
 
 function journeyCard(){
   const isGrad=!!(prof?.graduated);
-  const phaseHex=["#39A1C9","#EBA055","#7DCD93","#89608E"];
+  const phaseHex=["#39A1C9","#EBA055","#7DCD93","#896C8E"];
   const phaseNames=t("phases");
   const curPhase=getPhase(hwk);
   let track="";
@@ -1255,7 +1255,7 @@ function communityCard(){
   if(today>=3)line=es?`${today} personas ya calibraron hoy`:`${today} people already calibrated today`;
   else if(week>=3)line=es?`${week} personas calibraron esta semana`:`${week} people calibrated this week`;
   else line=es?`${members} personas en transformacion contigo`:`${members} people transforming alongside you`;
-  return `<div class="card" style="margin-top:16px;border-left:3px solid var(--v);background:linear-gradient(135deg,rgba(137,96,142,.08),transparent);">
+  return `<div class="card" style="margin-top:16px;border-left:3px solid var(--v);background:linear-gradient(135deg,rgba(137,108,142,.08),transparent);">
     <div style="display:flex;align-items:center;gap:12px;">
       <div style="font-size:26px;flex-shrink:0;">\u{1F331}</div>
       <div style="flex:1;min-width:0;">
@@ -2006,7 +2006,7 @@ function renderProgress(){
     {id:1,name:t("phases")[0],keyword:t("phase_keywords")[0],desc:t("phase_names")[0],color:"var(--phase1)",hex:"#39A1C9",weeks:[1,2,3,4]},
     {id:2,name:t("phases")[1],keyword:t("phase_keywords")[1],desc:t("phase_names")[1],color:"var(--phase2)",hex:"#EBA055",weeks:[5,6,7,8]},
     {id:3,name:t("phases")[2],keyword:t("phase_keywords")[2],desc:t("phase_names")[2],color:"var(--phase3)",hex:"#7DCD93",weeks:[9,10,11,12]},
-    {id:4,name:t("phases")[3],keyword:t("phase_keywords")[3],desc:t("phase_names")[3],color:"var(--phase4)",hex:"#89608E",weeks:[13,14,15,16]},
+    {id:4,name:t("phases")[3],keyword:t("phase_keywords")[3],desc:t("phase_names")[3],color:"var(--phase4)",hex:"#896C8E",weeks:[13,14,15,16]},
   ];
   document.getElementById("v-progreso").innerHTML=`
     <div class="sv-header"><button class="btn-back" onclick="gv('v-mas')">\u2039</button><h2>${t("progress_title")}</h2></div>
@@ -2602,7 +2602,7 @@ const BOOK={
       ]
     },
     {
-      id:4,color:"var(--phase4)",hex:"#89608E",
+      id:4,color:"var(--phase4)",hex:"#896C8E",
       name_es:"FASE 4 \u2014 VOLUNTAD",name_en:"PHASE 4 \u2014 WILL",
       keyword:"INTEGRATE",weeks:"Semanas 13-16",
       chapters:[

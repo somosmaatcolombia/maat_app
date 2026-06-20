@@ -150,12 +150,12 @@ $$;
 | 1 | 1-4 | GRATITUD | UNCOVER | #39A1C9 |
 | 2 | 5-8 | AMOR | REWRITE | #EBA055 |
 | 3 | 9-12 | INTENCIÓN | REBUILD | #7DCD93 |
-| 4 | 13-16 | VOLUNTAD | INTEGRATE | #89608E |
+| 4 | 13-16 | VOLUNTAD | INTEGRATE | #896C8E |
 
 ## Paleta de colores
 
 ```css
---c:#39A1C9; --o:#EBA055; --m:#7DCD93; --v:#89608E; --r:#D76B6E;
+--c:#39A1C9; --o:#EBA055; --m:#7DCD93; --v:#896C8E; --r:#D76B6E;
 --bg:#0d1117; --bg2:#111827; --text:#e8eaf0; --mu:#8892a4; --mu2:#6b7280;
 --bd:rgba(255,255,255,0.08);
 /* Light: --bg:#f0f4f8 --bg2:#e2e8f0 --text:#1a2030 --mu:#5a6377 */
