@@ -278,6 +278,10 @@ dialog.m-dialog[open]{display:flex;align-items:flex-start;justify-content:center
         <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
         Mentorias Grupales
       </div>
+      <div class="nav-link" data-view="notif" onclick="goView('notif')">
+        <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        Notificaciones
+      </div>
       <div class="nav-link" data-view="graduados" onclick="goView('graduados')">
         <svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
         Graduados
@@ -333,6 +337,7 @@ dialog.m-dialog[open]{display:flex;align-items:flex-start;justify-content:center
       <div id="v-alerts" class="view"></div>
       <div id="v-sessions" class="view"></div>
       <div id="v-grupos" class="view"></div>
+      <div id="v-notif" class="view"></div>
       <div id="v-mentor-config" class="view"></div>
       <div id="v-traccion" class="view"></div>
       <div id="v-admin-users" class="view"></div>
@@ -482,7 +487,7 @@ const sb=supabase.createClient(CONFIG.SUPABASE_URL,CONFIG.SUPABASE_ANON_KEY);
 /* ============================================ */
 let user=null,prof=null,myRole="client";
 let _allProfiles=[],_clientIds=[],_allCals=[],_allWkp=[],_allHt=[],_allSessions=[],_allUsers=[];
-let _allGroups=[],_allMembers=[],_schedSessions=[];
+let _allGroups=[],_allMembers=[],_schedSessions=[],_notifTemplates=[];
 let _clientMetrics={};
 let _currentView="overview",_selectedClient=null;
 let theme=localStorage.getItem("maat-m-theme")||(window.matchMedia('(prefers-color-scheme:light)').matches?'light':'dark');
@@ -709,10 +714,12 @@ async function loadGroupsAndSchedule(){
   const isAdmin=myRole==="admin";
   const gq=sb.from("mentor_groups").select("id,mentor_id,name,description,active,start_date,start_week,created_at").order("created_at",{ascending:false});
   const sq=sb.from("mentor_sessions").select("id,mentor_id,modality,group_id,client_id,title,scheduled_at,duration_min,location,status,reminder_offsets").order("scheduled_at",{ascending:true}).limit(200);
-  if(!isAdmin){gq.eq("mentor_id",uid);sq.eq("mentor_id",uid);}
-  const[rg,rs]=await Promise.allSettled([gq,sq]);
+  const tq=sb.from("notification_templates").select("id,mentor_id,title,body,audience,group_id,last_sent_at,created_at").order("created_at",{ascending:false}).limit(100);
+  if(!isAdmin){gq.eq("mentor_id",uid);sq.eq("mentor_id",uid);tq.eq("mentor_id",uid);}
+  const[rg,rs,rt]=await Promise.allSettled([gq,sq,tq]);
   _allGroups=rg.status==="fulfilled"?(rg.value.data||[]):[];
   _schedSessions=rs.status==="fulfilled"?(rs.value.data||[]):[];
+  _notifTemplates=rt.status==="fulfilled"?(rt.value.data||[]):[];
   // Miembros de los grupos cargados
   const gids=_allGroups.map(g=>g.id);
   if(gids.length){
@@ -787,13 +794,14 @@ function goView(viewId){
   const el=document.getElementById("v-"+viewId);if(el)el.classList.add("active");
   document.querySelectorAll(".nav-link").forEach(n=>{n.classList.toggle("active",n.dataset.view===viewId);});
   closeSidebar();
-  const titles={overview:"Resumen",clients:"Mis Clientes",profile:"Perfil del Cliente",alerts:"Alertas",sessions:"Notas de Sesi\u00F3n",grupos:"Mentorias Grupales","mentor-config":"Mi Configuraci\u00F3n","admin-users":"Usuarios","admin-prompt":"Coach IA Config",graduados:"Graduados",meditaciones:"Meditaciones",eventos:"Eventos",traccion:"Traccion / Metricas"};
+  const titles={overview:"Resumen",clients:"Mis Clientes",profile:"Perfil del Cliente",alerts:"Alertas",sessions:"Notas de Sesi\u00F3n",grupos:"Mentorias Grupales",notif:"Notificaciones","mentor-config":"Mi Configuraci\u00F3n","admin-users":"Usuarios","admin-prompt":"Coach IA Config",graduados:"Graduados",meditaciones:"Meditaciones",eventos:"Eventos",traccion:"Traccion / Metricas"};
   document.getElementById("topbar-title").textContent=titles[viewId]||"MAAT";
   if(viewId==="overview")renderOverview();
   else if(viewId==="clients")renderClients();
   else if(viewId==="alerts")renderAlerts();
   else if(viewId==="sessions")renderSessions();
   else if(viewId==="grupos")renderGrupos();
+  else if(viewId==="notif")renderNotif();
   else if(viewId==="mentor-config")renderMentorConfig();
   else if(viewId==="admin-users")renderAdminUsers();
   else if(viewId==="admin-prompt")loadAIPrompt();
@@ -1429,6 +1437,118 @@ async function saveGroupNotes(){
     if(_currentView==="grupos")renderGrupos();
   }catch(e){toast(e.message||"Error de red","err");}
   finally{btn.disabled=false;btn.textContent="ENVIAR A TODOS";}
+}
+
+/* ============================================ */
+/* NOTIFICACIONES (push personalizado + plantillas) */
+/* ============================================ */
+let _notifForm={id:"",title:"",body:"",audience:"all",group_id:""};
+function audienceLabel(t){
+  if(t.audience==="group"){const g=_allGroups.find(x=>x.id===t.group_id);return g?("Grupo: "+g.name):"Grupo";}
+  return "Todos los clientes";
+}
+function renderNotif(){
+  const f=_notifForm;
+  const groupOpts=_allGroups.filter(g=>g.active!==false).map(g=>`<option value="${g.id}" ${f.group_id===g.id?'selected':''}>${san(g.name)}</option>`).join("")||'<option value="">(sin grupos)</option>';
+  const tpls=_notifTemplates.map(t=>`
+    <div class="card" style="padding:14px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+        <div style="min-width:0;">
+          <div style="font-weight:600;color:var(--text);">${san(t.title)}</div>
+          <div style="font-size:12px;color:var(--mu);margin:3px 0;">${san((t.body||'').slice(0,120))}${(t.body||'').length>120?'\u2026':''}</div>
+          <span class="badge ${t.audience==='group'?'badge-info':'badge-ok'}" style="font-size:10px;">${san(audienceLabel(t))}</span>
+          ${t.last_sent_at?`<span style="font-size:10px;color:var(--mu);margin-left:6px;">enviado ${san(new Date(t.last_sent_at).toLocaleDateString('es-CO'))}</span>`:''}
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;white-space:nowrap;">
+          <button class="btn btn-c" style="padding:4px 10px;font-size:11px;" onclick="notifSendTemplate('${t.id}')">Enviar</button>
+          <button class="btn btn-outline" style="padding:4px 10px;font-size:11px;" onclick="notifEdit('${t.id}')">Editar</button>
+          <button class="btn btn-outline" style="padding:4px 10px;font-size:11px;color:var(--r);" onclick="notifDelete('${t.id}')">Eliminar</button>
+        </div>
+      </div>
+    </div>`).join("")||'<p style="color:var(--mu);font-size:13px;">Aun no has guardado plantillas.</p>';
+
+  document.getElementById("v-notif").innerHTML=`
+    <div class="card">
+      <div class="card-title">${f.id?"Editar mensaje":"Nuevo mensaje"}</div>
+      <p style="font-size:12px;color:var(--mu);margin-bottom:12px;">Envia un push a tus clientes en el momento, o guardalo como plantilla para reutilizar. No se envia a clientes suspendidos.</p>
+      <div class="session-form">
+        <div><label>Audiencia</label>
+          <select id="nt-audience" onchange="_notifForm.audience=this.value;renderNotif()">
+            <option value="all" ${f.audience==='all'?'selected':''}>Todos los clientes</option>
+            <option value="group" ${f.audience==='group'?'selected':''}>Un grupo especifico</option>
+          </select>
+        </div>
+        ${f.audience==='group'?`<div><label>Grupo</label><select id="nt-group" onchange="_notifForm.group_id=this.value">${groupOpts}</select></div>`:''}
+        <div><label>Titulo</label><input type="text" id="nt-title" maxlength="80" value="${san(f.title)}" oninput="_notifForm.title=this.value" placeholder="Tu momento de coherencia"></div>
+        <div><label>Mensaje</label><textarea id="nt-body" rows="3" maxlength="180" oninput="_notifForm.body=this.value" placeholder="Recuerda volver a ti. 30 segundos para calibrar tu dia.">${san(f.body)}</textarea></div>
+      </div>
+      <div class="modal-actions" style="justify-content:flex-start;flex-wrap:wrap;">
+        <button class="btn btn-c" id="nt-send" onclick="notifSend()">Enviar ahora</button>
+        <button class="btn btn-outline" id="nt-save" onclick="notifSaveTemplate()">${f.id?"Actualizar plantilla":"Guardar plantilla"}</button>
+        ${f.id?`<button class="btn btn-outline" onclick="notifNew()">Cancelar edicion</button>`:''}
+      </div>
+    </div>
+    <div class="card-title" style="margin:18px 0 8px;">Plantillas guardadas</div>
+    ${tpls}`;
+}
+function notifNew(){_notifForm={id:"",title:"",body:"",audience:"all",group_id:""};renderNotif();}
+function notifEdit(id){
+  const t=_notifTemplates.find(x=>x.id===id);if(!t)return;
+  _notifForm={id:t.id,title:t.title||"",body:t.body||"",audience:t.audience||"all",group_id:t.group_id||""};
+  document.querySelector('.content-area')?.scrollTo({top:0,behavior:'smooth'});
+  renderNotif();
+}
+function notifValidate(){
+  const f=_notifForm;
+  if(!f.title.trim()||!f.body.trim()){toast("Titulo y mensaje requeridos","err");return false;}
+  if(f.audience==="group"&&!f.group_id){toast("Selecciona un grupo","err");return false;}
+  return true;
+}
+async function notifSaveTemplate(){
+  if(!notifValidate())return;
+  const f=_notifForm;
+  const payload={title:f.title.trim(),body:f.body.trim(),audience:f.audience,group_id:f.audience==="group"?f.group_id:null};
+  const btn=document.getElementById("nt-save");btn.disabled=true;btn.textContent="GUARDANDO...";
+  try{
+    let error;
+    if(f.id){({error}=await sb.from("notification_templates").update(payload).eq("id",f.id));}
+    else{({error}=await sb.from("notification_templates").insert({...payload,mentor_id:user.id}));}
+    if(error){if(!chkAuthErr(error))toast(error.message,"err");return;}
+    await loadGroupsAndSchedule();notifNew();toast("Plantilla guardada \u2713","ok");
+  }finally{btn.disabled=false;}
+}
+async function notifDelete(id){
+  if(!confirm("Eliminar esta plantilla?"))return;
+  const{error}=await sb.from("notification_templates").delete().eq("id",id);
+  if(error){if(!chkAuthErr(error))toast(error.message,"err");return;}
+  await loadGroupsAndSchedule();if(_notifForm.id===id)notifNew();else renderNotif();
+  toast("Plantilla eliminada","ok");
+}
+function notifSendTemplate(id){
+  const t=_notifTemplates.find(x=>x.id===id);if(!t)return;
+  _notifForm={id:t.id,title:t.title||"",body:t.body||"",audience:t.audience||"all",group_id:t.group_id||""};
+  notifSend();
+}
+async function notifSend(){
+  if(!notifValidate())return;
+  const f=_notifForm;
+  const aud=f.audience==="group"?("al grupo \""+((_allGroups.find(g=>g.id===f.group_id)||{}).name||"")+"\""):"a TODOS tus clientes";
+  if(!confirm("Enviar esta notificacion "+aud+" ahora?"))return;
+  const btn=document.getElementById("nt-send");if(btn){btn.disabled=true;btn.textContent="ENVIANDO...";}
+  try{
+    const session=await sb.auth.getSession();const token=session?.data?.session?.access_token;
+    const res=await fetch(CONFIG.SUPABASE_URL+"/functions/v1/send-custom-push",{
+      method:"POST",
+      headers:{"Content-Type":"application/json","Authorization":"Bearer "+token,"apikey":CONFIG.SUPABASE_ANON_KEY},
+      body:JSON.stringify({title:f.title.trim(),body:f.body.trim(),audience:f.audience,group_id:f.audience==="group"?f.group_id:null,template_id:f.id||null})
+    });
+    const out=await res.json().catch(()=>({}));
+    if(!res.ok){toast(out.error||"No se pudo enviar","err");return;}
+    toast("Enviado a "+(out.sent||0)+" dispositivo(s) \u00B7 "+(out.recipients||0)+" cliente(s)","ok");
+    await loadGroupsAndSchedule();
+    if(_currentView==="notif")renderNotif();
+  }catch(e){toast(e.message||"Error de red","err");}
+  finally{const b=document.getElementById("nt-send");if(b){b.disabled=false;b.textContent="Enviar ahora";}}
 }
 
 /* ============================================ */
