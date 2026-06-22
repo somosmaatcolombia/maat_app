@@ -459,6 +459,18 @@ dialog.m-dialog[open]{display:flex;align-items:flex-start;justify-content:center
     <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modal-suspend')">Cancelar</button><button class="btn btn-c" id="su-btn" style="background:var(--r);border-color:var(--r);" onclick="confirmSuspend()">SUSPENDER</button></div>
   </div>
 </dialog>
+<dialog class="m-dialog" id="modal-slot">
+  <div class="maat-modal">
+    <h3 id="sl-title-h">Mensaje autom&aacute;tico</h3>
+    <p style="font-size:12px;color:var(--mu);margin-bottom:10px;">Este texto se usar&aacute; en los pr&oacute;ximos env&iacute;os autom&aacute;ticos de esta franja, para todos los clientes.</p>
+    <div class="session-form">
+      <div><label>T&iacute;tulo</label><input type="text" id="sl-title" maxlength="80"></div>
+      <div><label>Mensaje</label><textarea id="sl-body" rows="3" maxlength="180"></textarea></div>
+    </div>
+    <input type="hidden" id="sl-slot">
+    <div class="modal-actions"><button class="btn btn-outline" onclick="resetSlot()">Restaurar default</button><button class="btn btn-outline" onclick="closeModal('modal-slot')">Cancelar</button><button class="btn btn-c" id="sl-btn" onclick="saveSlot()">GUARDAR</button></div>
+  </div>
+</dialog>
 <div id="offline-banner">&#128225; Sin conexi&oacute;n &#8212; revisando...</div>
 <div id="pwa-banner">
   <p>&#128242; Agrega MAAT Mentor a tu pantalla de inicio para una mejor experiencia</p>
@@ -714,7 +726,7 @@ async function loadGroupsAndSchedule(){
   const isAdmin=myRole==="admin";
   const gq=sb.from("mentor_groups").select("id,mentor_id,name,description,active,start_date,start_week,created_at").order("created_at",{ascending:false});
   const sq=sb.from("mentor_sessions").select("id,mentor_id,modality,group_id,client_id,title,scheduled_at,duration_min,location,status,reminder_offsets").order("scheduled_at",{ascending:true}).limit(200);
-  const tq=sb.from("notification_templates").select("id,mentor_id,title,body,audience,group_id,last_sent_at,created_at").order("created_at",{ascending:false}).limit(100);
+  const tq=sb.from("notification_templates").select("id,mentor_id,title,body,audience,group_id,slot,is_active,last_sent_at,created_at").order("created_at",{ascending:false}).limit(100);
   if(!isAdmin){gq.eq("mentor_id",uid);sq.eq("mentor_id",uid);tq.eq("mentor_id",uid);}
   const[rg,rs,rt]=await Promise.allSettled([gq,sq,tq]);
   _allGroups=rg.status==="fulfilled"?(rg.value.data||[]):[];
@@ -1443,6 +1455,14 @@ async function saveGroupNotes(){
 /* NOTIFICACIONES (push personalizado + plantillas) */
 /* ============================================ */
 let _notifForm={id:"",title:"",body:"",audience:"all",group_id:""};
+// Copys por defecto de cada ranura del ritual (deben coincidir con la edge function).
+const SLOT_DEFAULTS={
+  morning:["Tu momento llego","30 segundos para elegir conscientemente tu dia."],
+  evening:["Cierra tu dia","Marca tus habitos y toma un momento para reflexionar."],
+  coherence:["Vuelve a ti","La coherencia no es perfeccion, es volver. Hoy es un buen dia para volver."],
+  weekly:["Cierra tu semana","Evalua tu semana y elige como empiezas la proxima."]
+};
+const SLOT_TITLES={morning:"Mensaje de la manana",evening:"Mensaje de la noche",coherence:"Ancla de coherencia",weekly:"Cierre semanal"};
 function audienceLabel(t){
   if(t.audience==="group"){const g=_allGroups.find(x=>x.id===t.group_id);return g?("Grupo: "+g.name):"Grupo";}
   return "Todos los clientes";
@@ -1450,7 +1470,20 @@ function audienceLabel(t){
 function renderNotif(){
   const f=_notifForm;
   const groupOpts=_allGroups.filter(g=>g.active!==false).map(g=>`<option value="${g.id}" ${f.group_id===g.id?'selected':''}>${san(g.name)}</option>`).join("")||'<option value="">(sin grupos)</option>';
-  const tpls=_notifTemplates.map(t=>`
+  const SLOTS=[["morning","\u{1F305} Ma\u00F1ana","Calibracion al iniciar el dia"],["evening","\u{1F319} Noche","Reflexion + habitos al cerrar"],["coherence","\u{1F3AF} Coherencia","Ancla adaptativa de la semana"],["weekly","\u{1F4C5} Cierre semanal","Resumen del domingo"]];
+  const autos=SLOTS.map(([slot,label,desc])=>{const t=_notifTemplates.find(x=>x.slot===slot);const title=t?t.title:SLOT_DEFAULTS[slot][0];const body=t?t.body:SLOT_DEFAULTS[slot][1];const custom=!!t;
+    return`<div class="card" style="padding:14px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+        <div style="min-width:0;">
+          <div style="font-weight:600;color:var(--text);">${label}${custom?'':' <span class="badge" style="font-size:9px;background:var(--bg2);color:var(--mu);">texto por defecto</span>'}</div>
+          <div style="font-size:11px;color:var(--mu);margin:2px 0 6px;">${desc}</div>
+          <div style="font-size:12px;color:var(--text);font-weight:600;">${san(title)}</div>
+          <div style="font-size:12px;color:var(--mu);">${san(body)}</div>
+        </div>
+        <button class="btn btn-outline" style="padding:4px 10px;font-size:11px;white-space:nowrap;" onclick="openSlotEditor('${slot}')">Editar texto</button>
+      </div>
+    </div>`;}).join("");
+  const tpls=_notifTemplates.filter(t=>!t.slot).map(t=>`
     <div class="card" style="padding:14px;">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
         <div style="min-width:0;">
@@ -1468,6 +1501,10 @@ function renderNotif(){
     </div>`).join("")||'<p style="color:var(--mu);font-size:13px;">Aun no has guardado plantillas.</p>';
 
   document.getElementById("v-notif").innerHTML=`
+    <div class="card-title" style="margin:0 0 8px;">Mensajes automaticos (ritual diario)</div>
+    <p style="font-size:12px;color:var(--mu);margin-bottom:10px;">Se envian solos segun la estrategia (manana, noche, ancla de coherencia y cierre semanal), a todos los clientes. Edita el texto cuando quieras y los proximos envios lo toman.</p>
+    ${autos}
+    <div class="card-title" style="margin:20px 0 8px;">Enviar un mensaje puntual</div>
     <div class="card">
       <div class="card-title">${f.id?"Editar mensaje":"Nuevo mensaje"}</div>
       <p style="font-size:12px;color:var(--mu);margin-bottom:12px;">Envia un push a tus clientes en el momento, o guardalo como plantilla para reutilizar. No se envia a clientes suspendidos.</p>
@@ -1549,6 +1586,40 @@ async function notifSend(){
     if(_currentView==="notif")renderNotif();
   }catch(e){toast(e.message||"Error de red","err");}
   finally{const b=document.getElementById("nt-send");if(b){b.disabled=false;b.textContent="Enviar ahora";}}
+}
+
+/* ---- Editor de texto de las ranuras automaticas ---- */
+function openSlotEditor(slot){
+  const t=_notifTemplates.find(x=>x.slot===slot);
+  document.getElementById("sl-slot").value=slot;
+  document.getElementById("sl-title-h").textContent=SLOT_TITLES[slot]||"Mensaje automatico";
+  document.getElementById("sl-title").value=t?t.title:SLOT_DEFAULTS[slot][0];
+  document.getElementById("sl-body").value=t?t.body:SLOT_DEFAULTS[slot][1];
+  openModal("modal-slot");
+}
+async function saveSlot(){
+  const slot=document.getElementById("sl-slot").value;
+  const title=document.getElementById("sl-title").value.trim();
+  const body=document.getElementById("sl-body").value.trim();
+  if(!title||!body){toast("Titulo y mensaje requeridos","err");return;}
+  const btn=document.getElementById("sl-btn");btn.disabled=true;btn.textContent="GUARDANDO...";
+  try{
+    // upsert por (mentor_id, slot): una plantilla activa por ranura
+    const{error}=await sb.from("notification_templates")
+      .upsert({mentor_id:user.id,slot,title,body,audience:"all",is_active:true},{onConflict:"mentor_id,slot"});
+    if(error){if(!chkAuthErr(error))toast(error.message,"err");return;}
+    await loadGroupsAndSchedule();closeModal("modal-slot");toast("Texto actualizado \u2713","ok");
+    if(_currentView==="notif")renderNotif();
+  }finally{btn.disabled=false;btn.textContent="GUARDAR";}
+}
+async function resetSlot(){
+  const slot=document.getElementById("sl-slot").value;
+  if(!confirm("Volver al texto por defecto de esta ranura?"))return;
+  const t=_notifTemplates.find(x=>x.slot===slot);
+  if(t){const{error}=await sb.from("notification_templates").delete().eq("id",t.id);
+    if(error){if(!chkAuthErr(error))toast(error.message,"err");return;}}
+  await loadGroupsAndSchedule();closeModal("modal-slot");toast("Restaurado al texto por defecto","ok");
+  if(_currentView==="notif")renderNotif();
 }
 
 /* ============================================ */

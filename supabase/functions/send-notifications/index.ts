@@ -1,383 +1,217 @@
-// Edge Function: send-notifications
-// Envía push notifications a usuarios inactivos
+// Edge Function: send-notifications  (MOTOR DE RITUAL)
+// Notificaciones automaticas diarias/semanales con texto EDITABLE desde el portal.
 //
-// Flujo:
-// 1. Verifica Authorization (cron secret o admin JWT)
-// 2. Consulta usuarios inactivos (2+ días sin calibrar, con suscripción push)
-// 3. Filtra por notification_hour (hora preferida del usuario)
-// 4. Envía Web Push a cada suscripción activa
-// 5. Registra en notification_log
-// 6. Limpia suscripciones inválidas (410 Gone)
+// Por cada corrida (cron horario) decide, para cada cliente, si toca enviar:
+//   - manana   (push_morning):   a su hora matutina, si NO calibro hoy
+//   - noche    (push_evening):   a su hora nocturna, si NO marco habitos hoy
+//   - coherencia (push_coherence): ancla adaptativa si la semana va corta de toques
+//   - semanal  (push_weekly):    domingo en la hora nocturna
+// Reglas: maximo 2/dia, horario noble (22-6 no), excluye suspendidos, no repite tipo
+//   el mismo dia. El texto sale de notification_templates (slot activo) o de un default.
 //
 // Deploy: supabase functions deploy send-notifications
-// Cron: Configurar en Supabase Dashboard → Edge Functions → Cron
-//        Schedule: "0 * * * *" (cada hora en punto)
-//        O invocar manualmente: POST /functions/v1/send-notifications
-//        con header Authorization: Bearer <CRON_SECRET>
+// Cron: "0 * * * *" (ya activo). Auth: CRON_SECRET o admin JWT.
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+const CO_OFFSET_MS = 5 * 60 * 60 * 1000; // Colombia UTC-5
+
+// Copys por defecto si el mentor no ha definido la plantilla de esa ranura.
+const DEFAULTS: Record<string, { title: string; body: string }> = {
+  morning: { title: "Tu momento llegó", body: "30 segundos para elegir conscientemente tu día." },
+  evening: { title: "Cierra tu día", body: "Marca tus hábitos y toma un momento para reflexionar." },
+  coherence: { title: "Vuelve a ti", body: "La coherencia no es perfección, es volver. Hoy es un buen día para volver." },
+  weekly: { title: "Cierra tu semana", body: "Evalúa tu semana y elige cómo empiezas la próxima." },
+};
+const VIEW_BY_TYPE: Record<string, string> = {
+  push_morning: "calib", push_evening: "habitos", push_coherence: "home", push_weekly: "progreso",
 };
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
-
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const cronSecret = Deno.env.get("CRON_SECRET") || "";
 
-    // Verify authorization: either cron secret or admin JWT
+    // ---- Auth: cron secret o admin JWT ----
     const authHeader = req.headers.get("Authorization") || "";
     const token = authHeader.replace("Bearer ", "");
-
     let authorized = false;
-
-    // Check cron secret
-    if (cronSecret && token === cronSecret) {
-      authorized = true;
-    }
-
-    // Check admin JWT
+    if (cronSecret && token === cronSecret) authorized = true;
     if (!authorized) {
-      const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-      const sbUser = createClient(supabaseUrl, supabaseAnonKey, {
-        global: { headers: { Authorization: authHeader } },
-      });
-      const { data: { user } } = await sbUser.auth.getUser();
+      const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+      const sbU = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: authHeader } } });
+      const { data: { user } } = await sbU.auth.getUser();
       if (user) {
-        const sbAdmin = createClient(supabaseUrl, supabaseServiceKey);
-        const { data: profile } = await sbAdmin
-          .from("profiles")
-          .select("role")
-          .eq("id", user.id)
-          .single();
-        if (profile?.role === "admin") authorized = true;
+        const sbA = createClient(supabaseUrl, serviceKey);
+        const { data: p } = await sbA.from("profiles").select("role").eq("id", user.id).single();
+        if (p?.role === "admin") authorized = true;
       }
     }
+    if (!authorized) return json({ error: "Unauthorized" }, 401);
 
-    if (!authorized) {
-      return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const sb = createClient(supabaseUrl, supabaseServiceKey);
-
-    // Get current hour (UTC) — users store notification_hour in their local time
-    // For Colombia (UTC-5), we adjust
-    const now = new Date();
-    const utcHour = now.getUTCHours();
-    // Colombia offset: UTC-5
-    const colombiaHour = (utcHour - 5 + 24) % 24;
-
-    // Find users who:
-    // 1. Have role = 'client' and active = true
-    // 2. Have notification_hour matching current Colombia hour
-    // 3. Have NOT calibrated in 2+ days
-    // 4. Have at least one push subscription
-
-    // Step 1: Get active clients with matching notification hour
-    const { data: candidates, error: candErr } = await sb
-      .from("profiles")
-      .select("id, full_name, notification_hour")
-      .eq("role", "client")
-      .eq("notification_hour", colombiaHour);
-
-    if (candErr) {
-      console.error("Query profiles error:", candErr);
-      return new Response(
-        JSON.stringify({ error: "Database error" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    if (!candidates || candidates.length === 0) {
-      return new Response(
-        JSON.stringify({ sent: 0, message: "No users matching this hour" }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const candidateIds = candidates.map((c) => c.id);
-
-    // Step 2: Check who has calibrated in the last 2 days
-    const twoDaysAgo = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString();
-    const { data: recentCals } = await sb
-      .from("calibrations")
-      .select("user_id")
-      .in("user_id", candidateIds)
-      .gte("created_at", twoDaysAgo);
-
-    const recentUserIds = new Set((recentCals || []).map((c) => c.user_id));
-    const inactiveUsers = candidates.filter((c) => !recentUserIds.has(c.id));
-
-    if (inactiveUsers.length === 0) {
-      return new Response(
-        JSON.stringify({ sent: 0, message: "All users are active" }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const inactiveIds = inactiveUsers.map((u) => u.id);
-
-    // Step 3: Check who was already notified today (avoid spam)
-    const todayStart = new Date(now);
-    todayStart.setUTCHours(0, 0, 0, 0);
-    const { data: todayLogs } = await sb
-      .from("notification_log")
-      .select("user_id")
-      .in("user_id", inactiveIds)
-      .eq("type", "push_inactive")
-      .gte("sent_at", todayStart.toISOString());
-
-    const alreadyNotified = new Set((todayLogs || []).map((l) => l.user_id));
-    const toNotify = inactiveUsers.filter((u) => !alreadyNotified.has(u.id));
-
-    if (toNotify.length === 0) {
-      return new Response(
-        JSON.stringify({ sent: 0, message: "All inactive users already notified today" }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // Step 4: Get push subscriptions for these users
-    const toNotifyIds = toNotify.map((u) => u.id);
-    const { data: subs } = await sb
-      .from("push_subscriptions")
-      .select("id, user_id, endpoint, p256dh, auth_key")
-      .in("user_id", toNotifyIds);
-
-    if (!subs || subs.length === 0) {
-      return new Response(
-        JSON.stringify({ sent: 0, message: "No push subscriptions found" }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // Step 5: Send Web Push notifications
-    // We need the VAPID keys for signing
     const vapidPublicKey = Deno.env.get("VAPID_PUBLIC_KEY") || "";
     const vapidPrivateKey = Deno.env.get("VAPID_PRIVATE_KEY") || "";
+    if (!vapidPublicKey || !vapidPrivateKey) return json({ error: "VAPID no configurado" }, 503);
 
-    if (!vapidPublicKey || !vapidPrivateKey) {
-      return new Response(
-        JSON.stringify({ error: "VAPID keys not configured. Set VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY secrets." }),
-        { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    const sb = createClient(supabaseUrl, serviceKey);
+
+    // ---- Tiempo en marco Colombia ----
+    const now = Date.now();
+    const coNow = new Date(now - CO_OFFSET_MS);
+    const coHour = coNow.getUTCHours();
+    if (coHour >= 22 || coHour < 6) return json({ sent: 0, message: "quiet hours" }, 200);
+
+    const todayStr = coNow.toISOString().slice(0, 10);
+    const startToday = new Date(todayStr + "T00:00:00.000Z").getTime() + CO_OFFSET_MS; // medianoche CO en UTC
+    const mon0 = (coNow.getUTCDay() + 6) % 7; // 0=Lun .. 6=Dom
+    const isSunday = coNow.getUTCDay() === 0;
+    const startWeek = startToday - mon0 * 86400000;
+    const startTodayISO = new Date(startToday).toISOString();
+    const startWeekISO = new Date(startWeek).toISOString();
+    const dayKey = (ts: string) => new Date(new Date(ts).getTime() - CO_OFFSET_MS).toISOString().slice(0, 10);
+
+    // ---- Plantillas activas por slot (texto editable) ----
+    const { data: tpls } = await sb.from("notification_templates")
+      .select("slot,title,body").eq("is_active", true).not("slot", "is", null);
+    const copyOf = (slot: string) => {
+      const t = (tpls || []).find((x) => x.slot === slot);
+      return t && t.title && t.body ? { title: t.title, body: t.body } : DEFAULTS[slot];
+    };
+
+    // ---- Clientes candidatos para ESTA hora ----
+    const { data: clients } = await sb.from("profiles")
+      .select("id, notif_morning_hour, notif_evening_hour")
+      .eq("role", "client").eq("active", true).eq("notif_enabled", true);
+    const relevant = (clients || []).filter((c) =>
+      (c.notif_morning_hour ?? 8) === coHour || (c.notif_evening_hour ?? 20) === coHour);
+    if (relevant.length === 0) return json({ sent: 0, message: "Nadie en esta hora" }, 200);
+
+    const ids = relevant.map((c) => c.id);
+
+    // ---- Cargas en bloque (Regla 6 de espiritu: una sola pasada) ----
+    const [subsR, calTR, habTR, logTR, calWR, habWR, logWR] = await Promise.all([
+      sb.from("push_subscriptions").select("id,user_id,endpoint,p256dh,auth_key").in("user_id", ids),
+      sb.from("calibrations").select("user_id,created_at").in("user_id", ids).gte("created_at", startTodayISO),
+      sb.from("habit_tracker").select("user_id,updated_at").in("user_id", ids).gte("updated_at", startTodayISO),
+      sb.from("notification_log").select("user_id,type,sent_at").in("user_id", ids).gte("sent_at", startTodayISO),
+      sb.from("calibrations").select("user_id,created_at").in("user_id", ids).gte("created_at", startWeekISO),
+      sb.from("habit_tracker").select("user_id,updated_at").in("user_id", ids).gte("updated_at", startWeekISO),
+      sb.from("notification_log").select("user_id,sent_at").in("user_id", ids).gte("sent_at", startWeekISO),
+    ]);
+    const subsByUser = new Map<string, Array<{ id: string; endpoint: string; p256dh: string; auth_key: string }>>();
+    for (const s of subsR.data || []) {
+      if (!subsByUser.has(s.user_id)) subsByUser.set(s.user_id, []);
+      subsByUser.get(s.user_id)!.push(s);
     }
+    const calToday = new Set((calTR.data || []).map((r) => r.user_id));
+    const habToday = new Set((habTR.data || []).map((r) => r.user_id));
+    const typesToday = new Map<string, string[]>();
+    for (const r of logTR.data || []) {
+      if (!typesToday.has(r.user_id)) typesToday.set(r.user_id, []);
+      typesToday.get(r.user_id)!.push(r.type);
+    }
+    // Dias-con-toque de la semana (calibracion, habito o push) por usuario
+    const weekDays = new Map<string, Set<string>>();
+    const addDay = (uid: string, ts: string) => {
+      if (!weekDays.has(uid)) weekDays.set(uid, new Set());
+      weekDays.get(uid)!.add(dayKey(ts));
+    };
+    for (const r of calWR.data || []) addDay(r.user_id, r.created_at);
+    for (const r of habWR.data || []) addDay(r.user_id, r.updated_at);
+    for (const r of logWR.data || []) addDay(r.user_id, r.sent_at);
 
-    // Import web-push library for Deno
-    // Note: Using raw fetch with VAPID JWT signing
-    const sent: string[] = [];
-    const failed: string[] = [];
-    const expired: string[] = [];
+    // ---- Decision por usuario ----
+    const sentLog: Array<{ user_id: string; type: string; sent_at: string; days_absent: number | null }> = [];
+    const expiredIds: string[] = [];
+    let sentDevices = 0;
+    const nowISO = new Date(now).toISOString();
 
-    for (const sub of subs) {
-      const userInfo = toNotify.find((u) => u.id === sub.user_id);
-      const daysSince = await getDaysSinceCalib(sb, sub.user_id);
-      const firstName = (userInfo?.full_name || "").split(" ")[0] || "";
-      const msg = buildReengageMessage(daysSince, firstName);
+    for (const c of relevant) {
+      const subs = subsByUser.get(c.id);
+      if (!subs || subs.length === 0) continue;
+      const tt = typesToday.get(c.id) || [];
+      if (tt.length >= 2) continue; // cap diario
+
+      const mh = c.notif_morning_hour ?? 8;
+      const eh = c.notif_evening_hour ?? 20;
+      let decision: { type: string; copy: { title: string; body: string } } | null = null;
+
+      if (mh === coHour && !tt.includes("push_morning") && !calToday.has(c.id)) {
+        decision = { type: "push_morning", copy: copyOf("morning") };
+      } else if (eh === coHour && !tt.some((x) => x === "push_evening" || x === "push_coherence" || x === "push_weekly")) {
+        if (isSunday) {
+          decision = { type: "push_weekly", copy: copyOf("weekly") };
+        } else {
+          const touches = (weekDays.get(c.id) || new Set()).size;
+          const daysLeftInclToday = 7 - mon0;
+          const needed = 3 - touches;
+          if (needed > 0 && needed >= daysLeftInclToday) {
+            decision = { type: "push_coherence", copy: copyOf("coherence") };
+          } else if (!habToday.has(c.id)) {
+            decision = { type: "push_evening", copy: copyOf("evening") };
+          }
+        }
+      }
+      if (!decision) continue;
 
       const payload = JSON.stringify({
-        title: msg.title,
-        body: msg.body,
-        icon: "https://somosmaat.org/wp-content/uploads/2026/02/logo_app.png",
-        badge: "https://somosmaat.org/wp-content/uploads/2026/02/logo_app.png",
-        data: { view: "calib" },
+        title: decision.copy.title,
+        body: decision.copy.body,
+        icon: "https://www.somosmaat.org/app/icon-192.png",
+        badge: "https://www.somosmaat.org/app/icon-192.png",
+        data: { view: VIEW_BY_TYPE[decision.type] || "home" },
       });
-
-      try {
-        // Build Web Push request with VAPID
-        const pushResult = await sendWebPush({
-          endpoint: sub.endpoint,
-          p256dh: sub.p256dh,
-          authKey: sub.auth_key,
-          payload,
-          vapidPublicKey,
-          vapidPrivateKey,
-          vapidSubject: "mailto:hello@somosmaat.org",
-        });
-
-        if (pushResult.ok) {
-          sent.push(sub.user_id);
-        } else if (pushResult.status === 410 || pushResult.status === 404) {
-          // Subscription expired — clean up
-          expired.push(sub.id);
-        } else {
-          failed.push(sub.user_id);
-          console.error(
-            `Push failed for ${sub.user_id}: ${pushResult.status} ${await pushResult.text()}`
-          );
-        }
-      } catch (e) {
-        failed.push(sub.user_id);
-        console.error(`Push error for ${sub.user_id}:`, e);
+      let anyOk = false;
+      for (const sub of subs) {
+        try {
+          const r = await sendWebPush({
+            endpoint: sub.endpoint, p256dh: sub.p256dh, authKey: sub.auth_key,
+            payload, vapidPublicKey, vapidPrivateKey, vapidSubject: "mailto:hello@somosmaat.org",
+          });
+          if (r.ok) { anyOk = true; sentDevices++; }
+          else if (r.status === 410 || r.status === 404) expiredIds.push(sub.id);
+        } catch (e) { console.error("push error:", e); }
       }
+      if (anyOk) sentLog.push({ user_id: c.id, type: decision.type, sent_at: nowISO, days_absent: null });
     }
 
-    // Step 6: Log notifications
-    const uniqueSent = [...new Set(sent)];
-    if (uniqueSent.length > 0) {
-      const logs = uniqueSent.map((userId) => ({
-        user_id: userId,
-        type: "push_inactive",
-        sent_at: now.toISOString(),
-        days_absent: null as number | null,
-      }));
+    if (sentLog.length > 0) await sb.from("notification_log").insert(sentLog);
+    if (expiredIds.length > 0) await sb.from("push_subscriptions").delete().in("id", expiredIds);
 
-      // Enrich with days_absent
-      for (const log of logs) {
-        log.days_absent = await getDaysSinceCalib(sb, log.user_id);
-      }
-
-      await sb.from("notification_log").insert(logs);
-    }
-
-    // Step 7: Clean up expired subscriptions
-    if (expired.length > 0) {
-      await sb.from("push_subscriptions").delete().in("id", expired);
-      console.log(`Cleaned up ${expired.length} expired push subscriptions`);
-    }
-
-    return new Response(
-      JSON.stringify({
-        sent: uniqueSent.length,
-        failed: failed.length,
-        expired: expired.length,
-        message: `Notified ${uniqueSent.length} users`,
-      }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return json({
+      hour_co: coHour, users_notified: sentLog.length, devices: sentDevices, expired: expiredIds.length,
+      message: `Ritual: ${sentLog.length} usuario(s), ${sentDevices} dispositivo(s)`,
+    }, 200);
   } catch (err) {
     console.error("send-notifications error:", err);
-    return new Response(
-      JSON.stringify({ error: "Internal server error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return json({ error: "Internal server error" }, 500);
   }
 });
 
-// Helper: construye un mensaje de re-enganche GRADUADO segun los dias de ausencia.
-// La gente se enfria progresivamente, asi que el tono cambia: empuje suave ->
-// invitacion calida -> reencuentro sin presion. Cada banda tiene variantes.
-function buildReengageMessage(
-  daysSince: number | null,
-  firstName: string,
-): { title: string; body: string } {
-  const name = firstName ? firstName : "";
-  const pick = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
-
-  // Nunca ha calibrado (daysSince === null): activacion
-  if (daysSince === null) {
-    return pick([
-      { title: "Tu proceso MAAT te espera", body: "Tu primera calibración toma 30 segundos. Empieza hoy." },
-      { title: name ? `${name}, demos el primer paso` : "Demos el primer paso", body: "30 segundos para elegir cómo quieres vivir tu día." },
-    ]);
-  }
-
-  // 2-3 dias: empuje suave, sin drama
-  if (daysSince <= 3) {
-    return pick([
-      { title: "Tu espacio te espera", body: "30 segundos para reconectar contigo. Calibra tu día." },
-      { title: name ? `${name}, un momento para ti` : "Un momento para ti", body: "Volver al ritual es simple. Solo toma 30 segundos." },
-      { title: "Tu calibración de hoy", body: "Elige tu actitud antes de seguir. Es rápido." },
-    ]);
-  }
-
-  // 4-7 dias: invitacion calida, reconoce la ausencia
-  if (daysSince <= 7) {
-    return pick([
-      { title: name ? `${name}, te extrañamos` : "Te extrañamos", body: `Han pasado ${daysSince} días. Volver es más fácil de lo que crees: 30 segundos.` },
-      { title: "Tu proceso sigue aquí", body: `${daysSince} días sin vernos. Un pequeño gesto hoy reenciende el hábito.` },
-      { title: "Retomemos donde lo dejaste", body: "No empiezas de cero. Tu camino te espera. Calibra hoy." },
-    ]);
-  }
-
-  // 8-14 dias: reencuentro sin culpa
-  if (daysSince <= 14) {
-    return pick([
-      { title: "Siempre puedes volver", body: "Tu proceso no se borró. Un nuevo comienzo está a 30 segundos." },
-      { title: name ? `${name}, sin culpas` : "Sin culpas", body: "Las pausas son parte del camino. Hoy es un buen día para retomar." },
-      { title: "Tu transformación sigue viva", body: "Donde quedaste sigue ahí. Solo necesitas un momento para volver." },
-    ]);
-  }
-
-  // 15+ dias: reencuentro suave, cero presion, puerta abierta
-  return pick([
-    { title: "La puerta sigue abierta", body: "No importa cuánto tiempo pase. Tu espacio MAAT te espera cuando estés listo." },
-    { title: name ? `${name}, un nuevo comienzo` : "Un nuevo comienzo", body: "Cada día es una oportunidad de reconectar contigo. Sin prisa, sin presión." },
-    { title: "Te guardamos tu lugar", body: "Tu proceso sigue intacto. Volver es tan simple como un primer paso de 30 segundos." },
-  ]);
+function json(b: unknown, status: number): Response {
+  return new Response(JSON.stringify(b), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 }
 
-// Helper: Get days since last calibration
-async function getDaysSinceCalib(
-  sb: ReturnType<typeof createClient>,
-  userId: string
-): Promise<number | null> {
-  const { data } = await sb
-    .from("calibrations")
-    .select("created_at")
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false })
-    .limit(1);
-
-  if (!data || data.length === 0) return null;
-  const lastDate = new Date(data[0].created_at);
-  return Math.floor((Date.now() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
-}
-
-// Helper: Send Web Push using raw fetch + VAPID JWT
-// This avoids needing a full web-push npm library in Deno
 async function sendWebPush(opts: {
-  endpoint: string;
-  p256dh: string;
-  authKey: string;
-  payload: string;
-  vapidPublicKey: string;
-  vapidPrivateKey: string;
-  vapidSubject: string;
+  endpoint: string; p256dh: string; authKey: string; payload: string;
+  vapidPublicKey: string; vapidPrivateKey: string; vapidSubject: string;
 }): Promise<Response> {
-  // For a production-grade implementation, you'd use the web-push protocol
-  // with ECDH key exchange and content encryption.
-  // For now, we use a simplified approach via a Deno-compatible library.
-
-  // Import webpush utilities
-  const { default: webpush } = await import(
-    "https://esm.sh/web-push@3.6.7?target=deno"
-  );
-
-  webpush.setVapidDetails(
-    opts.vapidSubject,
-    opts.vapidPublicKey,
-    opts.vapidPrivateKey
-  );
-
-  const subscription = {
-    endpoint: opts.endpoint,
-    keys: {
-      p256dh: opts.p256dh,
-      auth: opts.authKey,
-    },
-  };
-
+  const { default: webpush } = await import("https://esm.sh/web-push@3.6.7?target=deno");
+  webpush.setVapidDetails(opts.vapidSubject, opts.vapidPublicKey, opts.vapidPrivateKey);
+  const subscription = { endpoint: opts.endpoint, keys: { p256dh: opts.p256dh, auth: opts.authKey } };
   try {
     await webpush.sendNotification(subscription, opts.payload);
     return new Response("ok", { status: 201 });
   } catch (err: unknown) {
-    const error = err as { statusCode?: number; body?: string };
-    // Return a Response-like object for status checking
-    return new Response(error.body || "Push failed", {
-      status: error.statusCode || 500,
-    });
+    const e = err as { statusCode?: number; body?: string };
+    return new Response(e.body || "Push failed", { status: e.statusCode || 500 });
   }
 }
