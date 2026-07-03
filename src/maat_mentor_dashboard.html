@@ -1604,9 +1604,12 @@ async function saveSlot(){
   if(!title||!body){toast("Titulo y mensaje requeridos","err");return;}
   const btn=document.getElementById("sl-btn");btn.disabled=true;btn.textContent="GUARDANDO...";
   try{
-    // upsert por (mentor_id, slot): una plantilla activa por ranura
-    const{error}=await sb.from("notification_templates")
-      .upsert({mentor_id:user.id,slot,title,body,audience:"all",is_active:true},{onConflict:"mentor_id,slot"});
+    // Una plantilla activa por ranura: si existe, update por id; si no, insert.
+    // (Evitamos upsert onConflict porque el indice unico de slot es parcial.)
+    const existing=_notifTemplates.find(x=>x.slot===slot);
+    let error;
+    if(existing){({error}=await sb.from("notification_templates").update({title,body,audience:"all",is_active:true}).eq("id",existing.id));}
+    else{({error}=await sb.from("notification_templates").insert({mentor_id:user.id,slot,title,body,audience:"all",is_active:true}));}
     if(error){if(!chkAuthErr(error))toast(error.message,"err");return;}
     await loadGroupsAndSchedule();closeModal("modal-slot");toast("Texto actualizado \u2713","ok");
     if(_currentView==="notif")renderNotif();
