@@ -389,7 +389,8 @@ input:focus-visible,textarea:focus-visible,select:focus-visible{outline:none;bor
     <input type="password" id="auth-pass" placeholder="Contrase&ntilde;a" autocomplete="current-password" aria-label="Contrase&ntilde;a" required>
     <button type="submit" class="btn-primary" id="auth-btn">INICIAR SESI&Oacute;N</button>
     <p id="auth-error" role="alert" aria-live="polite"></p>
-    <p style="color:var(--mu);font-size:12px;margin-top:16px;">Tu mentor te proporcionar&aacute; las credenciales de acceso.</p>
+    <button type="button" id="btn-forgot" onclick="forgotPassword()" style="background:none;border:none;color:var(--c);font-size:13px;margin-top:14px;cursor:pointer;text-decoration:underline;font-family:var(--font-body);">&iquest;Olvidaste tu contrase&ntilde;a?</button>
+    <p style="color:var(--mu);font-size:12px;margin-top:10px;">&iquest;Primera vez? Tu mentor te enviar&aacute; un enlace de acceso a tu correo.</p>
   </form>
 </section>
 
@@ -769,6 +770,24 @@ async function doAuth(){
     if(data.user){user=data.user;await initApp();}
   }catch(e){errEl.textContent=e.message;}
   finally{btn.disabled=false;updateAuthUI();}
+}
+
+// Autoservicio: envia el email de recovery para crear una nueva contrasena.
+// Redirige de vuelta a esta misma URL (debe estar en la allowlist de Supabase).
+async function forgotPassword(){
+  const email=document.getElementById("auth-email").value.trim().toLowerCase();
+  const errEl=document.getElementById("auth-error");
+  if(!email){errEl.textContent=lang==='es'?"Escribe tu email arriba y vuelve a tocar el enlace.":"Type your email above and tap the link again.";document.getElementById("auth-email").focus();return;}
+  const btn=document.getElementById("btn-forgot");btn.disabled=true;
+  try{
+    const redirect=window.location.origin+window.location.pathname;
+    const{error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:redirect});
+    if(error){errEl.textContent=error.message;return;}
+    errEl.textContent=lang==='es'
+      ?"Listo: enviamos un enlace a "+email+" para crear tu nueva contrasena. Revisa tambien spam/promociones."
+      :"Done: we sent a link to "+email+" to create your new password. Check spam too.";
+  }catch(e){errEl.textContent=e.message||"Error";}
+  finally{btn.disabled=false;}
 }
 
 async function doLogout(){
@@ -1979,6 +1998,7 @@ function renderMas(){
       <div class="menu-item" onclick="contactMentor()" style="border-color:var(--m);background:var(--m)11;"><div class="menu-icon">\u{1F4AC}</div><div class="menu-label">${lang==='es'?'Contactar':'Contact'}</div></div>
       ${mentorNotes.length?`<div class="menu-item" onclick="gs('v-mentor-notes')" style="border-color:var(--c);"><div class="menu-icon">\u{1F4CB}</div><div class="menu-label">${lang==='es'?'NOTAS MENTOR':'MENTOR NOTES'}</div></div>`:''}
       ${mySessions.length?`<div class="menu-item" onclick="gs('v-sesiones')" style="border-color:var(--o);"><div class="menu-icon">\u{1F4C5}</div><div class="menu-label">${lang==='es'?'MIS SESIONES':'MY SESSIONS'}</div></div>`:''}
+      <div class="menu-item" onclick="showSetPassword('change')" style="border-color:var(--mu2);"><div class="menu-icon">\u{1F511}</div><div class="menu-label">${lang==='es'?'CAMBIAR CLAVE':'CHANGE PASSWORD'}</div></div>
       <div class="menu-item" onclick="exportProgress()" style="border-color:var(--mu2);"><div class="menu-icon">\u{1F4E5}</div><div class="menu-label">${lang==='es'?'EXPORTAR':'EXPORT'}</div></div>
       <div class="menu-item" onclick="replayTutorial()" style="border-color:var(--mu2);"><div class="menu-icon">\u{1F393}</div><div class="menu-label">${lang==='es'?'VER TUTORIAL':'REPLAY TUTORIAL'}</div></div>
     </div>
@@ -3256,19 +3276,38 @@ function exportProgress(){
 
 /* ============ CONFIGURAR CONTRASE\u00d1A (post-activaci\u00f3n por email) ============ */
 function isRecoveryUrl(){
-  // Supabase coloca type=recovery en el hash (#) o en query (?) tras click del email
+  // Supabase coloca type=... en el hash (#) o en query (?) tras click del email.
+  // recovery (reset), signup (confirmacion), invite y magiclink: en TODOS el usuario
+  // llega sin conocer su contrasena (la generamos aleatoria) -> pedirle que la cree.
   const h=(window.location.hash||"").toLowerCase();
   const q=(window.location.search||"").toLowerCase();
-  return h.includes("type=recovery")||q.includes("type=recovery");
+  return["type=recovery","type=signup","type=invite","type=magiclink"].some(t=>h.includes(t)||q.includes(t));
 }
 
-function showSetPassword(){
+// Enlace de email vencido/ya usado: Supabase redirige con #error=...&error_code=otp_expired.
+// Sin esto el usuario ve el login sin explicacion y cree que "no funciona".
+function linkErrorMsg(){
+  const l=((window.location.hash||"")+(window.location.search||"")).toLowerCase();
+  if(!l.includes("error"))return null;
+  if(l.includes("otp_expired")||l.includes("expired"))
+    return lang==='es'
+      ?"El enlace del correo expiro o ya fue usado. Escribe tu email y toca 'Olvidaste tu contrasena' para recibir uno nuevo."
+      :"The email link expired or was already used. Enter your email and tap 'Forgot your password' to get a new one.";
+  if(l.includes("error_code")||l.includes("access_denied"))
+    return lang==='es'
+      ?"No pudimos validar el enlace. Usa 'Olvidaste tu contrasena' para recibir uno nuevo."
+      :"We could not validate the link. Use 'Forgot your password' to get a new one.";
+  return null;
+}
+
+function showSetPassword(mode){
   const el=document.getElementById("setpass-overlay");
   const isES=lang!=='en';
+  const isChange=mode==='change'; // cambio voluntario desde el menu (con sesion activa)
   el.querySelector(".sp-inner").innerHTML=`
     <div class="sp-icon">\u{1F511}</div>
-    <h3>${isES?'\u00a1Bienvenido a MAAT!':'Welcome to MAAT!'}</h3>
-    <p class="sp-msg">${isES?'Crea tu contrase\u00f1a para acceder a tu cuenta. La usar\u00e1s desde cualquier dispositivo.':'Create your password to access your account. You will use it from any device.'}</p>
+    <h3>${isChange?(isES?'Cambiar contrase\u00f1a':'Change password'):(isES?'\u00a1Bienvenido a MAAT!':'Welcome to MAAT!')}</h3>
+    <p class="sp-msg">${isChange?(isES?'Elige tu nueva contrase\u00f1a. La usar\u00e1s desde cualquier dispositivo.':'Choose your new password. You will use it from any device.'):(isES?'Crea tu contrase\u00f1a para acceder a tu cuenta. La usar\u00e1s desde cualquier dispositivo.':'Create your password to access your account. You will use it from any device.')}</p>
     <div class="sp-field">
       <label for="sp-pass">${isES?'Nueva contrase\u00f1a':'New password'}</label>
       <input type="password" id="sp-pass" autocomplete="new-password" placeholder="${isES?'M\u00ednimo 8 caracteres':'At least 8 characters'}">
@@ -3279,6 +3318,7 @@ function showSetPassword(){
     </div>
     <div class="sp-err" id="sp-err"></div>
     <button class="sp-btn" id="sp-btn" onclick="saveNewPassword()">${isES?'Guardar contrase\u00f1a':'Save password'}</button>
+    ${isChange?`<button type="button" style="background:none;border:none;color:var(--mu);font-size:13px;margin-top:12px;cursor:pointer;text-decoration:underline;font-family:var(--font-body);" onclick="document.getElementById('setpass-overlay').classList.remove('show')">${isES?'Cancelar':'Cancel'}</button>`:''}
     <p class="sp-hint">${isES?'Despu\u00e9s podr\u00e1s usar tu correo y esta contrase\u00f1a para entrar.':'You will use your email and this password to sign in later.'}</p>
   `;
   el.classList.add("show");
@@ -3317,6 +3357,8 @@ async function saveNewPassword(){
   setTheme(theme);
   setupPWA(); // registra el Service Worker (no bloquea el arranque)
   const recovery=isRecoveryUrl();
+  const linkErr=linkErrorMsg();
+  if(linkErr){try{history.replaceState(null,"",window.location.pathname+window.location.search);}catch(_){}}
   try{
     const{data:{session}}=await sb.auth.getSession();
     if(session?.user){
@@ -3326,9 +3368,11 @@ async function saveNewPassword(){
       if(recovery)setTimeout(()=>showSetPassword(),500);
     }else{
       document.getElementById("auth-screen").classList.add("visible");
+      if(linkErr)document.getElementById("auth-error").textContent=linkErr;
     }
   }catch(e){
     document.getElementById("auth-screen").classList.add("visible");
+    if(linkErr)document.getElementById("auth-error").textContent=linkErr;
   }finally{
     document.getElementById("boot-loader").style.display="none";
   }

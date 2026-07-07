@@ -487,7 +487,10 @@ dialog.m-dialog[open]{display:flex;align-items:flex-start;justify-content:center
 const CONFIG={
   SUPABASE_URL:"https://pcclptmojjzqmfmzftot.supabase.co",
   SUPABASE_ANON_KEY:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjY2xwdG1vamp6cW1mbXpmdG90Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4OTg3MjAsImV4cCI6MjA4NzQ3NDcyMH0.VuFBEy19fgNN5pSp_r8p2ZVViniunKdVW7Hy3AmqJXE",
-  HISTORY_WINDOW_DAYS:90
+  HISTORY_WINDOW_DAYS:90,
+  // App del cliente (SIN www: la variante www da 404 en el hosting).
+  // Destino de los enlaces de activacion/recuperacion que enviamos a los clientes.
+  APP_URL:"https://somosmaat.org/app/"
 };
 // Activar warnings de fallos silenciosos con localStorage.setItem("maat-debug","1")
 const MAAT_DEBUG=(typeof localStorage!=="undefined"&&localStorage.getItem("maat-debug")==="1");
@@ -996,6 +999,7 @@ function renderProfile(){
       ${!p.graduated&&(m.week||1)>=16?`<button class="btn" style="background:#896C8E;color:#fff;border:none;" onclick="graduateClient('${uid}','${san(m.name)}')">\u{1F393} Graduar</button>`:''}
       ${p.graduated?`<button class="btn btn-outline" onclick="newCycleClient('${uid}','${san(m.name)}')" style="color:var(--o);border-color:var(--o);">\u27F3 Nuevo Ciclo</button>`:''}
       <button class="btn" id="btn-toggle-active" onclick="toggleClientActive('${uid}','${san(m.name)}')" style="background:${p.active===false?'rgba(215,107,110,.15)':'rgba(125,205,147,.15)'};color:${p.active===false?'var(--r)':'var(--m)'};border:1px solid ${p.active===false?'var(--r)':'var(--m)'};">${p.active===false?'\u{1F6AB} Desactivado':'\u2713 Activo'}</button>
+      <button class="btn btn-outline" onclick="sendAccessLink('${uid}')" title="Le llega un email para crear/restablecer su contrasena">\u{1F511} Enviar acceso</button>
     </div>
     ${p.active===false?`<div style="background:rgba(215,107,110,.1);border:1px solid var(--r);border-radius:8px;padding:10px 14px;margin-bottom:16px;color:var(--r);font-size:13px;">\u26A0\uFE0F Este usuario est\u00E1 desactivado. No podr\u00E1 iniciar sesi\u00F3n en la app.</div>`:''}
     <div id="ai-summary-result"></div>
@@ -1639,27 +1643,61 @@ function openCreateModal(){
 
 async function createClient(){
   const name=document.getElementById("nc-name").value.trim();
-  const email=document.getElementById("nc-email").value.trim();
+  const email=document.getElementById("nc-email").value.trim().toLowerCase();
   const btn=document.getElementById("nc-btn");const resultEl=document.getElementById("nc-result");
   if(!name||!email){toast("Nombre y email requeridos","err");return;}
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Creando...';resultEl.innerHTML="";
   try{
+    // Flujo por ENLACE: el cliente crea su propia contrasena via email.
+    // La clave aleatoria de signUp nunca se muestra ni se usa.
     const password=genPass();
     const sb2=supabase.createClient(CONFIG.SUPABASE_URL,CONFIG.SUPABASE_ANON_KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
-    const{data:signUpData,error:signUpErr}=await sb2.auth.signUp({email,password});
-    if(signUpErr){toast(signUpErr.message,"err");return;}
-    const newUid=signUpData.user?.id;
-    if(!newUid){toast("Error: no se obtuvo UID","err");return;}
-    await sb2.auth.signOut();
-    const{error:profErr}=await sb.from("profiles").upsert({id:newUid,full_name:name,role:"client",current_week:1});
-    if(profErr){toast("Perfil: "+profErr.message,"err");return;}
-    const{error:mcErr}=await sb.from("mentor_clients").upsert({mentor_id:user.id,client_id:newUid,active:true},{onConflict:"mentor_id,client_id"});
-    if(mcErr)_w("mentor_clients:",mcErr.message);
-    resultEl.innerHTML=`<div class="success-screen"><div class="icon">\u2705</div><h3>Cliente creado exitosamente</h3><div class="cred"><strong>Email:</strong> ${san(email)}<br><strong>Contrase\u00F1a:</strong> ${san(password)}</div><p style="font-size:12px;color:var(--mu);">Guarda estas credenciales \u2014 la contrase\u00F1a no se puede recuperar.</p></div>`;
+    const{data:signUpData,error:signUpErr}=await sb2.auth.signUp({email,password,options:{data:{full_name:name},emailRedirectTo:CONFIG.APP_URL}});
+    let newUid=signUpData?.user?.id||null;
+    let already=false;
+    if(signUpErr){
+      const m=(signUpErr.message||"").toLowerCase();
+      if(m.includes("already")||m.includes("registered")||m.includes("exists"))already=true;
+      else{toast(signUpErr.message,"err");return;}
+    }
+    try{await sb2.auth.signOut();}catch(_){}
+    if(already){
+      // Cuenta existente: solo re-vincular (sin pisar su perfil/semana actual)
+      const{data:ex}=await sb.from("profiles").select("id,full_name").eq("email",email).limit(1);
+      if(ex&&ex[0])newUid=ex[0].id;
+    }else if(newUid){
+      // Cuenta nueva: perfil completo (email incluido \u2014 la columna es NOT NULL)
+      const{error:profErr}=await sb.from("profiles").upsert({id:newUid,email,full_name:name,role:"client",current_week:1},{onConflict:"id"});
+      if(profErr){toast("Perfil: "+profErr.message,"err");return;}
+    }else{toast("Error: no se obtuvo UID","err");return;}
+    if(newUid){
+      const{error:mcErr}=await sb.from("mentor_clients").upsert({mentor_id:user.id,client_id:newUid,active:true},{onConflict:"mentor_id,client_id"});
+      if(mcErr)_w("mentor_clients:",mcErr.message);
+    }
+    // Enviar el enlace de acceso (crea/restablece su contrasena en la app)
+    const{error:linkErr}=await sb.auth.resetPasswordForEmail(email,{redirectTo:CONFIG.APP_URL});
+    if(already){
+      resultEl.innerHTML=`<div class="success-screen"><div class="icon">\u2139\uFE0F</div><h3>Este correo ya ten\u00EDa cuenta</h3><p style="font-size:13px;color:var(--mu);">${newUid?'Qued\u00F3 vinculado a tu lista de clientes. ':'No encontr\u00E9 su perfil para vincularlo (avisa al admin). '}${linkErr?'No se pudo enviar el enlace: '+san(linkErr.message):'Le enviamos a <strong>'+san(email)+'</strong> un enlace para restablecer su contrase\u00F1a.'}</p></div>`;
+    }else if(linkErr){
+      resultEl.innerHTML=`<div class="success-screen"><div class="icon">\u26A0\uFE0F</div><h3>Cliente creado, pero el email fall\u00F3</h3><p style="font-size:13px;color:var(--mu);">${san(linkErr.message)}<br>Usa el bot\u00F3n <strong>Enviar acceso</strong> en su perfil para reintentar.</p></div>`;
+    }else{
+      resultEl.innerHTML=`<div class="success-screen"><div class="icon">\u2705</div><h3>Cliente creado</h3><p style="font-size:13px;color:var(--mu);">Le enviamos a <strong>${san(email)}</strong> un enlace de activaci\u00F3n para que cree su contrase\u00F1a.<br>P\u00EDdele que lo abra pronto (el enlace expira) y que revise spam/promociones.</p></div>`;
+    }
     await loadData();
     if(_currentView==="clients")setTimeout(()=>renderClients(),300);
   }catch(e){toast(e.message,"err");}
   finally{btn.disabled=false;btn.textContent="CREAR CLIENTE";}
+}
+
+// Reenviar acceso: le llega un email al cliente para crear/restablecer su contrasena.
+async function sendAccessLink(uid){
+  const p=_allProfiles.find(x=>x.id===uid)||_allUsers.find(x=>x.id===uid);
+  const email=(p?.email||"").toLowerCase();
+  if(!email){toast("Este perfil no tiene email registrado","err");return;}
+  if(!confirm("Enviar a "+email+" un enlace para crear/restablecer su contrasena?"))return;
+  const{error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:CONFIG.APP_URL});
+  if(error){toast(error.message,"err");return;}
+  toast("Enlace de acceso enviado a "+email,"ok");
 }
 
 /* ============================================ */
