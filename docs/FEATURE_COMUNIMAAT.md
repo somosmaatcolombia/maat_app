@@ -43,6 +43,24 @@ Sin edge functions ni cron: todo va directo por RLS.
    autor lo ve marcado. Mostrar lo restaura.
 6. Un usuario graduado publica -> insignia "Graduado".
 
+## v1.1 - Enlaces con miniatura + errores bilingues (APLICADO)
+
+- **Compartir enlaces**: campo "Enlace (opcional)" en el composer. Al publicar, la
+  edge function `link-preview` visita la pagina UNA vez, extrae los metadatos Open
+  Graph (titulo + imagen) y los congela en el post (columnas `link_*`). El feed
+  muestra una tarjeta clicable con miniatura, titulo, favicon y dominio. YouTube
+  tiene atajo directo de miniatura. Las URLs pegadas en el texto quedan clicables.
+- **Errores bilingues**: helper `friendlyErr()` traduce los errores tecnicos de
+  Supabase (red, permisos RLS, tabla faltante, duplicados, sesion vencida, rate
+  limit) a ES/EN segun el idioma del usuario. Aplicado en reacciones, publicar,
+  borrar, cargar feed y subir foto.
+
+### Activacion v1.1
+1. **SQL:** `sql/maat_comunimaat_links.sql` (agrega columnas link_* al post).
+2. **Edge function:** `supabase functions deploy link-preview --project-ref pcclptmojjzqmfmzftot`
+   (con verify-JWT: solo usuarios logueados). [Ya desplegada]
+3. **App:** re-subir `deploy/app/index.html`.
+
 ## v2 (no incluido, si la comunidad lo pide)
 Comentarios en publicaciones · notificacion push "alguien reacciono a tu post" ·
 teaser de ultimas publicaciones en el home.

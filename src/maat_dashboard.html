@@ -2962,17 +2962,17 @@ async function uploadAvatar(input){
     if(!blob)throw new Error("No se pudo procesar la imagen");
     const path=user.id+"/avatar.jpg";
     const{error:upErr}=await sb.storage.from("maat-avatars").upload(path,blob,{cacheControl:"3600",upsert:true,contentType:"image/jpeg"});
-    if(upErr){statusEl.textContent=upErr.message;return;}
+    if(upErr){statusEl.textContent=friendlyErr(upErr);return;}
     const{data:{publicUrl}}=sb.storage.from("maat-avatars").getPublicUrl(path);
     const url=publicUrl+"?t="+Date.now(); // cache-bust: mismo nombre de archivo
     const{error:dbErr}=await sb.from("profiles").update({avatar_url:url}).eq("id",user.id);
-    if(dbErr){if(!chkAuthErr(dbErr))statusEl.textContent=dbErr.message;return;}
+    if(dbErr){if(!chkAuthErr(dbErr))statusEl.textContent=friendlyErr(dbErr);return;}
     prof.avatar_url=url;
     paintAvatar(document.getElementById("prof-avatar"));
     paintAvatar(document.getElementById("btn-profile"));
     statusEl.textContent="";
     toast(lang==='es'?"Foto actualizada \u2713":"Photo updated \u2713","ok");
-  }catch(e){statusEl.textContent=e.message||"Error";}
+  }catch(e){statusEl.textContent=friendlyErr(e);}
 }
 function closeProfile(){document.getElementById("profile-sheet").classList.remove("show");}
 async function saveProfile(){
@@ -3192,14 +3192,68 @@ const CM_CATS={
 };
 const CM_KINDS=[["corazon","\u2764\uFE0F"],["aplauso","\u{1F44F}"],["inspira","\u2728"]];
 
+// Traduce errores tecnicos de Supabase al idioma del usuario (los mensajes
+// crudos llegan en ingles; esto los vuelve humanos en ES/EN segun `lang`).
+function friendlyErr(e){
+  const es=lang==='es';
+  const m=(((e&&e.message)||String(e||""))+"").toLowerCase();
+  if(m.includes("failed to fetch")||m.includes("networkerror")||m.includes("load failed"))
+    return es?"Sin conexion. Revisa tu internet e intenta de nuevo.":"No connection. Check your internet and try again.";
+  if(m.includes("does not exist")||m.includes("schema cache"))
+    return es?"Esta funcion aun no esta habilitada. Avisale a tu mentor.":"This feature is not enabled yet. Let your mentor know.";
+  if(m.includes("row-level security")||m.includes("permission denied")||m.includes("policy"))
+    return es?"No tienes permiso para esta accion.":"You do not have permission for this action.";
+  if(m.includes("duplicate key"))
+    return es?"Ya habias hecho esto antes.":"You already did this.";
+  if(m.includes("jwt")||m.includes("expired")||m.includes("invalid token")||m.includes("refresh"))
+    return es?"Tu sesion expiro. Vuelve a iniciar sesion.":"Your session expired. Please sign in again.";
+  if(m.includes("rate limit")||m.includes("too many"))
+    return es?"Demasiados intentos seguidos. Espera un momento.":"Too many attempts. Wait a moment.";
+  return es?"Algo salio mal. Intenta de nuevo.":((e&&e.message)||"Something went wrong.");
+}
+
+// Hace clicables las URLs escritas en el texto (aplicar SIEMPRE despues de san()).
+function cmLinkify(escapedText){
+  return escapedText.replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener" style="color:var(--c);word-break:break-all;">$1</a>');
+}
+
+// Tarjeta de vista previa del enlace compartido (miniatura + titulo + dominio).
+function cmLinkCard(p){
+  const domain=p.link_domain||((p.link_url.split("/")[2]||"").replace(/^www\./,""));
+  const img=p.link_image?'<img src="'+san(p.link_image)+'" alt="" style="width:100%;max-height:170px;object-fit:cover;display:block;" onerror="this.remove()">':'';
+  return '<a href="'+san(p.link_url)+'" target="_blank" rel="noopener" style="display:block;border:1px solid var(--bd);border-radius:var(--radius-sm);overflow:hidden;margin-bottom:12px;text-decoration:none;background:var(--bg);">'
+    +img
+    +'<div style="padding:10px 12px;display:flex;align-items:center;gap:8px;">'
+    +'<img src="https://www.google.com/s2/favicons?domain='+encodeURIComponent(domain)+'&sz=32" alt="" style="width:16px;height:16px;flex-shrink:0;" onerror="this.remove()">'
+    +'<div style="min-width:0;"><div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+san(p.link_title||domain)+'</div>'
+    +'<div style="font-size:11px;color:var(--mu);">'+san(domain)+'</div></div></div></a>';
+}
+
+// Pide los metadatos del enlace a la edge function (timeout corto; si falla,
+// el post sale igual con tarjeta de solo-dominio).
+async function fetchLinkPreview(url){
+  try{
+    const session=await sb.auth.getSession();const token=session?.data?.session?.access_token;
+    const ctrl=new AbortController();const t=setTimeout(()=>ctrl.abort(),8000);
+    const res=await fetch(CONFIG.SUPABASE_URL+"/functions/v1/link-preview",{
+      method:"POST",signal:ctrl.signal,
+      headers:{"Content-Type":"application/json","Authorization":"Bearer "+token,"apikey":CONFIG.SUPABASE_ANON_KEY},
+      body:JSON.stringify({url})
+    });
+    clearTimeout(t);
+    if(!res.ok)return null;
+    return await res.json();
+  }catch(_){return null;}
+}
+
 async function loadComunidad(reset){
   if(reset){_cmPosts=[];_cmAuthors={};_cmReacts={};_cmOffset=0;_cmEnd=false;}
   const PAGE=15;
   const{data:posts,error}=await sb.from("community_posts")
-    .select("id,user_id,category,title,body,week,is_hidden,created_at")
+    .select("id,user_id,category,title,body,week,is_hidden,created_at,link_url,link_title,link_image,link_domain")
     .order("created_at",{ascending:false})
     .range(_cmOffset,_cmOffset+PAGE-1);
-  if(error){if(!chkAuthErr(error))toast(error.message,"err");_cmLoaded=true;return;}
+  if(error){if(!chkAuthErr(error))toast(friendlyErr(error),"err");_cmLoaded=true;return;}
   const batch=posts||[];
   _cmEnd=batch.length<PAGE;
   _cmOffset+=batch.length;
@@ -3258,7 +3312,8 @@ function renderComunidad(){
       +'<span style="margin-left:auto;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:'+cat.c+';border:1px solid '+cat.c+';border-radius:10px;padding:2px 8px;white-space:nowrap;">'+(es?cat.es:cat.en)+'</span></div>'
       +(p.is_hidden?'<div style="font-size:11px;color:var(--r);margin-bottom:6px;">'+(es?'Oculto por el mentor':'Hidden by mentor')+'</div>':'')
       +'<h4 style="font-family:var(--font-title);font-size:16px;font-weight:600;color:var(--text);margin-bottom:6px;">'+san(p.title)+'</h4>'
-      +'<p style="font-size:13.5px;color:var(--mu);line-height:1.65;margin-bottom:12px;white-space:pre-line;">'+san(p.body)+'</p>'
+      +'<p style="font-size:13.5px;color:var(--mu);line-height:1.65;margin-bottom:12px;white-space:pre-line;">'+cmLinkify(san(p.body))+'</p>'
+      +(p.link_url?cmLinkCard(p):'')
       +'<div style="display:flex;gap:8px;align-items:center;">'+reactBar
       +(own?'<span style="margin-left:auto;display:flex;gap:12px;"><button onclick="cmEdit(\''+p.id+'\')" style="background:none;border:none;color:var(--c);font-size:12px;cursor:pointer;text-decoration:underline;">'+(es?'Editar':'Edit')+'</button><button onclick="cmDelete(\''+p.id+'\')" style="background:none;border:none;color:var(--r);font-size:12px;cursor:pointer;text-decoration:underline;">'+(es?'Eliminar':'Delete')+'</button></span>':'')
       +'</div></div>';
@@ -3270,7 +3325,8 @@ function renderComunidad(){
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">${cmAvatarHtml(prof,36)}<strong style="font-size:14px;">${_cmEditId?(es?'Editar publicacion':'Edit post'):(es?'Comparte con la comunidad':'Share with the community')}</strong></div>
       <select id="cm-cat" style="width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--bd);border-radius:var(--radius-sm);color:var(--text);font-family:var(--font-body);font-size:14px;margin-bottom:8px;">${catOpts}</select>
       <input type="text" id="cm-title" maxlength="100" placeholder="${es?'Titulo':'Title'}" value="${editing?san(editing.title):''}" style="width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--bd);border-radius:var(--radius-sm);color:var(--text);font-family:var(--font-body);font-size:14px;margin-bottom:8px;">
-      <textarea id="cm-body" rows="3" maxlength="2000" placeholder="${es?'Tu experiencia, leccion o logro...':'Your experience, lesson or achievement...'}" style="width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--bd);border-radius:var(--radius-sm);color:var(--text);font-family:var(--font-body);font-size:14px;margin-bottom:10px;resize:vertical;">${editing?san(editing.body):''}</textarea>
+      <textarea id="cm-body" rows="3" maxlength="2000" placeholder="${es?'Tu experiencia, leccion o logro...':'Your experience, lesson or achievement...'}" style="width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--bd);border-radius:var(--radius-sm);color:var(--text);font-family:var(--font-body);font-size:14px;margin-bottom:8px;resize:vertical;">${editing?san(editing.body):''}</textarea>
+      <input type="url" id="cm-link" maxlength="500" placeholder="${es?'\u{1F517} Enlace (opcional): articulo, video, podcast...':'\u{1F517} Link (optional): article, video, podcast...'}" value="${editing&&editing.link_url?san(editing.link_url):''}" style="width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--bd);border-radius:var(--radius-sm);color:var(--text);font-family:var(--font-body);font-size:14px;margin-bottom:10px;">
       <div style="display:flex;gap:8px;">
         <button class="btn-action" id="cm-pub" style="margin:0;flex:1;" onclick="cmPublish()">${_cmEditId?(es?'GUARDAR CAMBIOS':'SAVE CHANGES'):(es?'PUBLICAR':'PUBLISH')}</button>
         ${_cmEditId?'<button class="btn-action" style="margin:0;width:auto;background:var(--bg2);color:var(--mu);" onclick="_cmEditId=null;renderComunidad()">'+(es?'Cancelar':'Cancel')+'</button>':''}
@@ -3286,25 +3342,55 @@ async function cmPublish(){
   const category=document.getElementById("cm-cat").value;
   const title=document.getElementById("cm-title").value.trim();
   const body=document.getElementById("cm-body").value.trim();
+  let link=(document.getElementById("cm-link")?.value||"").trim();
   if(!title||!body){toast(es?"Titulo y texto requeridos":"Title and text required","err");return;}
-  const btn=document.getElementById("cm-pub");btn.disabled=true;
+  const btn=document.getElementById("cm-pub");const btnLabel=btn.textContent;
+  btn.disabled=true;
   try{
+    // Enlace opcional: normalizar y resolver la vista previa UNA vez al publicar
+    const linkFields={link_url:null,link_title:null,link_image:null,link_domain:null};
+    if(link){
+      if(!/^https?:\/\//i.test(link))link="https://"+link;
+      let u;
+      try{u=new URL(link);}catch(_){toast(es?"El enlace no es valido":"The link is not valid","err");return;}
+      linkFields.link_url=u.href;
+      linkFields.link_domain=u.hostname.replace(/^www\./,"");
+      const editingPost=_cmEditId?_cmPosts.find(p=>p.id===_cmEditId):null;
+      if(editingPost&&editingPost.link_url===linkFields.link_url){
+        // mismo enlace de antes: conservar la vista previa ya resuelta
+        linkFields.link_title=editingPost.link_title;linkFields.link_image=editingPost.link_image;linkFields.link_domain=editingPost.link_domain;
+      }else{
+        btn.textContent=es?"OBTENIENDO VISTA PREVIA...":"FETCHING PREVIEW...";
+        const pv=await fetchLinkPreview(linkFields.link_url);
+        if(pv&&!pv.error){
+          if(pv.title)linkFields.link_title=pv.title;
+          if(pv.image)linkFields.link_image=pv.image;
+          if(pv.domain)linkFields.link_domain=pv.domain;
+        }
+        // Atajo YouTube: miniatura directa si la pagina no dio imagen
+        if(!linkFields.link_image){
+          const yt=linkFields.link_url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([\w-]{6,})/);
+          if(yt)linkFields.link_image="https://img.youtube.com/vi/"+yt[1]+"/hqdefault.jpg";
+        }
+      }
+    }
+    btn.textContent=es?"PUBLICANDO...":"PUBLISHING...";
     let error;
-    if(_cmEditId){({error}=await sb.from("community_posts").update({category,title,body}).eq("id",_cmEditId));}
-    else{({error}=await sb.from("community_posts").insert({user_id:user.id,category,title,body,week:prof?.graduated?null:hwk}));}
-    if(error){if(!chkAuthErr(error))toast(error.message,"err");return;}
+    if(_cmEditId){({error}=await sb.from("community_posts").update({category,title,body,...linkFields}).eq("id",_cmEditId));}
+    else{({error}=await sb.from("community_posts").insert({user_id:user.id,category,title,body,week:prof?.graduated?null:hwk,...linkFields}));}
+    if(error){if(!chkAuthErr(error))toast(friendlyErr(error),"err");return;}
     _cmEditId=null;
-    track("community_post",{category});
+    track("community_post",{category,has_link:!!linkFields.link_url});
     toast(es?"Publicado \u2713":"Published \u2713","ok");
     await loadComunidad(true);renderComunidad();
-  }finally{btn.disabled=false;}
+  }finally{btn.disabled=false;btn.textContent=btnLabel;}
 }
 function cmEdit(id){_cmEditId=id;renderComunidad();document.querySelector('.main-content')?.scrollTo({top:0,behavior:'smooth'});}
 async function cmDelete(id){
   const es=lang==='es';
   if(!confirm(es?"Eliminar esta publicacion?":"Delete this post?"))return;
   const{error}=await sb.from("community_posts").delete().eq("id",id);
-  if(error){if(!chkAuthErr(error))toast(error.message,"err");return;}
+  if(error){if(!chkAuthErr(error))toast(friendlyErr(error),"err");return;}
   _cmPosts=_cmPosts.filter(p=>p.id!==id);if(_cmEditId===id)_cmEditId=null;
   toast(es?"Publicacion eliminada":"Post deleted","ok");renderComunidad();
 }
@@ -3315,11 +3401,11 @@ async function cmReact(postId,kind){
     const r=_cmReacts[postId];
     if(r.mine===kind){
       const{error}=await sb.from("community_reactions").delete().eq("post_id",postId).eq("user_id",user.id);
-      if(error){if(!chkAuthErr(error))toast(error.message,"err");return;}
+      if(error){if(!chkAuthErr(error))toast(friendlyErr(error),"err");return;}
       r[kind]=Math.max(0,(r[kind]||0)-1);r.mine=null;
     }else{
       const{error}=await sb.from("community_reactions").upsert({post_id:postId,user_id:user.id,kind},{onConflict:"post_id,user_id"});
-      if(error){if(!chkAuthErr(error))toast(error.message,"err");return;}
+      if(error){if(!chkAuthErr(error))toast(friendlyErr(error),"err");return;}
       if(r.mine)r[r.mine]=Math.max(0,(r[r.mine]||0)-1);
       r[kind]=(r[kind]||0)+1;r.mine=kind;
     }
