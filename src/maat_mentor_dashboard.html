@@ -284,7 +284,7 @@ dialog.m-dialog[open]{display:flex;align-items:flex-start;justify-content:center
       </div>
       <div class="nav-link" data-view="cmmod" onclick="goView('cmmod')">
         <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="13" y2="13"/></svg>
-        Comuni-Maat
+        Comuni-MAAT
       </div>
       <div class="nav-link" data-view="graduados" onclick="goView('graduados')">
         <svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
@@ -814,7 +814,7 @@ function goView(viewId){
   const el=document.getElementById("v-"+viewId);if(el)el.classList.add("active");
   document.querySelectorAll(".nav-link").forEach(n=>{n.classList.toggle("active",n.dataset.view===viewId);});
   closeSidebar();
-  const titles={overview:"Resumen",clients:"Mis Clientes",profile:"Perfil del Cliente",alerts:"Alertas",sessions:"Notas de Sesi\u00F3n",grupos:"Mentorias Grupales",notif:"Notificaciones",cmmod:"Comuni-Maat","mentor-config":"Mi Configuraci\u00F3n","admin-users":"Usuarios","admin-prompt":"Coach IA Config",graduados:"Graduados",meditaciones:"Meditaciones",eventos:"Eventos",traccion:"Traccion / Metricas"};
+  const titles={overview:"Resumen",clients:"Mis Clientes",profile:"Perfil del Cliente",alerts:"Alertas",sessions:"Notas de Sesi\u00F3n",grupos:"Mentorias Grupales",notif:"Notificaciones",cmmod:"Comuni-MAAT","mentor-config":"Mi Configuraci\u00F3n","admin-users":"Usuarios","admin-prompt":"Coach IA Config",graduados:"Graduados",meditaciones:"Meditaciones",eventos:"Eventos",traccion:"Traccion / Metricas"};
   document.getElementById("topbar-title").textContent=titles[viewId]||"MAAT";
   if(viewId==="overview")renderOverview();
   else if(viewId==="clients")renderClients();
@@ -1670,7 +1670,7 @@ async function renderCmMod(){
   }).join("");
   el.innerHTML=`
     <p style="font-size:12px;color:var(--mu);margin-bottom:12px;">Publicaciones de la comunidad (activos y graduados). <strong>Ocultar</strong> la quita del feed sin borrarla; el autor la sigue viendo marcada.</p>
-    ${rows||'<div class="empty"><div class="icon">\u{1F331}</div><p>Aun no hay publicaciones en Comuni-Maat</p></div>'}`;
+    ${rows||'<div class="empty"><div class="icon">\u{1F331}</div><p>Aun no hay publicaciones en Comuni-MAAT</p></div>'}`;
 }
 async function cmModToggle(id,hide){
   const{error}=await sb.from("community_posts").update({is_hidden:hide}).eq("id",id);

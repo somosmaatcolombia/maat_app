@@ -425,7 +425,7 @@ input:focus-visible,textarea:focus-visible,select:focus-visible{outline:none;bor
     <section id="v-dailymaat" class="view" aria-label="Daily MAAT"></section>
     <section id="v-mentor-notes" class="view" aria-label="Notas del mentor"></section>
     <section id="v-sesiones" class="view" aria-label="Pr&oacute;ximas sesiones de mentor&iacute;a"></section>
-    <section id="v-comunimaat" class="view" aria-label="Comuni-Maat"></section>
+    <section id="v-comunimaat" class="view" aria-label="Comuni-MAAT"></section>
     <section id="v-biblioteca" class="view" aria-label="Biblioteca de Meditaciones"></section>
     <section id="v-eventos" class="view" aria-label="Pr&oacute;ximos Eventos"></section>
     <section id="v-logros" class="view" aria-label="Logros"></section>
@@ -2008,7 +2008,7 @@ function renderMas(){
       <div class="menu-item" onclick="contactMentor()" style="border-color:var(--m);background:var(--m)11;"><div class="menu-icon">\u{1F4AC}</div><div class="menu-label">${lang==='es'?'Contactar':'Contact'}</div></div>
       ${mentorNotes.length?`<div class="menu-item" onclick="gs('v-mentor-notes')" style="border-color:var(--c);"><div class="menu-icon">\u{1F4CB}</div><div class="menu-label">${lang==='es'?'NOTAS MENTOR':'MENTOR NOTES'}</div></div>`:''}
       ${mySessions.length?`<div class="menu-item" onclick="gs('v-sesiones')" style="border-color:var(--o);"><div class="menu-icon">\u{1F4C5}</div><div class="menu-label">${lang==='es'?'MIS SESIONES':'MY SESSIONS'}</div></div>`:''}
-      <div class="menu-item" onclick="nav('v-comunimaat')" style="border-color:var(--m);background:var(--m)11;"><div class="menu-icon">\u{1F331}</div><div class="menu-label">COMUNI-MAAT</div></div>
+      <div class="menu-item" onclick="nav('v-comunimaat')" style="border-color:var(--m);background:var(--m)11;"><div class="menu-icon">\u{1F331}</div><div class="menu-label">Comuni-MAAT</div></div>
       <div class="menu-item" onclick="showSetPassword('change')" style="border-color:var(--mu2);"><div class="menu-icon">\u{1F511}</div><div class="menu-label">${lang==='es'?'CAMBIAR CLAVE':'CHANGE PASSWORD'}</div></div>
       <div class="menu-item" onclick="exportProgress()" style="border-color:var(--mu2);"><div class="menu-icon">\u{1F4E5}</div><div class="menu-label">${lang==='es'?'EXPORTAR':'EXPORT'}</div></div>
       <div class="menu-item" onclick="replayTutorial()" style="border-color:var(--mu2);"><div class="menu-icon">\u{1F393}</div><div class="menu-label">${lang==='es'?'VER TUTORIAL':'REPLAY TUTORIAL'}</div></div>
@@ -3289,7 +3289,7 @@ function renderComunidad(){
   const es=lang==='es';
   const el=document.getElementById("v-comunimaat");
   if(!_cmLoaded){
-    el.innerHTML='<div class="sv-header"><button class="btn-back" onclick="gv(\'v-mas\')">\u2039</button><h2>Comuni-Maat</h2></div><div class="skeleton" style="height:100px;border-radius:var(--radius);margin-bottom:12px;"></div><div class="skeleton" style="height:140px;border-radius:var(--radius);"></div>';
+    el.innerHTML='<div class="sv-header"><button class="btn-back" onclick="gv(\'v-mas\')">\u2039</button><h2>Comuni-MAAT</h2></div><div class="skeleton" style="height:100px;border-radius:var(--radius);margin-bottom:12px;"></div><div class="skeleton" style="height:140px;border-radius:var(--radius);"></div>';
     loadComunidad(true).then(()=>{if(document.getElementById("v-comunimaat")?.classList.contains("active"))renderComunidad();});
     return;
   }
@@ -3319,7 +3319,7 @@ function renderComunidad(){
       +'</div></div>';
   }).join("");
   el.innerHTML=`
-    <div class="sv-header"><button class="btn-back" onclick="gv('v-mas')">\u2039</button><h2>\u{1F331} Comuni-Maat</h2></div>
+    <div class="sv-header"><button class="btn-back" onclick="gv('v-mas')">\u2039</button><h2>\u{1F331} Comuni-MAAT</h2></div>
     <p style="font-size:13px;color:var(--mu);margin-bottom:14px;line-height:1.6;">${es?'La red privada de la mentoria: comparte lecciones, logros y aprendizajes con quienes recorren el mismo camino \u2014 activos y graduados.':'The private mentorship network: share lessons, achievements and learnings with those walking the same path \u2014 active and graduates.'}</p>
     <div class="card" style="margin-bottom:16px;">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">${cmAvatarHtml(prof,36)}<strong style="font-size:14px;">${_cmEditId?(es?'Editar publicacion':'Edit post'):(es?'Comparte con la comunidad':'Share with the community')}</strong></div>
