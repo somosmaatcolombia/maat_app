@@ -7,8 +7,8 @@
 #   FTP_USERNAME  usuario FTP de cPanel
 #   FTP_PASSWORD  contrasena de ese usuario
 #
-# NOTA server-dir: si la cuenta FTP entra directo a public_html/ (tipico en cPanel),
-# cambia "public_html/app/" por "app/" (y igual en mentor/onboarding).
+# server-dir: el docroot del sitio es /home/hhvluukj/somosmaat.org/ y el FTP entra
+# al home del usuario, por eso la ruta relativa es somosmaat.org/...
 
 name: Deploy a somosmaat.org
 
@@ -58,7 +58,7 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           protocol: ftps
           local-dir: deploy/app/
-          server-dir: public_html/app/
+          server-dir: somosmaat.org/app/
 
       - name: Subir portal del mentor (/mentor/)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
@@ -68,7 +68,7 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           protocol: ftps
           local-dir: deploy/mentor/
-          server-dir: public_html/mentor/
+          server-dir: somosmaat.org/mentor/
 
       - name: Subir landing de onboarding (/onboarding/)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
@@ -78,4 +78,4 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           protocol: ftps
           local-dir: deploy/onboarding/
-          server-dir: public_html/onboarding/
+          server-dir: somosmaat.org/onboarding/
