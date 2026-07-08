@@ -425,6 +425,7 @@ input:focus-visible,textarea:focus-visible,select:focus-visible{outline:none;bor
     <section id="v-dailymaat" class="view" aria-label="Daily MAAT"></section>
     <section id="v-mentor-notes" class="view" aria-label="Notas del mentor"></section>
     <section id="v-sesiones" class="view" aria-label="Pr&oacute;ximas sesiones de mentor&iacute;a"></section>
+    <section id="v-comunimaat" class="view" aria-label="Comuni-Maat"></section>
     <section id="v-biblioteca" class="view" aria-label="Biblioteca de Meditaciones"></section>
     <section id="v-eventos" class="view" aria-label="Pr&oacute;ximos Eventos"></section>
     <section id="v-logros" class="view" aria-label="Logros"></section>
@@ -459,6 +460,14 @@ input:focus-visible,textarea:focus-visible,select:focus-visible{outline:none;bor
   <div class="sheet">
     <div class="sheet-handle"></div>
     <h3>Perfil</h3>
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
+      <div id="prof-avatar" style="width:64px;height:64px;border-radius:50%;border:2px solid var(--c);background:var(--bg2);color:var(--c);font-family:var(--font-title);font-size:24px;font-weight:700;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;"></div>
+      <div>
+        <button type="button" class="btn-action" style="width:auto;padding:9px 16px;margin:0;font-size:12px;" onclick="document.getElementById('prof-avatar-file').click()">CAMBIAR FOTO</button>
+        <p id="prof-avatar-status" style="font-size:11px;color:var(--mu);margin-top:6px;"></p>
+      </div>
+      <input type="file" id="prof-avatar-file" accept="image/*" style="display:none;" onchange="uploadAvatar(this)">
+    </div>
     <div class="sheet-field"><label>Nombre completo</label><input type="text" id="prof-name"></div>
     <div class="sheet-field"><label>Semana actual (1-16)</label><input type="number" id="prof-week" min="1" max="16"></div>
     <div class="sheet-field"><label>Hora de notificaci&oacute;n (0-23)</label><input type="number" id="prof-notif" min="0" max="23"></div>
@@ -1171,6 +1180,7 @@ function nav(id){
   else if(id==="v-dailymaat")renderDailyMaat();
   else if(id==="v-mentor-notes")renderMentorNotes();
   else if(id==="v-sesiones")renderSesiones();
+  else if(id==="v-comunimaat")renderComunidad();
   else if(id==="v-biblioteca"){
     // Datos secundarios aun cargando -> skeleton
     if(!_appReady&&!meditations.length){document.getElementById("v-biblioteca").innerHTML=skelBiblioteca();}
@@ -1383,7 +1393,7 @@ function renderHome(){
       `:''}
     </div>
   `;
-  document.getElementById("btn-profile").textContent=(prof?.full_name||"?")[0].toUpperCase();
+  paintAvatar(document.getElementById("btn-profile"));
 
   // FIX: init audio via manager \u2014 not a DOM element reference
   if(sh?.audio_url){
@@ -1998,6 +2008,7 @@ function renderMas(){
       <div class="menu-item" onclick="contactMentor()" style="border-color:var(--m);background:var(--m)11;"><div class="menu-icon">\u{1F4AC}</div><div class="menu-label">${lang==='es'?'Contactar':'Contact'}</div></div>
       ${mentorNotes.length?`<div class="menu-item" onclick="gs('v-mentor-notes')" style="border-color:var(--c);"><div class="menu-icon">\u{1F4CB}</div><div class="menu-label">${lang==='es'?'NOTAS MENTOR':'MENTOR NOTES'}</div></div>`:''}
       ${mySessions.length?`<div class="menu-item" onclick="gs('v-sesiones')" style="border-color:var(--o);"><div class="menu-icon">\u{1F4C5}</div><div class="menu-label">${lang==='es'?'MIS SESIONES':'MY SESSIONS'}</div></div>`:''}
+      <div class="menu-item" onclick="nav('v-comunimaat')" style="border-color:var(--m);background:var(--m)11;"><div class="menu-icon">\u{1F331}</div><div class="menu-label">COMUNI-MAAT</div></div>
       <div class="menu-item" onclick="showSetPassword('change')" style="border-color:var(--mu2);"><div class="menu-icon">\u{1F511}</div><div class="menu-label">${lang==='es'?'CAMBIAR CLAVE':'CHANGE PASSWORD'}</div></div>
       <div class="menu-item" onclick="exportProgress()" style="border-color:var(--mu2);"><div class="menu-icon">\u{1F4E5}</div><div class="menu-label">${lang==='es'?'EXPORTAR':'EXPORT'}</div></div>
       <div class="menu-item" onclick="replayTutorial()" style="border-color:var(--mu2);"><div class="menu-icon">\u{1F393}</div><div class="menu-label">${lang==='es'?'VER TUTORIAL':'REPLAY TUTORIAL'}</div></div>
@@ -2912,7 +2923,56 @@ function openProfile(){
   document.getElementById("prof-notif").value=notifHour;
   document.getElementById("prof-lang").value=lang;
   document.getElementById("prof-theme").value=theme;
+  paintAvatar(document.getElementById("prof-avatar"));
+  document.getElementById("prof-avatar-status").textContent="";
   document.getElementById("profile-sheet").classList.add("show");
+}
+
+// Pinta la foto de perfil (o la inicial) en un contenedor circular.
+function paintAvatar(el){
+  if(!el)return;
+  if(prof?.avatar_url){
+    el.innerHTML='<img src="'+san(prof.avatar_url)+'" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.remove()">';
+  }else{
+    el.textContent=(prof?.full_name||"?")[0].toUpperCase();
+  }
+}
+
+// Sube la foto: recorte cuadrado + resize a 256px en el navegador (canvas),
+// va al bucket maat-avatars/{uid}/avatar.jpg (upsert) y actualiza profiles.avatar_url.
+async function uploadAvatar(input){
+  const file=input.files&&input.files[0];
+  input.value="";
+  if(!file||!user)return;
+  const statusEl=document.getElementById("prof-avatar-status");
+  if(!file.type.startsWith("image/")){statusEl.textContent=lang==='es'?"Elige una imagen.":"Pick an image.";return;}
+  statusEl.textContent=lang==='es'?"Subiendo...":"Uploading...";
+  try{
+    const img=await new Promise((res,rej)=>{
+      const u=URL.createObjectURL(file);const i=new Image();
+      i.onload=()=>{URL.revokeObjectURL(u);res(i);};
+      i.onerror=()=>{URL.revokeObjectURL(u);rej(new Error("No se pudo leer la imagen"));};
+      i.src=u;
+    });
+    const S=256,cv=document.createElement("canvas");cv.width=S;cv.height=S;
+    const cx=cv.getContext("2d");
+    const side=Math.min(img.width,img.height);
+    cx.drawImage(img,(img.width-side)/2,(img.height-side)/2,side,side,0,0,S,S);
+    const blob=await new Promise(res=>cv.toBlob(res,"image/jpeg",0.85));
+    if(!blob)throw new Error("No se pudo procesar la imagen");
+    const path=user.id+"/avatar.jpg";
+    const{error:upErr}=await sb.storage.from("maat-avatars").upload(path,blob,{cacheControl:"3600",upsert:true,contentType:"image/jpeg"});
+    if(upErr){statusEl.textContent=upErr.message;return;}
+    const{data:{publicUrl}}=sb.storage.from("maat-avatars").getPublicUrl(path);
+    const url=publicUrl+"?t="+Date.now(); // cache-bust: mismo nombre de archivo
+    const{error:dbErr}=await sb.from("profiles").update({avatar_url:url}).eq("id",user.id);
+    if(dbErr){if(!chkAuthErr(dbErr))statusEl.textContent=dbErr.message;return;}
+    prof.avatar_url=url;
+    paintAvatar(document.getElementById("prof-avatar"));
+    paintAvatar(document.getElementById("btn-profile"));
+    statusEl.textContent="";
+    toast(lang==='es'?"Foto actualizada \u2713":"Photo updated \u2713","ok");
+  }catch(e){statusEl.textContent=e.message||"Error";}
 }
 function closeProfile(){document.getElementById("profile-sheet").classList.remove("show");}
 async function saveProfile(){
@@ -3120,6 +3180,151 @@ function fmtSesDateTime(iso){
   let h=d.getHours();const mi=String(d.getMinutes()).padStart(2,"0");
   const ap=h>=12?"PM":"AM";h=h%12;if(h===0)h=12;
   return dd[d.getDay()]+" "+d.getDate()+" "+mm[d.getMonth()]+", "+h+":"+mi+" "+ap;
+}
+
+/* ============ COMUNI-MAAT (red privada de la mentoria) ============ */
+let _cmPosts=[],_cmAuthors={},_cmReacts={},_cmOffset=0,_cmEnd=false,_cmLoaded=false,_cmEditId=null,_cmBusy=false;
+const CM_CATS={
+  leccion:{es:"Leccion",en:"Lesson",c:"var(--c)"},
+  logro:{es:"Logro",en:"Achievement",c:"var(--o)"},
+  aprendizaje:{es:"Aprendizaje",en:"Learning",c:"var(--m)"},
+  experiencia:{es:"Experiencia",en:"Experience",c:"var(--v)"}
+};
+const CM_KINDS=[["corazon","\u2764\uFE0F"],["aplauso","\u{1F44F}"],["inspira","\u2728"]];
+
+async function loadComunidad(reset){
+  if(reset){_cmPosts=[];_cmAuthors={};_cmReacts={};_cmOffset=0;_cmEnd=false;}
+  const PAGE=15;
+  const{data:posts,error}=await sb.from("community_posts")
+    .select("id,user_id,category,title,body,week,is_hidden,created_at")
+    .order("created_at",{ascending:false})
+    .range(_cmOffset,_cmOffset+PAGE-1);
+  if(error){if(!chkAuthErr(error))toast(error.message,"err");_cmLoaded=true;return;}
+  const batch=posts||[];
+  _cmEnd=batch.length<PAGE;
+  _cmOffset+=batch.length;
+  // Autores del lote (join manual: posts.user_id -> profiles.id)
+  const uids=[...new Set(batch.map(p=>p.user_id).filter(id=>!_cmAuthors[id]))];
+  if(uids.length){
+    const{data:profs}=await sb.from("profiles").select("id,full_name,avatar_url,graduated").in("id",uids);
+    (profs||[]).forEach(p=>{_cmAuthors[p.id]=p;});
+  }
+  // Reacciones del lote (conteo por tipo + la mia)
+  const ids=batch.map(p=>p.id);
+  if(ids.length){
+    const{data:reacts}=await sb.from("community_reactions").select("post_id,user_id,kind").in("post_id",ids);
+    (reacts||[]).forEach(r=>{
+      if(!_cmReacts[r.post_id])_cmReacts[r.post_id]={corazon:0,aplauso:0,inspira:0,mine:null};
+      _cmReacts[r.post_id][r.kind]=(_cmReacts[r.post_id][r.kind]||0)+1;
+      if(r.user_id===user.id)_cmReacts[r.post_id].mine=r.kind;
+    });
+  }
+  _cmPosts=_cmPosts.concat(batch);
+  _cmLoaded=true;
+}
+
+function cmAvatarHtml(a,size){
+  const s=size||40;
+  const base='width:'+s+'px;height:'+s+'px;border-radius:50%;flex-shrink:0;';
+  if(a&&a.avatar_url)return '<img src="'+san(a.avatar_url)+'" alt="" style="'+base+'object-fit:cover;" onerror="this.remove()">';
+  const ini=((a&&a.full_name)||"?")[0].toUpperCase();
+  return '<div style="'+base+'background:var(--bg2);border:1.5px solid var(--c);color:var(--c);display:flex;align-items:center;justify-content:center;font-family:var(--font-title);font-weight:700;">'+san(ini)+'</div>';
+}
+
+function renderComunidad(){
+  const es=lang==='es';
+  const el=document.getElementById("v-comunimaat");
+  if(!_cmLoaded){
+    el.innerHTML='<div class="sv-header"><button class="btn-back" onclick="gv(\'v-mas\')">\u2039</button><h2>Comuni-Maat</h2></div><div class="skeleton" style="height:100px;border-radius:var(--radius);margin-bottom:12px;"></div><div class="skeleton" style="height:140px;border-radius:var(--radius);"></div>';
+    loadComunidad(true).then(()=>{if(document.getElementById("v-comunimaat")?.classList.contains("active"))renderComunidad();});
+    return;
+  }
+  const editing=_cmEditId?_cmPosts.find(p=>p.id===_cmEditId):null;
+  const catOpts=Object.keys(CM_CATS).map(k=>'<option value="'+k+'" '+((editing?editing.category:'experiencia')===k?'selected':'')+'>'+(es?CM_CATS[k].es:CM_CATS[k].en)+'</option>').join("");
+  const feed=_cmPosts.map(p=>{
+    const a=_cmAuthors[p.user_id];
+    const own=p.user_id===user.id;
+    const cat=CM_CATS[p.category]||CM_CATS.experiencia;
+    const r=_cmReacts[p.id]||{corazon:0,aplauso:0,inspira:0,mine:null};
+    const badge=a&&a.graduated?'\u{1F393} '+(es?'Graduado':'Graduate'):(p.week?(es?'Semana ':'Week ')+p.week:'');
+    const reactBar=CM_KINDS.map(([k,icon])=>{
+      const active=r.mine===k;
+      return '<button onclick="cmReact(\''+p.id+'\',\''+k+'\')" style="background:'+(active?'rgba(57,161,201,.15)':'none')+';border:1px solid '+(active?'var(--c)':'var(--bd)')+';border-radius:16px;padding:4px 10px;color:var(--text);font-size:13px;cursor:pointer;">'+icon+' '+(r[k]||0)+'</button>';
+    }).join(" ");
+    return '<div class="card" style="margin-bottom:12px;'+(p.is_hidden?'opacity:.5;':'')+'">'
+      +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">'+cmAvatarHtml(a,40)
+      +'<div style="min-width:0;"><div style="font-weight:600;font-size:14px;color:var(--text);">'+san((a&&a.full_name)||(es?'Miembro MAAT':'MAAT member'))+'</div>'
+      +'<div style="font-size:11px;color:var(--mu);">'+badge+(badge?' \u00B7 ':'')+new Date(p.created_at).toLocaleDateString(es?'es-CO':'en-US',{day:'numeric',month:'short'})+'</div></div>'
+      +'<span style="margin-left:auto;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:'+cat.c+';border:1px solid '+cat.c+';border-radius:10px;padding:2px 8px;white-space:nowrap;">'+(es?cat.es:cat.en)+'</span></div>'
+      +(p.is_hidden?'<div style="font-size:11px;color:var(--r);margin-bottom:6px;">'+(es?'Oculto por el mentor':'Hidden by mentor')+'</div>':'')
+      +'<h4 style="font-family:var(--font-title);font-size:16px;font-weight:600;color:var(--text);margin-bottom:6px;">'+san(p.title)+'</h4>'
+      +'<p style="font-size:13.5px;color:var(--mu);line-height:1.65;margin-bottom:12px;white-space:pre-line;">'+san(p.body)+'</p>'
+      +'<div style="display:flex;gap:8px;align-items:center;">'+reactBar
+      +(own?'<span style="margin-left:auto;display:flex;gap:12px;"><button onclick="cmEdit(\''+p.id+'\')" style="background:none;border:none;color:var(--c);font-size:12px;cursor:pointer;text-decoration:underline;">'+(es?'Editar':'Edit')+'</button><button onclick="cmDelete(\''+p.id+'\')" style="background:none;border:none;color:var(--r);font-size:12px;cursor:pointer;text-decoration:underline;">'+(es?'Eliminar':'Delete')+'</button></span>':'')
+      +'</div></div>';
+  }).join("");
+  el.innerHTML=`
+    <div class="sv-header"><button class="btn-back" onclick="gv('v-mas')">\u2039</button><h2>\u{1F331} Comuni-Maat</h2></div>
+    <p style="font-size:13px;color:var(--mu);margin-bottom:14px;line-height:1.6;">${es?'La red privada de la mentoria: comparte lecciones, logros y aprendizajes con quienes recorren el mismo camino \u2014 activos y graduados.':'The private mentorship network: share lessons, achievements and learnings with those walking the same path \u2014 active and graduates.'}</p>
+    <div class="card" style="margin-bottom:16px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">${cmAvatarHtml(prof,36)}<strong style="font-size:14px;">${_cmEditId?(es?'Editar publicacion':'Edit post'):(es?'Comparte con la comunidad':'Share with the community')}</strong></div>
+      <select id="cm-cat" style="width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--bd);border-radius:var(--radius-sm);color:var(--text);font-family:var(--font-body);font-size:14px;margin-bottom:8px;">${catOpts}</select>
+      <input type="text" id="cm-title" maxlength="100" placeholder="${es?'Titulo':'Title'}" value="${editing?san(editing.title):''}" style="width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--bd);border-radius:var(--radius-sm);color:var(--text);font-family:var(--font-body);font-size:14px;margin-bottom:8px;">
+      <textarea id="cm-body" rows="3" maxlength="2000" placeholder="${es?'Tu experiencia, leccion o logro...':'Your experience, lesson or achievement...'}" style="width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--bd);border-radius:var(--radius-sm);color:var(--text);font-family:var(--font-body);font-size:14px;margin-bottom:10px;resize:vertical;">${editing?san(editing.body):''}</textarea>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-action" id="cm-pub" style="margin:0;flex:1;" onclick="cmPublish()">${_cmEditId?(es?'GUARDAR CAMBIOS':'SAVE CHANGES'):(es?'PUBLICAR':'PUBLISH')}</button>
+        ${_cmEditId?'<button class="btn-action" style="margin:0;width:auto;background:var(--bg2);color:var(--mu);" onclick="_cmEditId=null;renderComunidad()">'+(es?'Cancelar':'Cancel')+'</button>':''}
+      </div>
+    </div>
+    ${feed||'<div class="text-center text-mu" style="padding:30px 0;"><p style="font-size:28px;margin-bottom:8px;">\u{1F331}</p><p>'+(es?'Aun no hay publicaciones. Se el primero en compartir.':'No posts yet. Be the first to share.')+'</p></div>'}
+    ${!_cmEnd&&_cmPosts.length?'<button class="btn-action" style="background:var(--bg2);color:var(--c);" onclick="cmMore()">'+(es?'Ver mas':'Load more')+'</button>':''}
+  `;
+}
+async function cmMore(){await loadComunidad(false);renderComunidad();}
+async function cmPublish(){
+  const es=lang==='es';
+  const category=document.getElementById("cm-cat").value;
+  const title=document.getElementById("cm-title").value.trim();
+  const body=document.getElementById("cm-body").value.trim();
+  if(!title||!body){toast(es?"Titulo y texto requeridos":"Title and text required","err");return;}
+  const btn=document.getElementById("cm-pub");btn.disabled=true;
+  try{
+    let error;
+    if(_cmEditId){({error}=await sb.from("community_posts").update({category,title,body}).eq("id",_cmEditId));}
+    else{({error}=await sb.from("community_posts").insert({user_id:user.id,category,title,body,week:prof?.graduated?null:hwk}));}
+    if(error){if(!chkAuthErr(error))toast(error.message,"err");return;}
+    _cmEditId=null;
+    track("community_post",{category});
+    toast(es?"Publicado \u2713":"Published \u2713","ok");
+    await loadComunidad(true);renderComunidad();
+  }finally{btn.disabled=false;}
+}
+function cmEdit(id){_cmEditId=id;renderComunidad();document.querySelector('.main-content')?.scrollTo({top:0,behavior:'smooth'});}
+async function cmDelete(id){
+  const es=lang==='es';
+  if(!confirm(es?"Eliminar esta publicacion?":"Delete this post?"))return;
+  const{error}=await sb.from("community_posts").delete().eq("id",id);
+  if(error){if(!chkAuthErr(error))toast(error.message,"err");return;}
+  _cmPosts=_cmPosts.filter(p=>p.id!==id);if(_cmEditId===id)_cmEditId=null;
+  toast(es?"Publicacion eliminada":"Post deleted","ok");renderComunidad();
+}
+async function cmReact(postId,kind){
+  if(_cmBusy)return;_cmBusy=true;
+  try{
+    if(!_cmReacts[postId])_cmReacts[postId]={corazon:0,aplauso:0,inspira:0,mine:null};
+    const r=_cmReacts[postId];
+    if(r.mine===kind){
+      const{error}=await sb.from("community_reactions").delete().eq("post_id",postId).eq("user_id",user.id);
+      if(error){if(!chkAuthErr(error))toast(error.message,"err");return;}
+      r[kind]=Math.max(0,(r[kind]||0)-1);r.mine=null;
+    }else{
+      const{error}=await sb.from("community_reactions").upsert({post_id:postId,user_id:user.id,kind},{onConflict:"post_id,user_id"});
+      if(error){if(!chkAuthErr(error))toast(error.message,"err");return;}
+      if(r.mine)r[r.mine]=Math.max(0,(r[r.mine]||0)-1);
+      r[kind]=(r[kind]||0)+1;r.mine=kind;
+    }
+    renderComunidad();
+  }finally{_cmBusy=false;}
 }
 
 // Offline/online detection

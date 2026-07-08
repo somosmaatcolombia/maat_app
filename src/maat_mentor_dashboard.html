@@ -282,6 +282,10 @@ dialog.m-dialog[open]{display:flex;align-items:flex-start;justify-content:center
         <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
         Notificaciones
       </div>
+      <div class="nav-link" data-view="cmmod" onclick="goView('cmmod')">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="13" y2="13"/></svg>
+        Comuni-Maat
+      </div>
       <div class="nav-link" data-view="graduados" onclick="goView('graduados')">
         <svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
         Graduados
@@ -338,6 +342,7 @@ dialog.m-dialog[open]{display:flex;align-items:flex-start;justify-content:center
       <div id="v-sessions" class="view"></div>
       <div id="v-grupos" class="view"></div>
       <div id="v-notif" class="view"></div>
+      <div id="v-cmmod" class="view"></div>
       <div id="v-mentor-config" class="view"></div>
       <div id="v-traccion" class="view"></div>
       <div id="v-admin-users" class="view"></div>
@@ -809,7 +814,7 @@ function goView(viewId){
   const el=document.getElementById("v-"+viewId);if(el)el.classList.add("active");
   document.querySelectorAll(".nav-link").forEach(n=>{n.classList.toggle("active",n.dataset.view===viewId);});
   closeSidebar();
-  const titles={overview:"Resumen",clients:"Mis Clientes",profile:"Perfil del Cliente",alerts:"Alertas",sessions:"Notas de Sesi\u00F3n",grupos:"Mentorias Grupales",notif:"Notificaciones","mentor-config":"Mi Configuraci\u00F3n","admin-users":"Usuarios","admin-prompt":"Coach IA Config",graduados:"Graduados",meditaciones:"Meditaciones",eventos:"Eventos",traccion:"Traccion / Metricas"};
+  const titles={overview:"Resumen",clients:"Mis Clientes",profile:"Perfil del Cliente",alerts:"Alertas",sessions:"Notas de Sesi\u00F3n",grupos:"Mentorias Grupales",notif:"Notificaciones",cmmod:"Comuni-Maat","mentor-config":"Mi Configuraci\u00F3n","admin-users":"Usuarios","admin-prompt":"Coach IA Config",graduados:"Graduados",meditaciones:"Meditaciones",eventos:"Eventos",traccion:"Traccion / Metricas"};
   document.getElementById("topbar-title").textContent=titles[viewId]||"MAAT";
   if(viewId==="overview")renderOverview();
   else if(viewId==="clients")renderClients();
@@ -817,6 +822,7 @@ function goView(viewId){
   else if(viewId==="sessions")renderSessions();
   else if(viewId==="grupos")renderGrupos();
   else if(viewId==="notif")renderNotif();
+  else if(viewId==="cmmod")renderCmMod();
   else if(viewId==="mentor-config")renderMentorConfig();
   else if(viewId==="admin-users")renderAdminUsers();
   else if(viewId==="admin-prompt")loadAIPrompt();
@@ -901,7 +907,7 @@ function renderClients(){
         ${m.hasAlert?'<div class="cc-alert"></div>':""}
         ${isInactive?'<div style="position:absolute;top:10px;right:10px;background:var(--r);color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;letter-spacing:.5px;">DESACTIVADO</div>':''}
         <div class="cc-top">
-          <div class="cc-avatar" style="background:${getPhaseHex(phase)}">${san((m.name||"?")[0].toUpperCase())}</div>
+          <div class="cc-avatar" style="background:${getPhaseHex(phase)};overflow:hidden;">${p.avatar_url?'<img src="'+san(p.avatar_url)+'" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.remove()">':san((m.name||"?")[0].toUpperCase())}</div>
           <div><div class="cc-name">${san(m.name)}${p.graduated?' \u{1F393}':''}</div><div class="cc-week">${p.graduated?'Graduado':'Semana '+m.week+' \u00B7 Fase '+phase}</div>${gname?`<div style="font-size:10px;color:var(--c);margin-top:2px;">\u{1F465} ${san(gname)}</div>`:'<div style="font-size:10px;color:var(--mu);margin-top:2px;">Individual 1:1</div>'}</div>
         </div>
         <div class="cc-metrics">
@@ -1627,6 +1633,55 @@ async function resetSlot(){
     if(error){if(!chkAuthErr(error))toast(error.message,"err");return;}}
   await loadGroupsAndSchedule();closeModal("modal-slot");toast("Restaurado al texto por defecto","ok");
   if(_currentView==="notif")renderNotif();
+}
+
+/* ============================================ */
+/* COMUNI-MAAT (moderacion)                     */
+/* ============================================ */
+let _cmModPosts=[],_cmModAuthors={};
+async function renderCmMod(){
+  const el=document.getElementById("v-cmmod");
+  el.innerHTML='<div class="card"><p style="color:var(--mu);">Cargando publicaciones...</p></div>';
+  const{data:posts,error}=await sb.from("community_posts")
+    .select("id,user_id,category,title,body,week,is_hidden,created_at")
+    .order("created_at",{ascending:false}).limit(50);
+  if(error){if(!chkAuthErr(error))el.innerHTML='<div class="card"><p style="color:var(--r);">'+san(error.message)+'</p></div>';return;}
+  _cmModPosts=posts||[];
+  const uids=[...new Set(_cmModPosts.map(p=>p.user_id))].filter(id=>!_cmModAuthors[id]);
+  if(uids.length){
+    const{data:profs}=await sb.from("profiles").select("id,full_name,avatar_url,graduated").in("id",uids);
+    (profs||[]).forEach(p=>{_cmModAuthors[p.id]=p;});
+  }
+  const rows=_cmModPosts.map(p=>{
+    const a=_cmModAuthors[p.user_id]||{};
+    return`<div class="card" style="${p.is_hidden?'opacity:.55;border-color:var(--r);':''}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+        <div style="min-width:0;">
+          <div style="font-weight:600;color:var(--text);">${san(p.title)}</div>
+          <div style="font-size:11px;color:var(--mu);margin:3px 0;">${san(a.full_name||"?")}${a.graduated?' \u{1F393}':''} \u00B7 ${san(p.category)} \u00B7 ${new Date(p.created_at).toLocaleDateString('es-CO')}${p.is_hidden?' \u00B7 <span style="color:var(--r);">OCULTO</span>':''}</div>
+          <p style="font-size:12px;color:var(--mu);">${san((p.body||'').slice(0,180))}${(p.body||'').length>180?'\u2026':''}</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;white-space:nowrap;">
+          <button class="btn btn-outline" style="padding:4px 10px;font-size:11px;" onclick="cmModToggle('${p.id}',${p.is_hidden?'false':'true'})">${p.is_hidden?'Mostrar':'Ocultar'}</button>
+          <button class="btn btn-outline" style="padding:4px 10px;font-size:11px;color:var(--r);" onclick="cmModDelete('${p.id}')">Eliminar</button>
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+  el.innerHTML=`
+    <p style="font-size:12px;color:var(--mu);margin-bottom:12px;">Publicaciones de la comunidad (activos y graduados). <strong>Ocultar</strong> la quita del feed sin borrarla; el autor la sigue viendo marcada.</p>
+    ${rows||'<div class="empty"><div class="icon">\u{1F331}</div><p>Aun no hay publicaciones en Comuni-Maat</p></div>'}`;
+}
+async function cmModToggle(id,hide){
+  const{error}=await sb.from("community_posts").update({is_hidden:hide}).eq("id",id);
+  if(error){if(!chkAuthErr(error))toast(error.message,"err");return;}
+  toast(hide?"Publicacion oculta":"Publicacion visible","ok");renderCmMod();
+}
+async function cmModDelete(id){
+  if(!confirm("Eliminar definitivamente esta publicacion?"))return;
+  const{error}=await sb.from("community_posts").delete().eq("id",id);
+  if(error){if(!chkAuthErr(error))toast(error.message,"err");return;}
+  toast("Publicacion eliminada","ok");renderCmMod();
 }
 
 /* ============================================ */
