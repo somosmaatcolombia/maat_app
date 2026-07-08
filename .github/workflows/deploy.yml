@@ -1,0 +1,81 @@
+# MAAT - Deploy automatico a somosmaat.org por FTP
+# Se dispara en cada push a main que toque src/ (o a mano desde Actions -> Run workflow).
+# Construye deploy/ (minificado) y sube app/, mentor/ y onboarding/ al hosting.
+#
+# Requiere 3 secrets en GitHub (Settings -> Secrets and variables -> Actions):
+#   FTP_SERVER    ej: ftp.somosmaat.org (o la IP del hosting)
+#   FTP_USERNAME  usuario FTP de cPanel
+#   FTP_PASSWORD  contrasena de ese usuario
+#
+# NOTA server-dir: si la cuenta FTP entra directo a public_html/ (tipico en cPanel),
+# cambia "public_html/app/" por "app/" (y igual en mentor/onboarding).
+
+name: Deploy a somosmaat.org
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "build_deploy.sh"
+      - ".github/workflows/deploy.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-somosmaat
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node (para html-minifier-terser)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Build (minifica y arma deploy/)
+        run: bash build_deploy.sh
+
+      - name: Verificar ASCII puro del build
+        run: |
+          python3 -c "
+          import sys
+          for f in ['deploy/app/index.html','deploy/mentor/index.html','deploy/onboarding/index.html']:
+              ok = all(ord(c) < 128 for c in open(f, encoding='utf-8').read())
+              print(f, 'ASCII:', ok)
+              if not ok: sys.exit(1)
+          "
+
+      - name: Subir app del cliente (/app/)
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          local-dir: deploy/app/
+          server-dir: public_html/app/
+
+      - name: Subir portal del mentor (/mentor/)
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          local-dir: deploy/mentor/
+          server-dir: public_html/mentor/
+
+      - name: Subir landing de onboarding (/onboarding/)
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          local-dir: deploy/onboarding/
+          server-dir: public_html/onboarding/
