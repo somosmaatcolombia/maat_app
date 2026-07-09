@@ -18,6 +18,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import webpush from "https://esm.sh/web-push@3.6.7?target=deno";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -65,6 +66,8 @@ serve(async (req) => {
     if (!vapidPublicKey || !vapidPrivateKey) {
       return json({ error: "VAPID keys not configured" }, 503);
     }
+    // Configurar UNA sola vez (antes se hacia por cada push individual, sumando latencia).
+    webpush.setVapidDetails("mailto:hello@somosmaat.org", vapidPublicKey, vapidPrivateKey);
 
     const now = Date.now();
     const graceMs = graceMin * 60 * 1000;
@@ -141,24 +144,22 @@ serve(async (req) => {
           data: { view: "sesiones" },
         });
 
+        // Enviar TODOS los push EN PARALELO (antes: uno por uno -> superaba el
+        // timeout de 5s de pg_net cuando habia varios destinatarios reales).
         const expiredIds: string[] = [];
-        for (const sub of subs) {
-          try {
-            const r = await sendWebPush({
-              endpoint: sub.endpoint,
-              p256dh: sub.p256dh,
-              authKey: sub.auth_key,
-              payload,
-              vapidPublicKey,
-              vapidPrivateKey,
-              vapidSubject: "mailto:hello@somosmaat.org",
-            });
-            if (r.ok) totalSent++;
-            else if (r.status === 410 || r.status === 404) expiredIds.push(sub.id);
-          } catch (e) {
-            console.error("Push error:", e);
+        const results = await Promise.allSettled(
+          subs.map((sub) => sendWebPush({
+            endpoint: sub.endpoint, p256dh: sub.p256dh, authKey: sub.auth_key, payload,
+          }))
+        );
+        results.forEach((r, i) => {
+          if (r.status === "fulfilled") {
+            if (r.value.ok) totalSent++;
+            else if (r.value.status === 410 || r.value.status === 404) expiredIds.push(subs[i].id);
+          } else {
+            console.error("Push error:", r.reason);
           }
-        }
+        });
         if (expiredIds.length > 0) {
           await sb.from("push_subscriptions").delete().in("id", expiredIds);
           totalExpired += expiredIds.length;
@@ -240,20 +241,13 @@ function formatTimeCO(iso: string): string {
   return `${h}:${mi} ${ap}`;
 }
 
-// Envia Web Push usando la libreria web-push (igual que send-notifications).
+// Envia Web Push. webpush ya viene importado y configurado (setVapidDetails) arriba.
 async function sendWebPush(opts: {
   endpoint: string;
   p256dh: string;
   authKey: string;
   payload: string;
-  vapidPublicKey: string;
-  vapidPrivateKey: string;
-  vapidSubject: string;
 }): Promise<Response> {
-  const { default: webpush } = await import(
-    "https://esm.sh/web-push@3.6.7?target=deno"
-  );
-  webpush.setVapidDetails(opts.vapidSubject, opts.vapidPublicKey, opts.vapidPrivateKey);
   const subscription = {
     endpoint: opts.endpoint,
     keys: { p256dh: opts.p256dh, auth: opts.authKey },

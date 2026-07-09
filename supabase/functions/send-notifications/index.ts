@@ -14,6 +14,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import webpush from "https://esm.sh/web-push@3.6.7?target=deno";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -60,6 +61,8 @@ serve(async (req) => {
     const vapidPublicKey = Deno.env.get("VAPID_PUBLIC_KEY") || "";
     const vapidPrivateKey = Deno.env.get("VAPID_PRIVATE_KEY") || "";
     if (!vapidPublicKey || !vapidPrivateKey) return json({ error: "VAPID no configurado" }, 503);
+    // Configurar UNA sola vez (antes se hacia por cada push individual, sumando latencia).
+    webpush.setVapidDetails("mailto:hello@somosmaat.org", vapidPublicKey, vapidPrivateKey);
 
     const sb = createClient(supabaseUrl, serviceKey);
 
@@ -128,11 +131,11 @@ serve(async (req) => {
     for (const r of habWR.data || []) addDay(r.user_id, r.updated_at);
     for (const r of logWR.data || []) addDay(r.user_id, r.sent_at);
 
-    // ---- Decision por usuario ----
-    const sentLog: Array<{ user_id: string; type: string; sent_at: string; days_absent: number | null }> = [];
-    const expiredIds: string[] = [];
-    let sentDevices = 0;
+    // ---- Decision por usuario: arma la cola de envios (todavia no envia nada) ----
     const nowISO = new Date(now).toISOString();
+    const decisionByUser = new Map<string, string>();
+    const payloadByType: Record<string, string> = {};
+    const pending: Array<{ userId: string; type: string; sub: { id: string; endpoint: string; p256dh: string; auth_key: string } }> = [];
 
     for (const c of relevant) {
       const subs = subsByUser.get(c.id);
@@ -162,25 +165,47 @@ serve(async (req) => {
       }
       if (!decision) continue;
 
-      const payload = JSON.stringify({
-        title: decision.copy.title,
-        body: decision.copy.body,
-        icon: "https://www.somosmaat.org/app/icon-192.png",
-        badge: "https://www.somosmaat.org/app/icon-192.png",
-        data: { view: VIEW_BY_TYPE[decision.type] || "home" },
-      });
-      let anyOk = false;
-      for (const sub of subs) {
-        try {
-          const r = await sendWebPush({
-            endpoint: sub.endpoint, p256dh: sub.p256dh, authKey: sub.auth_key,
-            payload, vapidPublicKey, vapidPrivateKey, vapidSubject: "mailto:hello@somosmaat.org",
-          });
-          if (r.ok) { anyOk = true; sentDevices++; }
-          else if (r.status === 410 || r.status === 404) expiredIds.push(sub.id);
-        } catch (e) { console.error("push error:", e); }
+      decisionByUser.set(c.id, decision.type);
+      if (!payloadByType[decision.type]) {
+        payloadByType[decision.type] = JSON.stringify({
+          title: decision.copy.title,
+          body: decision.copy.body,
+          icon: "https://www.somosmaat.org/app/icon-192.png",
+          badge: "https://www.somosmaat.org/app/icon-192.png",
+          data: { view: VIEW_BY_TYPE[decision.type] || "home" },
+        });
       }
-      if (anyOk) sentLog.push({ user_id: c.id, type: decision.type, sent_at: nowISO, days_absent: null });
+      for (const sub of subs) pending.push({ userId: c.id, type: decision.type, sub });
+    }
+
+    // ---- Enviar TODOS los push EN PARALELO ----
+    // Antes se enviaba uno por uno (secuencial) y cada llamada recargaba la libreria
+    // de push desde internet: con varios destinatarios reales superaba el timeout de
+    // 5s de pg_net y el cron quedaba sin respuesta (status_code=null, cero log).
+    const sentLog: Array<{ user_id: string; type: string; sent_at: string; days_absent: number | null }> = [];
+    const expiredIds: string[] = [];
+    let sentDevices = 0;
+
+    if (pending.length > 0) {
+      const results = await Promise.allSettled(
+        pending.map((p) => sendWebPush({
+          endpoint: p.sub.endpoint, p256dh: p.sub.p256dh, authKey: p.sub.auth_key,
+          payload: payloadByType[p.type],
+        }))
+      );
+      const okUsers = new Set<string>();
+      results.forEach((r, i) => {
+        const p = pending[i];
+        if (r.status === "fulfilled") {
+          if (r.value.ok) { sentDevices++; okUsers.add(p.userId); }
+          else if (r.value.status === 410 || r.value.status === 404) expiredIds.push(p.sub.id);
+        } else {
+          console.error("push error:", r.reason);
+        }
+      });
+      for (const userId of okUsers) {
+        sentLog.push({ user_id: userId, type: decisionByUser.get(userId)!, sent_at: nowISO, days_absent: null });
+      }
     }
 
     if (sentLog.length > 0) await sb.from("notification_log").insert(sentLog);
@@ -200,12 +225,10 @@ function json(b: unknown, status: number): Response {
   return new Response(JSON.stringify(b), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 }
 
+// webpush ya viene importado y configurado (setVapidDetails) una sola vez arriba.
 async function sendWebPush(opts: {
   endpoint: string; p256dh: string; authKey: string; payload: string;
-  vapidPublicKey: string; vapidPrivateKey: string; vapidSubject: string;
 }): Promise<Response> {
-  const { default: webpush } = await import("https://esm.sh/web-push@3.6.7?target=deno");
-  webpush.setVapidDetails(opts.vapidSubject, opts.vapidPublicKey, opts.vapidPrivateKey);
   const subscription = { endpoint: opts.endpoint, keys: { p256dh: opts.p256dh, auth: opts.authKey } };
   try {
     await webpush.sendNotification(subscription, opts.payload);
