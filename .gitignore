@@ -8,3 +8,4 @@ deploy/
 deploy.zip
 app_pluma.zip
 maat_deploy.zip
+.secrets/
