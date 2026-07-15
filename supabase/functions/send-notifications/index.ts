@@ -14,7 +14,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import webpush from "https://esm.sh/web-push@3.6.7?target=deno";
+import { sendPush } from "../_shared/webpush.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -61,8 +61,6 @@ serve(async (req) => {
     const vapidPublicKey = Deno.env.get("VAPID_PUBLIC_KEY") || "";
     const vapidPrivateKey = Deno.env.get("VAPID_PRIVATE_KEY") || "";
     if (!vapidPublicKey || !vapidPrivateKey) return json({ error: "VAPID no configurado" }, 503);
-    // Configurar UNA sola vez (antes se hacia por cada push individual, sumando latencia).
-    webpush.setVapidDetails("mailto:hello@somosmaat.org", vapidPublicKey, vapidPrivateKey);
 
     const sb = createClient(supabaseUrl, serviceKey);
 
@@ -188,10 +186,9 @@ serve(async (req) => {
 
     if (pending.length > 0) {
       const results = await Promise.allSettled(
-        pending.map((p) => sendWebPush({
-          endpoint: p.sub.endpoint, p256dh: p.sub.p256dh, authKey: p.sub.auth_key,
-          payload: payloadByType[p.type],
-        }))
+        pending.map((p) => sendPush({
+          endpoint: p.sub.endpoint, p256dh: p.sub.p256dh, auth_key: p.sub.auth_key,
+        }, payloadByType[p.type]))
       );
       const okUsers = new Set<string>();
       results.forEach((r, i) => {
@@ -225,16 +222,3 @@ function json(b: unknown, status: number): Response {
   return new Response(JSON.stringify(b), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 }
 
-// webpush ya viene importado y configurado (setVapidDetails) una sola vez arriba.
-async function sendWebPush(opts: {
-  endpoint: string; p256dh: string; authKey: string; payload: string;
-}): Promise<Response> {
-  const subscription = { endpoint: opts.endpoint, keys: { p256dh: opts.p256dh, auth: opts.authKey } };
-  try {
-    await webpush.sendNotification(subscription, opts.payload);
-    return new Response("ok", { status: 201 });
-  } catch (err: unknown) {
-    const e = err as { statusCode?: number; body?: string };
-    return new Response(e.body || "Push failed", { status: e.statusCode || 500 });
-  }
-}

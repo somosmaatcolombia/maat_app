@@ -18,7 +18,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import webpush from "https://esm.sh/web-push@3.6.7?target=deno";
+import { sendPush } from "../_shared/webpush.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -66,8 +66,6 @@ serve(async (req) => {
     if (!vapidPublicKey || !vapidPrivateKey) {
       return json({ error: "VAPID keys not configured" }, 503);
     }
-    // Configurar UNA sola vez (antes se hacia por cada push individual, sumando latencia).
-    webpush.setVapidDetails("mailto:hello@somosmaat.org", vapidPublicKey, vapidPrivateKey);
 
     const now = Date.now();
     const graceMs = graceMin * 60 * 1000;
@@ -148,9 +146,9 @@ serve(async (req) => {
         // timeout de 5s de pg_net cuando habia varios destinatarios reales).
         const expiredIds: string[] = [];
         const results = await Promise.allSettled(
-          subs.map((sub) => sendWebPush({
-            endpoint: sub.endpoint, p256dh: sub.p256dh, authKey: sub.auth_key, payload,
-          }))
+          subs.map((sub) => sendPush({
+            endpoint: sub.endpoint, p256dh: sub.p256dh, auth_key: sub.auth_key,
+          }, payload))
         );
         results.forEach((r, i) => {
           if (r.status === "fulfilled") {
@@ -241,22 +239,3 @@ function formatTimeCO(iso: string): string {
   return `${h}:${mi} ${ap}`;
 }
 
-// Envia Web Push. webpush ya viene importado y configurado (setVapidDetails) arriba.
-async function sendWebPush(opts: {
-  endpoint: string;
-  p256dh: string;
-  authKey: string;
-  payload: string;
-}): Promise<Response> {
-  const subscription = {
-    endpoint: opts.endpoint,
-    keys: { p256dh: opts.p256dh, auth: opts.authKey },
-  };
-  try {
-    await webpush.sendNotification(subscription, opts.payload);
-    return new Response("ok", { status: 201 });
-  } catch (err: unknown) {
-    const error = err as { statusCode?: number; body?: string };
-    return new Response(error.body || "Push failed", { status: error.statusCode || 500 });
-  }
-}

@@ -12,6 +12,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { sendPush } from "../_shared/webpush.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -121,23 +122,17 @@ serve(async (req) => {
         });
 
         const expiredIds: string[] = [];
-        for (const sub of subs || []) {
-          try {
-            const r = await sendWebPush({
-              endpoint: sub.endpoint,
-              p256dh: sub.p256dh,
-              authKey: sub.auth_key,
-              payload,
-              vapidPublicKey,
-              vapidPrivateKey,
-              vapidSubject: "mailto:hello@somosmaat.org",
-            });
-            if (r.ok) sent++;
-            else if (r.status === 410 || r.status === 404) expiredIds.push(sub.id);
-          } catch (e) {
-            console.error("push error:", e);
-          }
-        }
+        const results = await Promise.allSettled(
+          (subs || []).map((sub) => sendPush({
+            endpoint: sub.endpoint, p256dh: sub.p256dh, auth_key: sub.auth_key,
+          }, payload))
+        );
+        results.forEach((r, i) => {
+          if (r.status === "fulfilled") {
+            if (r.value.ok) sent++;
+            else if (r.value.status === 410 || r.value.status === 404) expiredIds.push((subs || [])[i].id);
+          } else console.error("push error:", r.reason);
+        });
         if (expiredIds.length > 0) {
           await sb.from("push_subscriptions").delete().in("id", expiredIds);
           expired = expiredIds.length;
@@ -165,29 +160,3 @@ function json(body: unknown, status: number): Response {
   });
 }
 
-// Envia Web Push (igual patron que send-notifications / session-reminders).
-async function sendWebPush(opts: {
-  endpoint: string;
-  p256dh: string;
-  authKey: string;
-  payload: string;
-  vapidPublicKey: string;
-  vapidPrivateKey: string;
-  vapidSubject: string;
-}): Promise<Response> {
-  const { default: webpush } = await import(
-    "https://esm.sh/web-push@3.6.7?target=deno"
-  );
-  webpush.setVapidDetails(opts.vapidSubject, opts.vapidPublicKey, opts.vapidPrivateKey);
-  const subscription = {
-    endpoint: opts.endpoint,
-    keys: { p256dh: opts.p256dh, auth: opts.authKey },
-  };
-  try {
-    await webpush.sendNotification(subscription, opts.payload);
-    return new Response("ok", { status: 201 });
-  } catch (err: unknown) {
-    const error = err as { statusCode?: number; body?: string };
-    return new Response(error.body || "Push failed", { status: error.statusCode || 500 });
-  }
-}
