@@ -1284,13 +1284,14 @@ function communityCard(){
   if(today>=3)line=es?`${today} personas ya calibraron hoy`:`${today} people already calibrated today`;
   else if(week>=3)line=es?`${week} personas calibraron esta semana`:`${week} people calibrated this week`;
   else line=es?`${members} personas en transformacion contigo`:`${members} people transforming alongside you`;
-  return `<div class="card" style="margin-top:16px;border-left:3px solid var(--v);background:linear-gradient(135deg,rgba(137,108,142,.08),transparent);">
+  return `<div class="card" style="margin-top:16px;border-left:3px solid var(--v);background:linear-gradient(135deg,rgba(137,108,142,.08),transparent);cursor:pointer;" onclick="nav('v-comunimaat')" role="button" tabindex="0" aria-label="${es?'Abrir Comuni-MAAT':'Open Comuni-MAAT'}">
     <div style="display:flex;align-items:center;gap:12px;">
       <div style="font-size:26px;flex-shrink:0;">\u{1F331}</div>
       <div style="flex:1;min-width:0;">
-        <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:2px;">${es?'Comunidad MAAT':'MAAT Community'}</div>
-        <div style="font-size:12px;color:var(--mu);line-height:1.5;">${san(line)}. ${es?'No caminas solo.':'You are not walking alone.'}</div>
+        <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:2px;">Comuni-MAAT</div>
+        <div style="font-size:12px;color:var(--mu);line-height:1.5;">${san(line)}. ${es?'Toca para ver lo que la comunidad esta compartiendo.':'Tap to see what the community is sharing.'}</div>
       </div>
+      <div style="font-size:20px;color:var(--v);flex-shrink:0;">\u203A</div>
     </div>
   </div>`;
 }
