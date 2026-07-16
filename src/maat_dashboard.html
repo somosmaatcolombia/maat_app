@@ -148,6 +148,13 @@ label.field-label{display:block;font-size:14px;color:var(--mu);margin-bottom:6px
 .cta-calib:active{transform:scale(.98);}
 .cta-calib h3{font-family:var(--font-title);font-size:18px;margin-bottom:4px;}
 .cta-calib p{font-size:12px;opacity:.8;}
+/* Banner inmersivo papercut: imagen sangra a la derecha, texto sobre velo solido a la izquierda */
+.cta-hero{position:relative;overflow:hidden;text-align:left;padding:22px 20px;min-height:104px;display:flex;align-items:center;}
+.cta-hero .cta-hero-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:right center;z-index:0;}
+.cta-hero .cta-hero-scrim{position:absolute;inset:0;background:linear-gradient(90deg,var(--c) 46%,rgba(57,161,201,.30) 100%);z-index:1;}
+.cta-hero .cta-hero-txt{position:relative;z-index:2;}
+/* Miniatura papercut para tarjetas del home */
+.pc-thumb{width:54px;height:54px;border-radius:12px;object-fit:cover;flex-shrink:0;background:var(--bg2);}
 .last-calib{font-size:14px;color:var(--mu);margin-top:8px;}
 .last-calib strong{color:var(--text);}
 .phase-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-family:var(--font-title);font-size:14px;font-weight:600;letter-spacing:.5px;}
@@ -1286,7 +1293,7 @@ function communityCard(){
   else line=es?`${members} personas en transformacion contigo`:`${members} people transforming alongside you`;
   return `<div class="card" style="margin-top:16px;border-left:3px solid var(--v);background:linear-gradient(135deg,rgba(137,108,142,.08),transparent);cursor:pointer;" onclick="nav('v-comunimaat')" role="button" tabindex="0" aria-label="${es?'Abrir Comuni-MAAT':'Open Comuni-MAAT'}">
     <div style="display:flex;align-items:center;gap:12px;">
-      <div style="font-size:26px;flex-shrink:0;">\u{1F331}</div>
+      <img class="pc-thumb" src="${CONFIG.IMG_BASE}onboarding-01-bienvenida.png${ASSET_V}" alt="" loading="lazy" decoding="async" onerror="this.remove()">
       <div style="flex:1;min-width:0;">
         <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:2px;">Comuni-MAAT</div>
         <div style="font-size:12px;color:var(--mu);line-height:1.5;">${san(line)}. ${es?'Toca para ver lo que la comunidad esta compartiendo.':'Tap to see what the community is sharing.'}</div>
@@ -1345,15 +1352,29 @@ function renderHome(){
     ${nextSes?`<div class="card" style="margin-top:16px;border-left:3px solid var(--o);cursor:pointer;background:linear-gradient(135deg,rgba(235,160,85,.08),transparent);" onclick="gv('v-sesiones')"><div style="display:flex;align-items:center;gap:12px;"><span style="font-size:22px;">\u{1F4C5}</span><div><div style="font-family:var(--font-title);font-size:14px;font-weight:600;color:var(--text);">${nextSes.modality==='group'?(lang==='es'?'Pr\u00F3xima sesi\u00F3n grupal':'Next group session'):(lang==='es'?'Pr\u00F3xima sesi\u00F3n 1:1':'Next 1:1 session')}</div><div style="font-size:12px;color:var(--o);">${fmtSesDateTime(nextSes.scheduled_at)}</div></div></div></div>`:''}
     ${cals.length===0?`<div class="onboarding-card"><h3>${lang==='es'?'\u00A1Bienvenido a MAAT! \u{1F44B}':'Welcome to MAAT! \u{1F44B}'}</h3><p>${lang==='es'?'Tu primer paso es calibrar tu d\u00EDa. Toma solo 30 segundos y es el inicio de todo tu proceso.':'Your first step is to calibrate your day. It takes just 30 seconds and is the start of your whole journey.'}</p><button class="btn-action" style="width:auto;padding:10px 24px;margin:0;" onclick="gv(\'v-calib\')">${lang==='es'?'Hacer mi primera calibraci\u00F3n \u2192':'Do my first calibration \u2192'}</button></div>`:''}
     ${journeyCard()}
-    <div class="cta-calib" onclick="gv('v-calib')"><h3>${t("cta_calib")}</h3><p>${t("cta_calib_sub")}</p></div>
+    <div class="cta-calib cta-hero" onclick="gv('v-calib')">
+      <img class="cta-hero-img" src="${CONFIG.IMG_BASE}onboarding-02-Calibracion.png${ASSET_V}" alt="" loading="lazy" decoding="async" onerror="this.remove()">
+      <div class="cta-hero-scrim"></div>
+      <div class="cta-hero-txt"><h3>${t("cta_calib")}</h3><p>${t("cta_calib_sub")}</p></div>
+    </div>
     <div class="card" style="margin-top:16px;border-left:3px solid var(--m);cursor:pointer;background:linear-gradient(135deg,rgba(125,205,147,.08),transparent);" onclick="gv('v-coach')">
       <div style="display:flex;align-items:center;gap:12px;">
-        <div style="font-size:30px;flex-shrink:0;">\u{1F9E0}</div>
+        <img class="pc-thumb" src="${CONFIG.IMG_BASE}onboarding-04-coach.png${ASSET_V}" alt="" loading="lazy" decoding="async" onerror="this.remove()">
         <div style="flex:1;min-width:0;">
           <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:3px;">${lang==='es'?'Habla con tu Coach MAAT':'Talk to your MAAT Coach'}</div>
           <div style="font-size:12px;color:var(--mu);line-height:1.5;">${san(coachHook)}</div>
         </div>
         <div style="font-size:20px;color:var(--m);flex-shrink:0;">\u2192</div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px;border-left:3px solid var(--o);cursor:pointer;background:linear-gradient(135deg,rgba(235,160,85,.08),transparent);" onclick="gv('v-habitos')">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <img class="pc-thumb" src="${CONFIG.IMG_BASE}onboarding-03-habitos.png${ASSET_V}" alt="" loading="lazy" decoding="async" onerror="this.remove()">
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:3px;">${lang==='es'?'Registra tus h\u00e1bitos':'Track your habits'}</div>
+          <div style="font-size:12px;color:var(--mu);line-height:1.5;">${lang==='es'?'Marca lo que cumpliste hoy y sostiene tu coherencia.':'Mark what you did today and sustain your coherence.'}</div>
+        </div>
+        <div style="font-size:20px;color:var(--o);flex-shrink:0;">\u2192</div>
       </div>
     </div>
     ${communityCard()}
