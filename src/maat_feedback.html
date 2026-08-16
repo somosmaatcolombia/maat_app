@@ -32,6 +32,11 @@ body{font-family:var(--font-body);background:var(--paper);color:var(--ink);font-
 .card{background:#fff;border:1px solid var(--bd);border-radius:var(--radius);padding:32px 28px;box-shadow:var(--shadow);margin-bottom:20px;}
 .hidden{display:none!important;}
 
+/* Language toggle */
+.lang-toggle{position:fixed;top:14px;right:14px;display:flex;gap:2px;background:var(--paper2);border:1px solid var(--bd);border-radius:20px;padding:3px;z-index:20;box-shadow:var(--shadow);}
+.lang-toggle button{border:none;background:transparent;font-family:var(--font-title);font-size:12px;font-weight:700;letter-spacing:1px;color:var(--mu);padding:5px 11px;border-radius:16px;cursor:pointer;}
+.lang-toggle button.on{background:var(--v);color:#fff;}
+
 /* Auth */
 .field{margin-bottom:16px;}
 .field label{display:block;font-family:var(--font-title);font-size:12px;letter-spacing:1.5px;color:var(--mu);text-transform:uppercase;margin-bottom:8px;font-weight:600;}
@@ -84,41 +89,42 @@ body{font-family:var(--font-body);background:var(--paper);color:var(--ink);font-
 </style>
 </head>
 <body>
+<div class="lang-toggle" id="lang-toggle"></div>
 <div class="wrap">
 
   <div class="head">
     <img class="logo" src="https://somosmaat.org/wp-content/uploads/2026/02/Fav-icon-1.png" alt="MAAT">
-    <div class="eyebrow">Tu proceso MAAT</div>
-    <h1>C&oacute;mo vas, <em>en tus palabras</em></h1>
-    <p>Un momento honesto contigo. No hay respuestas correctas.</p>
+    <div class="eyebrow" id="s-eyebrow"></div>
+    <h1 id="s-h1"></h1>
+    <p id="s-head-p"></p>
   </div>
 
   <!-- AUTH -->
   <div class="card" id="auth-card">
     <div class="err-box" id="auth-err"></div>
     <div class="field">
-      <label for="a-email">Tu correo</label>
-      <input type="email" id="a-email" placeholder="tu@correo.com" autocomplete="email">
+      <label for="a-email" id="lbl-email"></label>
+      <input type="email" id="a-email" autocomplete="email">
     </div>
     <div class="field">
-      <label for="a-pass">Tu contrase&ntilde;a</label>
-      <input type="password" id="a-pass" placeholder="La misma de tu app MAAT" autocomplete="current-password">
+      <label for="a-pass" id="lbl-pass"></label>
+      <input type="password" id="a-pass" autocomplete="current-password">
     </div>
-    <button class="btn" id="a-btn" onclick="doLogin()">Entrar</button>
-    <p class="note">Usa el mismo correo y contrase&ntilde;a con los que entras a tu app MAAT.</p>
+    <button class="btn" id="a-btn" onclick="doLogin()"></button>
+    <p class="note" id="s-auth-note"></p>
   </div>
 
   <!-- SURVEY -->
   <div id="survey-card" class="hidden">
-    <div class="topbar"><button onclick="doLogout()">Cerrar sesi&oacute;n</button></div>
+    <div class="topbar"><button id="btn-logout" onclick="doLogout()"></button></div>
     <div class="card">
       <div class="moment-bar" id="moment-bar"></div>
       <div class="moment-hint" id="moment-hint"></div>
       <div class="err-box" id="survey-err"></div>
       <div id="questions"></div>
       <div id="extra"></div>
-      <button class="btn" id="s-btn" onclick="submitSurvey()">Guardar mis respuestas</button>
-      <p class="note">Tus respuestas son parte de tu proceso. Solo t&uacute; y tu mentor las ven.</p>
+      <button class="btn" id="s-btn" onclick="submitSurvey()"></button>
+      <p class="note" id="s-survey-note"></p>
     </div>
   </div>
 
@@ -143,28 +149,64 @@ const CONFIG={
 };
 const sb=supabase.createClient(CONFIG.SUPABASE_URL,CONFIG.SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 
+/* ---------- i18n (comparte la clave maat-lang con la app MAAT) ---------- */
+let lang=localStorage.getItem("maat-lang")||"es";
+function L(es,en){return lang==="es"?es:en;}
+function setLang(l){
+  lang=l;localStorage.setItem("maat-lang",l);
+  renderLangToggle();applyStaticI18N();
+  if(!document.getElementById("survey-card").classList.contains("hidden")){renderMomentBar();renderSurvey();}
+}
+function renderLangToggle(){
+  document.getElementById("lang-toggle").innerHTML=
+    `<button class="${lang==="es"?"on":""}" onclick="setLang('es')">ES</button>`+
+    `<button class="${lang==="en"?"on":""}" onclick="setLang('en')">EN</button>`;
+}
+function setTxt(id,txt){const e=document.getElementById(id);if(e)e.textContent=txt;}
+function applyStaticI18N(){
+  document.documentElement.lang=lang;
+  setTxt("s-eyebrow",L("Tu proceso MAAT","Your MAAT process"));
+  document.getElementById("s-h1").innerHTML=L("C\u00F3mo vas, <em>en tus palabras</em>","How you\u2019re doing, <em>in your words</em>");
+  setTxt("s-head-p",L("Un momento honesto contigo. No hay respuestas correctas.","An honest moment with yourself. There are no wrong answers."));
+  setTxt("lbl-email",L("Tu correo","Your email"));
+  setTxt("lbl-pass",L("Tu contrase\u00F1a","Your password"));
+  document.getElementById("a-email").placeholder=L("tu@correo.com","you@email.com");
+  document.getElementById("a-pass").placeholder=L("La misma de tu app MAAT","The same as your MAAT app");
+  setTxt("a-btn",L("Entrar","Sign in"));
+  setTxt("s-auth-note",L("Usa el mismo correo y contrase\u00F1a con los que entras a tu app MAAT.","Use the same email and password you use for your MAAT app."));
+  setTxt("btn-logout",L("Cerrar sesi\u00F3n","Sign out"));
+  setTxt("s-survey-note",L("Tus respuestas son parte de tu proceso. Solo t\u00FA y tu mentor las ven.","Your answers are part of your process. Only you and your mentor see them."));
+}
+
 /* Estado */
 const STATE={user:null,profile:null,moment:null,answers:{},existing:{},refsLocked:false};
 
 /* Dimensiones nucleo (se repiten en los 3 momentos) */
 const CORE=[
-  {k:"actitud",   t:"Actitud hacia la vida",            s:"En las \u00FAltimas 2 semanas, mi actitud general hacia la vida ha sido...", lo:"Muy negativa", hi:"Muy positiva"},
-  {k:"claridad",  t:"Claridad",                          s:"Tengo claridad sobre lo que quiero y hacia d\u00F3nde voy.",                lo:"Nada claro",   hi:"Total claridad"},
-  {k:"confianza", t:"Confianza en m\u00ED mismo",         s:"Conf\u00EDo en mi capacidad para lograr lo que me propongo.",              lo:"Nada",         hi:"Plena"},
-  {k:"energia",   t:"Energ\u00EDa",                       s:"La energ\u00EDa con la que afronto mis d\u00EDas es...",                    lo:"Muy baja",     hi:"Muy alta"}
+  {k:"actitud",   es:{t:"Actitud hacia la vida",  s:"En las \u00FAltimas 2 semanas, mi actitud general hacia la vida ha sido...", lo:"Muy negativa", hi:"Muy positiva"},
+                  en:{t:"Attitude toward life",    s:"In the last 2 weeks, my general attitude toward life has been...",     lo:"Very negative",hi:"Very positive"}},
+  {k:"claridad",  es:{t:"Claridad",               s:"Tengo claridad sobre lo que quiero y hacia d\u00F3nde voy.",                 lo:"Nada claro",   hi:"Total claridad"},
+                  en:{t:"Clarity",                s:"I have clarity about what I want and where I am going.",                lo:"None",         hi:"Total clarity"}},
+  {k:"confianza", es:{t:"Confianza en m\u00ED mismo",  s:"Conf\u00EDo en mi capacidad para lograr lo que me propongo.",                lo:"Nada",         hi:"Plena"},
+                  en:{t:"Confidence in myself",   s:"I trust my ability to achieve what I set out to do.",                   lo:"None",         hi:"Full"}},
+  {k:"energia",   es:{t:"Energ\u00EDa",                s:"La energ\u00EDa con la que afronto mis d\u00EDas es...",                          lo:"Muy baja",     hi:"Muy alta"},
+                  en:{t:"Energy",                 s:"The energy with which I face my days is...",                            lo:"Very low",     hi:"Very high"}}
 ];
 /* Sub-ejes de entorno (radar) */
 const ENTORNO=[
-  {k:"ent_profesional",   t:"Profesional / trabajo"},
-  {k:"ent_relaciones",    t:"Relaciones / v\u00EDnculos"},
-  {k:"ent_familiar",      t:"Familiar"},
-  {k:"ent_intrapersonal", t:"Contigo mismo (intrapersonal)"}
+  {k:"ent_profesional",   es:"Profesional / trabajo",          en:"Professional / work"},
+  {k:"ent_relaciones",    es:"Relaciones / v\u00EDnculos",          en:"Relationships / bonds"},
+  {k:"ent_familiar",      es:"Familiar",                       en:"Family"},
+  {k:"ent_intrapersonal", es:"Contigo mismo (intrapersonal)",  en:"With yourself (intrapersonal)"}
 ];
 
 const MOMENTS={
-  inicio:      {label:"Inicio",     hint:"Esta es tu <b>l\u00EDnea base</b>. Responde seg\u00FAn c\u00F3mo te sientes hoy, al empezar el proceso. No busques la 'mejor' respuesta \u2014 busca la verdadera."},
-  intermedio:  {label:"Intermedio", hint:"Vamos a mitad de camino. Esto nos ayuda a <b>ajustar</b> lo que necesites para la segunda mitad."},
-  final:       {label:"Cierre",     hint:"Cierre del proceso. Compara con honestidad c\u00F3mo llegaste y c\u00F3mo te vas."}
+  inicio:     {es:{label:"Inicio",     hint:"Esta es tu <b>l\u00EDnea base</b>. Responde seg\u00FAn c\u00F3mo te sientes hoy, al empezar el proceso. No busques la 'mejor' respuesta \u2014 busca la verdadera."},
+               en:{label:"Start",      hint:"This is your <b>baseline</b>. Answer based on how you feel today, as you begin the process. Don't look for the 'best' answer \u2014 look for the true one."}},
+  intermedio: {es:{label:"Intermedio", hint:"Vamos a mitad de camino. Esto nos ayuda a <b>ajustar</b> lo que necesites para la segunda mitad."},
+               en:{label:"Midpoint",   hint:"We're halfway through. This helps us <b>adjust</b> whatever you need for the second half."}},
+  final:      {es:{label:"Cierre",     hint:"Cierre del proceso. Compara con honestidad c\u00F3mo llegaste y c\u00F3mo te vas."},
+               en:{label:"Closing",    hint:"End of the process. Honestly compare how you arrived and how you're leaving."}}
 };
 
 function suggestMoment(week){
@@ -186,14 +228,14 @@ async function doLogin(){
   clrErr("auth-err");
   const email=document.getElementById("a-email").value.trim().toLowerCase();
   const pass=document.getElementById("a-pass").value;
-  if(!email||!pass){showErr("auth-err","Escribe tu correo y contrase\u00F1a.");return;}
-  const btn=document.getElementById("a-btn");btn.disabled=true;btn.textContent="Entrando...";
+  if(!email||!pass){showErr("auth-err",L("Escribe tu correo y contrase\u00F1a.","Enter your email and password."));return;}
+  const btn=document.getElementById("a-btn");btn.disabled=true;btn.textContent=L("Entrando...","Signing in...");
   try{
     const{data,error}=await sb.auth.signInWithPassword({email,password:pass});
-    if(error){showErr("auth-err","Correo o contrase\u00F1a incorrectos.");btn.disabled=false;btn.textContent="Entrar";return;}
+    if(error){showErr("auth-err",L("Correo o contrase\u00F1a incorrectos.","Incorrect email or password."));btn.disabled=false;btn.textContent=L("Entrar","Sign in");return;}
     await loadUser();
   }catch(e){
-    showErr("auth-err","Algo sali\u00F3 mal. Intenta de nuevo.");btn.disabled=false;btn.textContent="Entrar";
+    showErr("auth-err",L("Algo sali\u00F3 mal. Intenta de nuevo.","Something went wrong. Try again."));btn.disabled=false;btn.textContent=L("Entrar","Sign in");
   }
 }
 async function doLogout(){
@@ -205,8 +247,13 @@ async function loadUser(){
   const{data:{user}}=await sb.auth.getUser();
   if(!user){hide("survey-card");hide("success-card");show("auth-card");return;}
   STATE.user=user;
-  const{data:prof}=await sb.from("profiles").select("full_name,current_week,role").eq("id",user.id).maybeSingle();
+  const{data:prof}=await sb.from("profiles").select("full_name,current_week,role,preferred_lang").eq("id",user.id).maybeSingle();
   STATE.profile=prof||{};
+  /* Idioma preferido del perfil manda (si existe) */
+  if(STATE.profile.preferred_lang&&STATE.profile.preferred_lang!==lang){
+    lang=STATE.profile.preferred_lang;localStorage.setItem("maat-lang",lang);
+    renderLangToggle();applyStaticI18N();
+  }
   /* Cargar respuestas existentes de este usuario */
   const{data:rows}=await sb.from("client_feedback").select("*").eq("user_id",user.id);
   STATE.existing={};(rows||[]).forEach(r=>{STATE.existing[r.moment]=r;});
@@ -226,12 +273,12 @@ function renderMomentBar(){
   bar.innerHTML="";
   Object.keys(MOMENTS).forEach(mk=>{
     const b=document.createElement("button");
-    b.textContent=MOMENTS[mk].label+(STATE.existing[mk]?" \u2713":"");
+    b.textContent=MOMENTS[mk][lang].label+(STATE.existing[mk]?" \u2713":"");
     if(mk===STATE.moment)b.classList.add("active");
     b.onclick=()=>{STATE.moment=mk;STATE.answers={};renderMomentBar();renderSurvey();};
     bar.appendChild(b);
   });
-  document.getElementById("moment-hint").innerHTML=MOMENTS[STATE.moment].hint;
+  document.getElementById("moment-hint").innerHTML=MOMENTS[STATE.moment][lang].hint;
 }
 
 function scaleHTML(key,min,lo,hi){
@@ -241,11 +288,11 @@ function scaleHTML(key,min,lo,hi){
           <div class="scale-anchors"><span>${esc(lo)}</span><span>${esc(hi)}</span></div>`;
 }
 
-function qBlock(dim,min,lo,hi){
+function qBlock(title,sub,key,min,lo,hi){
   return `<div class="q">
-    <div class="q-title">${esc(dim.t)}</div>
-    ${dim.s?`<div class="q-sub">${esc(dim.s)}</div>`:""}
-    ${scaleHTML(dim.k,min===undefined?1:min,lo||"1",hi||"10")}
+    <div class="q-title">${esc(title)}</div>
+    ${sub?`<div class="q-sub">${esc(sub)}</div>`:""}
+    ${scaleHTML(key,min===undefined?1:min,lo||"1",hi||"10")}
   </div>`;
 }
 
@@ -254,13 +301,14 @@ function renderSurvey(){
   const ex=STATE.existing[STATE.moment]||{};
   const qc=document.getElementById("questions");
   let html="";
-  CORE.forEach(d=>{html+=qBlock(d,1,d.lo,d.hi);});
-  html+=`<div class="section-label">Tu entorno hoy (1 = muy insatisfecho, 10 = pleno)</div>`;
-  ENTORNO.forEach(d=>{html+=qBlock(d,1,"Muy insatisfecho","Pleno");});
+  CORE.forEach(d=>{const t=d[lang];html+=qBlock(t.t,t.s,d.k,1,t.lo,t.hi);});
+  html+=`<div class="section-label">${L("Tu entorno hoy (1 = muy insatisfecho, 10 = pleno)","Your environment today (1 = very unsatisfied, 10 = fulfilled)")}</div>`;
+  const entLo=L("Muy insatisfecho","Very unsatisfied"),entHi=L("Pleno","Fulfilled");
+  ENTORNO.forEach(d=>{html+=qBlock(d[lang],"",d.k,1,entLo,entHi);});
   html+=`<div class="q">
-      <div class="q-title">Una frase</div>
-      <div class="q-sub">Describe en una frase c\u00F3mo te sientes hoy respecto a tu vida.</div>
-      <textarea id="f-open" placeholder="Escribe con tus palabras...">${esc(ex.open_text||"")}</textarea>
+      <div class="q-title">${L("Una frase","One sentence")}</div>
+      <div class="q-sub">${L("Describe en una frase c\u00F3mo te sientes hoy respecto a tu vida.","Describe in one sentence how you feel about your life today.")}</div>
+      <textarea id="f-open" placeholder="${L("Escribe con tus palabras...","Write in your own words...")}">${esc(ex.open_text||"")}</textarea>
     </div>`;
   qc.innerHTML=html;
 
@@ -268,33 +316,33 @@ function renderSurvey(){
   let extra="";
   if(STATE.moment!=="inicio"){
     extra+=`<div class="q">
-        <div class="q-title">Satisfacci\u00F3n con la mentor\u00EDa</div>
-        <div class="q-sub">\u00BFQu\u00E9 tan satisfecho est\u00E1s con el proceso hasta ahora?</div>
-        ${scaleHTML("satisfaccion",1,"Nada","Totalmente")}
+        <div class="q-title">${L("Satisfacci\u00F3n con la mentor\u00EDa","Satisfaction with the mentorship")}</div>
+        <div class="q-sub">${L("\u00BFQu\u00E9 tan satisfecho est\u00E1s con el proceso hasta ahora?","How satisfied are you with the process so far?")}</div>
+        ${scaleHTML("satisfaccion",1,L("Nada","Not at all"),L("Totalmente","Completely"))}
       </div>
       <div class="q">
-        <div class="q-title">\u00BFQu\u00E9 faltar\u00EDa para un 10?</div>
-        <textarea id="f-mejora" placeholder="Lo que mejorar\u00EDas o necesitas...">${esc(ex.mejora_text||"")}</textarea>
+        <div class="q-title">${L("\u00BFQu\u00E9 faltar\u00EDa para un 10?","What would make it a 10?")}</div>
+        <textarea id="f-mejora" placeholder="${L("Lo que mejorar\u00EDas o necesitas...","What you'd improve or need...")}">${esc(ex.mejora_text||"")}</textarea>
       </div>`;
   }
   if(STATE.moment==="final"){
-    extra+=`<div class="section-label">Cierre</div>
+    extra+=`<div class="section-label">${L("Cierre","Closing")}</div>
       <div class="q">
-        <div class="q-title">\u00BFNos recomendar\u00EDas?</div>
-        <div class="q-sub">Del 0 al 10, \u00BFqu\u00E9 tan probable es que recomiendes MAAT a alguien como t\u00FA?</div>
-        ${scaleHTML("nps",0,"Nada probable","Segur\u00EDsimo")}
+        <div class="q-title">${L("\u00BFNos recomendar\u00EDas?","Would you recommend us?")}</div>
+        <div class="q-sub">${L("Del 0 al 10, \u00BFqu\u00E9 tan probable es que recomiendes MAAT a alguien como t\u00FA?","From 0 to 10, how likely are you to recommend MAAT to someone like you?")}</div>
+        ${scaleHTML("nps",0,L("Nada probable","Not at all likely"),L("Segur\u00EDsimo","Absolutely"))}
       </div>
       <div class="q">
-        <div class="q-title">Testimonio</div>
-        <label class="check-row"><input type="checkbox" id="f-testok"><span>Autorizo a MAAT a usar mi frase de cierre como testimonio.</span></label>
-        <textarea id="f-testtext" placeholder="Si quieres, deja aqu\u00ED tu frase de cierre...">${esc(ex.testimonial_text||"")}</textarea>
+        <div class="q-title">${L("Testimonio","Testimonial")}</div>
+        <label class="check-row"><input type="checkbox" id="f-testok"><span>${L("Autorizo a MAAT a usar mi frase de cierre como testimonio.","I authorize MAAT to use my closing words as a testimonial.")}</span></label>
+        <textarea id="f-testtext" placeholder="${L("Si quieres, deja aqu\u00ED tu frase de cierre...","If you'd like, leave your closing words here...")}">${esc(ex.testimonial_text||"")}</textarea>
       </div>`;
     if(STATE.refsLocked){
-      extra+=`<div class="q"><div class="q-title">Recomendaciones</div><div class="q-sub">Ya registramos tus recomendaciones. \u00A1Gracias!</div></div>`;
+      extra+=`<div class="q"><div class="q-title">${L("Recomendaciones","Referrals")}</div><div class="q-sub">${L("Ya registramos tus recomendaciones. \u00A1Gracias!","We already recorded your referrals. Thank you!")}</div></div>`;
     }else{
       extra+=`<div class="q">
-        <div class="q-title">\u00BFQui\u00E9n m\u00E1s lo necesita?</div>
-        <div class="q-sub">Piensa en 2 personas a las que este proceso les cambiar\u00EDa la vida. Nos acercaremos con respeto de tu parte.</div>
+        <div class="q-title">${L("\u00BFQui\u00E9n m\u00E1s lo necesita?","Who else needs this?")}</div>
+        <div class="q-sub">${L("Piensa en 2 personas a las que este proceso les cambiar\u00EDa la vida. Nos acercaremos con respeto de tu parte.","Think of 2 people whose lives this process would change. We'll reach out respectfully on your behalf.")}</div>
         ${refBlock(1)}${refBlock(2)}
       </div>`;
     }
@@ -315,14 +363,14 @@ function renderSurvey(){
       setScale(b.dataset.k,parseInt(b.dataset.v,10));
     });
   });
-  document.getElementById("s-btn").textContent=STATE.existing[STATE.moment]?"Actualizar mis respuestas":"Guardar mis respuestas";
+  document.getElementById("s-btn").textContent=STATE.existing[STATE.moment]?L("Actualizar mis respuestas","Update my answers"):L("Guardar mis respuestas","Save my answers");
 }
 
 function refBlock(n){
   return `<div class="ref-block">
-    <div class="field"><label>Persona ${n} &middot; nombre</label><input type="text" id="ref${n}-name" placeholder="Nombre y apellido"></div>
-    <div class="field"><label>Correo o WhatsApp</label><input type="text" id="ref${n}-contact" placeholder="correo o +57..."></div>
-    <div class="field"><label>\u00BFPor qu\u00E9 crees que lo necesita?</label><input type="text" id="ref${n}-reason" placeholder="En una l\u00EDnea"></div>
+    <div class="field"><label>${L("Persona","Person")} ${n} &middot; ${L("nombre","name")}</label><input type="text" id="ref${n}-name" placeholder="${L("Nombre y apellido","Full name")}"></div>
+    <div class="field"><label>${L("Correo o WhatsApp","Email or WhatsApp")}</label><input type="text" id="ref${n}-contact" placeholder="${L("correo o +57...","email or +1...")}"></div>
+    <div class="field"><label>${L("\u00BFPor qu\u00E9 crees que lo necesita?","Why do you think they need it?")}</label><input type="text" id="ref${n}-reason" placeholder="${L("En una l\u00EDnea","In one line")}"></div>
   </div>`;
 }
 
@@ -337,11 +385,11 @@ async function submitSurvey(){
   clrErr("survey-err");
   const a=STATE.answers;
   const missing=[...CORE,...ENTORNO].filter(d=>a[d.k]==null);
-  if(missing.length){showErr("survey-err","Te faltan algunas preguntas por responder.");return;}
-  if(STATE.moment!=="inicio"&&a.satisfaccion==null){showErr("survey-err","Falta tu nivel de satisfacci\u00F3n.");return;}
-  if(STATE.moment==="final"&&a.nps==null){showErr("survey-err","Falta tu nivel de recomendaci\u00F3n.");return;}
+  if(missing.length){showErr("survey-err",L("Te faltan algunas preguntas por responder.","You still have some questions to answer."));return;}
+  if(STATE.moment!=="inicio"&&a.satisfaccion==null){showErr("survey-err",L("Falta tu nivel de satisfacci\u00F3n.","Your satisfaction level is missing."));return;}
+  if(STATE.moment==="final"&&a.nps==null){showErr("survey-err",L("Falta tu nivel de recomendaci\u00F3n.","Your recommendation level is missing."));return;}
 
-  const btn=document.getElementById("s-btn");btn.disabled=true;const prev=btn.textContent;btn.textContent="Guardando...";
+  const btn=document.getElementById("s-btn");btn.disabled=true;const prev=btn.textContent;btn.textContent=L("Guardando...","Saving...");
   try{
     const row={
       user_id:STATE.user.id,
@@ -362,7 +410,7 @@ async function submitSurvey(){
       const tt=document.getElementById("f-testtext");row.testimonial_text=tt&&tt.value.trim()?tt.value.trim():null;
     }
     const{error}=await sb.from("client_feedback").upsert(row,{onConflict:"user_id,moment"});
-    if(error){showErr("survey-err","No pudimos guardar: "+error.message);btn.disabled=false;btn.textContent=prev;return;}
+    if(error){showErr("survey-err",L("No pudimos guardar: ","Could not save: ")+error.message);btn.disabled=false;btn.textContent=prev;return;}
 
     /* Referidos (solo final y si no estaban bloqueados) */
     if(STATE.moment==="final"&&!STATE.refsLocked){
@@ -385,20 +433,20 @@ async function submitSurvey(){
     }
     showSuccess();
   }catch(e){
-    showErr("survey-err","Algo sali\u00F3 mal. Intenta de nuevo.");btn.disabled=false;btn.textContent=prev;
+    showErr("survey-err",L("Algo sali\u00F3 mal. Intenta de nuevo.","Something went wrong. Try again."));btn.disabled=false;btn.textContent=prev;
   }
 }
 
 function showSuccess(){
   const name=(STATE.profile.full_name||"").split(" ")[0]||"";
   const msgs={
-    inicio:"Registramos tu punto de partida. Nos vemos dentro del proceso.",
-    intermedio:"Gracias por tu honestidad. Con esto ajustamos lo que necesites para la segunda mitad.",
-    final:"Gracias por confiar y por caminar este proceso. Tu voz cierra el c\u00EDrculo."
+    inicio:L("Registramos tu punto de partida. Nos vemos dentro del proceso.","We recorded your starting point. See you inside the process."),
+    intermedio:L("Gracias por tu honestidad. Con esto ajustamos lo que necesites para la segunda mitad.","Thank you for your honesty. With this we'll adjust whatever you need for the second half."),
+    final:L("Gracias por confiar y por caminar este proceso. Tu voz cierra el c\u00EDrculo.","Thank you for trusting and walking this process. Your voice closes the circle.")
   };
   hide("survey-card");
-  document.getElementById("succ-title").textContent=(name?name+", ":"")+"\u00A1listo! \u2728";
-  document.getElementById("succ-body").textContent=msgs[STATE.moment]||"Respuestas guardadas.";
+  document.getElementById("succ-title").textContent=(name?name+", ":"")+L("\u00A1listo! \u2728","done! \u2728");
+  document.getElementById("succ-body").textContent=msgs[STATE.moment]||L("Respuestas guardadas.","Answers saved.");
   show("success-card");
 }
 
@@ -407,7 +455,9 @@ function showSuccess(){
   document.getElementById(id).addEventListener("keydown",e=>{if(e.key==="Enter")doLogin();});
 });
 
-/* Sesion existente? */
+/* Init */
+renderLangToggle();
+applyStaticI18N();
 loadUser();
 </script>
 </body>

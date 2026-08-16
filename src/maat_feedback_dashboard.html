@@ -22,8 +22,15 @@ h1{font-family:var(--font-title);font-size:34px;font-weight:700;letter-spacing:.
 h2{font-family:var(--font-title);font-size:20px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--mu);margin-bottom:16px;}
 .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;flex-wrap:wrap;gap:12px;}
 .head .sub{color:var(--mu);font-size:13px;}
+.head-right{display:flex;align-items:center;gap:10px;}
 .card{background:var(--bg2);border:1px solid var(--bd);border-radius:16px;padding:24px;margin-bottom:20px;}
 .hidden{display:none!important;}
+
+/* Language toggle */
+.lang-toggle{display:inline-flex;gap:2px;background:var(--bg);border:1px solid var(--bd);border-radius:20px;padding:3px;}
+.lang-toggle button{border:none;background:transparent;font-family:var(--font-title);font-size:12px;font-weight:700;letter-spacing:1px;color:var(--mu);padding:5px 11px;border-radius:16px;cursor:pointer;}
+.lang-toggle button.on{background:var(--v);color:#fff;}
+.auth-top{display:flex;justify-content:flex-end;margin-bottom:14px;}
 
 /* Auth */
 .auth{max-width:400px;margin:60px auto;}
@@ -80,55 +87,59 @@ select{background:var(--bg);color:var(--text);border:1.5px solid var(--bd);borde
 
   <!-- AUTH -->
   <div class="card auth" id="auth-card">
-    <h1 style="margin-bottom:6px;">Dashboard de Feedback</h1>
-    <p class="sub" style="color:var(--mu);margin-bottom:20px;">Solo mentores y administradores.</p>
+    <div class="auth-top"><div class="lang-toggle"></div></div>
+    <h1 style="margin-bottom:6px;" id="s-auth-h1"></h1>
+    <p class="sub" style="color:var(--mu);margin-bottom:20px;" id="s-auth-sub"></p>
     <div class="err-box" id="auth-err"></div>
-    <div class="field"><label for="a-email">Correo</label><input type="email" id="a-email" autocomplete="email"></div>
-    <div class="field"><label for="a-pass">Contrase&ntilde;a</label><input type="password" id="a-pass" autocomplete="current-password"></div>
-    <button class="btn" id="a-btn" onclick="doLogin()">Entrar</button>
+    <div class="field"><label for="a-email" id="lbl-email"></label><input type="email" id="a-email" autocomplete="email"></div>
+    <div class="field"><label for="a-pass" id="lbl-pass"></label><input type="password" id="a-pass" autocomplete="current-password"></div>
+    <button class="btn" id="a-btn" onclick="doLogin()"></button>
   </div>
 
   <!-- DASH -->
   <div id="dash" class="hidden">
     <div class="head">
       <div>
-        <h1>Feedback &amp; Cierre</h1>
+        <h1 id="s-head-h1"></h1>
         <div class="sub" id="head-sub"></div>
       </div>
-      <button class="btn-ghost" onclick="doLogout()">Salir</button>
+      <div class="head-right">
+        <div class="lang-toggle"></div>
+        <button class="btn-ghost" id="btn-logout" onclick="doLogout()"></button>
+      </div>
     </div>
 
     <div class="kpis" id="kpis"></div>
 
     <div class="card">
-      <h2>Curva de transformaci&oacute;n</h2>
+      <h2 id="s-h2-curve"></h2>
       <div id="curve"></div>
     </div>
 
     <div class="grid2">
       <div class="card">
-        <h2>Entorno: antes vs despu&eacute;s</h2>
+        <h2 id="s-h2-radar"></h2>
         <div id="radar"></div>
       </div>
       <div class="card">
-        <h2>Recomendaci&oacute;n (NPS)</h2>
+        <h2 id="s-h2-nps"></h2>
         <div id="nps"></div>
       </div>
     </div>
 
     <div class="card">
-      <h2>Ficha individual</h2>
+      <h2 id="s-h2-ficha"></h2>
       <select id="client-sel" onchange="renderFicha()"></select>
       <div id="ficha" style="margin-top:18px;"></div>
     </div>
 
     <div class="grid2">
       <div class="card">
-        <h2>Testimonios autorizados</h2>
+        <h2 id="s-h2-testi"></h2>
         <div id="testimonios"></div>
       </div>
       <div class="card">
-        <h2>Leads referidos</h2>
+        <h2 id="s-h2-refs"></h2>
         <div id="referidos"></div>
       </div>
     </div>
@@ -144,22 +155,56 @@ const CONFIG={
 };
 const sb=supabase.createClient(CONFIG.SUPABASE_URL,CONFIG.SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 
+/* ---------- i18n (comparte la clave maat-lang con la app MAAT) ---------- */
+let lang=localStorage.getItem("maat-lang")||"es";
+function L(es,en){return lang==="es"?es:en;}
+function setLang(l){
+  lang=l;localStorage.setItem("maat-lang",l);
+  renderLangToggle();applyStaticI18N();
+  if(!document.getElementById("dash").classList.contains("hidden"))renderAll();
+}
+function renderLangToggle(){
+  const html=`<button class="${lang==="es"?"on":""}" onclick="setLang('es')">ES</button>`+
+             `<button class="${lang==="en"?"on":""}" onclick="setLang('en')">EN</button>`;
+  document.querySelectorAll(".lang-toggle").forEach(el=>{el.innerHTML=html;});
+}
+function setTxt(id,txt){const e=document.getElementById(id);if(e)e.textContent=txt;}
+function applyStaticI18N(){
+  document.documentElement.lang=lang;
+  setTxt("s-auth-h1",L("Dashboard de Feedback","Feedback Dashboard"));
+  setTxt("s-auth-sub",L("Solo mentores y administradores.","Mentors and admins only."));
+  setTxt("lbl-email",L("Correo","Email"));
+  setTxt("lbl-pass",L("Contrase\u00F1a","Password"));
+  setTxt("a-btn",L("Entrar","Sign in"));
+  setTxt("s-head-h1",L("Feedback & Cierre","Feedback & Closing"));
+  setTxt("btn-logout",L("Salir","Sign out"));
+  setTxt("s-h2-curve",L("Curva de transformaci\u00F3n","Transformation curve"));
+  setTxt("s-h2-radar",L("Entorno: antes vs despu\u00E9s","Environment: before vs after"));
+  setTxt("s-h2-nps",L("Recomendaci\u00F3n (NPS)","Recommendation (NPS)"));
+  setTxt("s-h2-ficha",L("Ficha individual","Individual profile"));
+  setTxt("s-h2-testi",L("Testimonios autorizados","Authorized testimonials"));
+  setTxt("s-h2-refs",L("Leads referidos","Referred leads"));
+  if(D.me)setHeadSub(D.me);
+}
+
 const DIMS=[
-  {k:"actitud",   t:"Actitud",     col:"var(--c)"},
-  {k:"claridad",  t:"Claridad",    col:"var(--o)"},
-  {k:"confianza", t:"Confianza",   col:"var(--m)"},
-  {k:"energia",   t:"Energia",     col:"var(--v)"}
+  {k:"actitud",   es:"Actitud",    en:"Attitude",   col:"var(--c)"},
+  {k:"claridad",  es:"Claridad",   en:"Clarity",    col:"var(--o)"},
+  {k:"confianza", es:"Confianza",  en:"Confidence", col:"var(--m)"},
+  {k:"energia",   es:"Energ\u00EDa",    en:"Energy",     col:"var(--v)"}
 ];
 const ENT=[
-  {k:"ent_profesional",   t:"Profesional"},
-  {k:"ent_relaciones",    t:"Relaciones"},
-  {k:"ent_familiar",      t:"Familiar"},
-  {k:"ent_intrapersonal", t:"Intrapersonal"}
+  {k:"ent_profesional",   es:"Profesional",   en:"Professional"},
+  {k:"ent_relaciones",    es:"Relaciones",    en:"Relationships"},
+  {k:"ent_familiar",      es:"Familiar",      en:"Family"},
+  {k:"ent_intrapersonal", es:"Intrapersonal", en:"Intrapersonal"}
 ];
 const MOMS=["inicio","intermedio","final"];
-const MOM_LABEL={inicio:"Inicio",intermedio:"Intermedio",final:"Cierre"};
+const MOM_LABEL={inicio:{es:"Inicio",en:"Start"},intermedio:{es:"Intermedio",en:"Midpoint"},final:{es:"Cierre",en:"Closing"}};
+function dimT(d){return d[lang];}
+function momL(m){return MOM_LABEL[m][lang];}
 
-const D={rows:[],refs:[],profiles:{},overview:null};
+const D={rows:[],refs:[],profiles:{},overview:null,me:null};
 
 function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");}
 function show(id){document.getElementById(id).classList.remove("hidden");}
@@ -173,23 +218,33 @@ async function doLogin(){
   document.getElementById("auth-err").classList.remove("show");
   const email=document.getElementById("a-email").value.trim().toLowerCase();
   const pass=document.getElementById("a-pass").value;
-  const btn=document.getElementById("a-btn");btn.disabled=true;btn.textContent="Entrando...";
+  const btn=document.getElementById("a-btn");btn.disabled=true;btn.textContent=L("Entrando...","Signing in...");
   const{error}=await sb.auth.signInWithPassword({email,password:pass});
-  if(error){showErr("auth-err","Credenciales incorrectas.");btn.disabled=false;btn.textContent="Entrar";return;}
+  if(error){showErr("auth-err",L("Credenciales incorrectas.","Incorrect credentials."));btn.disabled=false;btn.textContent=L("Entrar","Sign in");return;}
   await boot();
 }
 async function doLogout(){try{await sb.auth.signOut();}catch(_){}location.reload();}
 
+function setHeadSub(me){
+  document.getElementById("head-sub").textContent=
+    L("Sesi\u00F3n de ","Session of ")+(me.full_name||"")+" \u00B7 "+L("rol ","role ")+me.role;
+}
+
 async function boot(){
   const{data:{user}}=await sb.auth.getUser();
   if(!user){hide("dash");show("auth-card");return;}
-  const{data:me}=await sb.from("profiles").select("role,full_name").eq("id",user.id).maybeSingle();
+  const{data:me}=await sb.from("profiles").select("role,full_name,preferred_lang").eq("id",user.id).maybeSingle();
   if(!me||!["mentor","admin"].includes(me.role)){
-    showErr("auth-err","Tu cuenta no tiene acceso a este panel.");
+    showErr("auth-err",L("Tu cuenta no tiene acceso a este panel.","Your account has no access to this panel."));
     await sb.auth.signOut();hide("dash");show("auth-card");return;
   }
+  D.me=me;
+  if(me.preferred_lang&&me.preferred_lang!==lang){
+    lang=me.preferred_lang;localStorage.setItem("maat-lang",lang);
+    renderLangToggle();applyStaticI18N();
+  }
   hide("auth-card");show("dash");
-  document.getElementById("head-sub").textContent="Sesion de "+(me.full_name||"")+" \u00B7 rol "+me.role;
+  setHeadSub(me);
   await loadData();
 }
 
@@ -206,8 +261,11 @@ async function loadData(){
   const profs=(res[2].status==="fulfilled"&&res[2].value.data)||[];
   D.profiles={};profs.forEach(p=>{D.profiles[p.id]=p;});
   D.overview=(res[3].status==="fulfilled"&&res[3].value.data)||null;
+  renderAll();
+}
 
-  renderKPIs(profs.length);
+function renderAll(){
+  renderKPIs(Object.keys(D.profiles).length);
   renderCurve();
   renderRadar();
   renderNPS();
@@ -231,16 +289,16 @@ function renderKPIs(totalClients){
   const inicios=D.rows.filter(r=>r.moment==="inicio").length;
   const pend=D.refs.filter(r=>!r.synced_to_crm).length;
   document.getElementById("kpis").innerHTML=`
-    <div class="kpi" data-t="nps"><div class="label">NPS</div><div class="val">${n.score==null?"--":(n.score>0?"+":"")+n.score}</div><div class="foot">${n.n} respuesta(s) de cierre</div></div>
-    <div class="kpi" data-t="sat"><div class="label">Satisfaccion final</div><div class="val">${f1(sat)}</div><div class="foot">promedio sobre 10</div></div>
-    <div class="kpi"><div class="label">Cierres completados</div><div class="val">${finales}</div><div class="foot">${inicios} linea(s) base registrada(s)</div></div>
-    <div class="kpi" data-t="ref"><div class="label">Leads referidos</div><div class="val">${D.refs.length}</div><div class="foot">${pend} sin pasar al CRM</div></div>`;
+    <div class="kpi" data-t="nps"><div class="label">NPS</div><div class="val">${n.score==null?"--":(n.score>0?"+":"")+n.score}</div><div class="foot">${n.n} ${L("respuesta(s) de cierre","closing response(s)")}</div></div>
+    <div class="kpi" data-t="sat"><div class="label">${L("Satisfacci\u00F3n final","Final satisfaction")}</div><div class="val">${f1(sat)}</div><div class="foot">${L("promedio sobre 10","average out of 10")}</div></div>
+    <div class="kpi"><div class="label">${L("Cierres completados","Completed closings")}</div><div class="val">${finales}</div><div class="foot">${inicios} ${L("l\u00EDnea(s) base registrada(s)","baseline(s) recorded")}</div></div>
+    <div class="kpi" data-t="ref"><div class="label">${L("Leads referidos","Referred leads")}</div><div class="val">${D.refs.length}</div><div class="foot">${pend} ${L("sin pasar al CRM","not yet in CRM")}</div></div>`;
 }
 
 /* ---------- Curva de transformacion ---------- */
 function renderCurve(){
   const has=MOMS.some(m=>D.rows.some(r=>r.moment===m));
-  if(!has){document.getElementById("curve").innerHTML='<div class="empty">Aun no hay respuestas.</div>';return;}
+  if(!has){document.getElementById("curve").innerHTML=`<div class="empty">${L("A\u00FAn no hay respuestas.","No answers yet.")}</div>`;return;}
   const W=880,H=280,PL=44,PR=16,PT=18,PB=38;
   const x=i=>PL+i*((W-PL-PR)/(MOMS.length-1));
   const y=v=>PT+(10-v)/9*(H-PT-PB);
@@ -251,9 +309,8 @@ function renderCurve(){
   });
   MOMS.forEach((m,i)=>{
     const n=D.rows.filter(r=>r.moment===m).length;
-    /* Los extremos se anclan para que no se salgan del viewBox */
     const anchor=i===0?"start":(i===MOMS.length-1?"end":"middle");
-    svg+=`<text x="${x(i)}" y="${H-14}" fill="#8892a4" font-size="12" text-anchor="${anchor}" font-family="Saira Condensed">${MOM_LABEL[m].toUpperCase()} (${n})</text>`;
+    svg+=`<text x="${x(i)}" y="${H-14}" fill="#8892a4" font-size="12" text-anchor="${anchor}" font-family="Saira Condensed">${momL(m).toUpperCase()} (${n})</text>`;
   });
   DIMS.forEach(d=>{
     const pts=MOMS.map((m,i)=>{
@@ -274,10 +331,10 @@ function renderCurve(){
     const dl=(ini!=null&&fin!=null)?(fin-ini):null;
     const cls=dl==null?"delta-0":(dl>0.05?"delta-up":(dl<-0.05?"delta-dn":"delta-0"));
     const txt=dl==null?"--":(dl>0?"+":"")+f1(dl);
-    return `<span style="margin-right:18px;font-size:12.5px;"><i style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${d.col};margin-right:6px;"></i>${d.t} <b class="${cls}">${txt}</b></span>`;
+    return `<span style="margin-right:18px;font-size:12.5px;"><i style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${d.col};margin-right:6px;"></i>${dimT(d)} <b class="${cls}">${txt}</b></span>`;
   }).join("");
   document.getElementById("curve").innerHTML=svg+`<div style="margin-top:10px;">${legend}</div>
-    <div class="muted" style="font-size:12px;margin-top:6px;">Delta = promedio de cierre menos promedio de inicio.</div>`;
+    <div class="muted" style="font-size:12px;margin-top:6px;">${L("Delta = promedio de cierre menos promedio de inicio.","Delta = closing average minus start average.")}</div>`;
 }
 
 /* ---------- Radar entorno ---------- */
@@ -285,9 +342,8 @@ function renderRadar(){
   const ini=ENT.map(e=>avg(D.rows.filter(r=>r.moment==="inicio").map(r=>r[e.k])));
   const fin=ENT.map(e=>avg(D.rows.filter(r=>r.moment==="final").map(r=>r[e.k])));
   if(ini.every(v=>v==null)&&fin.every(v=>v==null)){
-    document.getElementById("radar").innerHTML='<div class="empty">Aun no hay datos de entorno.</div>';return;
+    document.getElementById("radar").innerHTML=`<div class="empty">${L("A\u00FAn no hay datos de entorno.","No environment data yet.")}</div>`;return;
   }
-  /* viewBox mas ancho que alto: los ejes laterales llevan etiquetas largas */
   const W=400,H=300,cx=W/2,cy=H/2+6,R=100;
   const ang=i=>(Math.PI*2*i/ENT.length)-Math.PI/2;
   const pt=(i,v)=>[cx+Math.cos(ang(i))*(R*(v/10)),cy+Math.sin(ang(i))*(R*(v/10))];
@@ -300,7 +356,7 @@ function renderRadar(){
     const[ex,ey]=pt(i,10);
     svg+=`<line x1="${cx}" y1="${cy}" x2="${ex}" y2="${ey}" stroke="rgba(255,255,255,.08)"/>`;
     const[lx,ly]=pt(i,12.4);
-    svg+=`<text x="${lx}" y="${ly}" fill="#8892a4" font-size="10.5" text-anchor="middle" font-family="Saira Condensed">${e.t.toUpperCase()}</text>`;
+    svg+=`<text x="${lx}" y="${ly}" fill="#8892a4" font-size="10.5" text-anchor="middle" font-family="Saira Condensed">${dimT(e).toUpperCase()}</text>`;
   });
   function poly(vals,col,fill){
     if(vals.some(v=>v==null))return"";
@@ -313,33 +369,33 @@ function renderRadar(){
   const rows=ENT.map((e,i)=>{
     const a=ini[i],b=fin[i],dl=(a!=null&&b!=null)?b-a:null;
     const cls=dl==null?"delta-0":(dl>0.05?"delta-up":(dl<-0.05?"delta-dn":"delta-0"));
-    return `<tr><td>${e.t}</td><td class="muted">${f1(a)}</td><td>${f1(b)}</td><td class="${cls}">${dl==null?"--":(dl>0?"+":"")+f1(dl)}</td></tr>`;
+    return `<tr><td>${dimT(e)}</td><td class="muted">${f1(a)}</td><td>${f1(b)}</td><td class="${cls}">${dl==null?"--":(dl>0?"+":"")+f1(dl)}</td></tr>`;
   }).join("");
   document.getElementById("radar").innerHTML=svg+
     `<div style="margin:10px 0;font-size:12px;color:var(--mu);text-align:center;">
-      <i style="display:inline-block;width:9px;height:9px;background:#8892a4;border-radius:2px;margin-right:5px;"></i>Inicio
-      <i style="display:inline-block;width:9px;height:9px;background:#7DCD93;border-radius:2px;margin:0 5px 0 14px;"></i>Cierre
+      <i style="display:inline-block;width:9px;height:9px;background:#8892a4;border-radius:2px;margin-right:5px;"></i>${momL("inicio")}
+      <i style="display:inline-block;width:9px;height:9px;background:#7DCD93;border-radius:2px;margin:0 5px 0 14px;"></i>${momL("final")}
      </div>
-     <table><tr><th>Eje</th><th>Inicio</th><th>Cierre</th><th>Delta</th></tr>${rows}</table>`;
+     <table><tr><th>${L("Eje","Axis")}</th><th>${momL("inicio")}</th><th>${momL("final")}</th><th>${L("Delta","Delta")}</th></tr>${rows}</table>`;
 }
 
 /* ---------- NPS ---------- */
 function renderNPS(){
   const n=npsCalc();
-  if(!n.n){document.getElementById("nps").innerHTML='<div class="empty">Aun no hay respuestas de cierre.</div>';return;}
+  if(!n.n){document.getElementById("nps").innerHTML=`<div class="empty">${L("A\u00FAn no hay respuestas de cierre.","No closing responses yet.")}</div>`;return;}
   const pc=v=>(v/n.n*100);
   document.getElementById("nps").innerHTML=`
     <div style="font-family:var(--font-title);font-size:52px;font-weight:700;line-height:1;">${n.score>0?"+":""}${n.score}</div>
-    <div class="muted" style="font-size:12.5px;margin-bottom:4px;">sobre ${n.n} respuesta(s) &middot; rango -100 a +100</div>
+    <div class="muted" style="font-size:12.5px;margin-bottom:4px;">${L("sobre","over")} ${n.n} ${L("respuesta(s)","response(s)")} &middot; ${L("rango","range")} -100 ${L("a","to")} +100</div>
     <div class="npsbar">
       ${n.d?`<div style="width:${pc(n.d)}%;background:var(--r);">${n.d}</div>`:""}
       ${n.pa?`<div style="width:${pc(n.pa)}%;background:var(--o);">${n.pa}</div>`:""}
       ${n.p?`<div style="width:${pc(n.p)}%;background:var(--m);">${n.p}</div>`:""}
     </div>
     <div class="npslegend">
-      <span><i style="background:var(--m);"></i>Promotores 9-10: ${n.p}</span>
-      <span><i style="background:var(--o);"></i>Pasivos 7-8: ${n.pa}</span>
-      <span><i style="background:var(--r);"></i>Detractores 0-6: ${n.d}</span>
+      <span><i style="background:var(--m);"></i>${L("Promotores","Promoters")} 9-10: ${n.p}</span>
+      <span><i style="background:var(--o);"></i>${L("Pasivos","Passives")} 7-8: ${n.pa}</span>
+      <span><i style="background:var(--r);"></i>${L("Detractores","Detractors")} 0-6: ${n.d}</span>
     </div>`;
 }
 
@@ -347,7 +403,7 @@ function renderNPS(){
 function renderClientSel(){
   const ids=[...new Set(D.rows.map(r=>r.user_id))];
   const sel=document.getElementById("client-sel");
-  if(!ids.length){sel.innerHTML='<option>Sin respuestas</option>';return;}
+  if(!ids.length){sel.innerHTML=`<option>${L("Sin respuestas","No answers")}</option>`;return;}
   sel.innerHTML=ids.map(id=>{
     const p=D.profiles[id];
     return `<option value="${esc(id)}">${esc(p&&p.full_name?p.full_name:id.slice(0,8))}</option>`;
@@ -357,7 +413,7 @@ function renderFicha(){
   const id=document.getElementById("client-sel").value;
   const box=document.getElementById("ficha");
   const rows=D.rows.filter(r=>r.user_id===id);
-  if(!rows.length){box.innerHTML='<div class="empty">Selecciona un cliente con respuestas.</div>';return;}
+  if(!rows.length){box.innerHTML=`<div class="empty">${L("Selecciona un cliente con respuestas.","Select a client with answers.")}</div>`;return;}
   const by={};rows.forEach(r=>{by[r.moment]=r;});
   const all=[...DIMS,...ENT];
   const body=all.map(d=>{
@@ -365,24 +421,24 @@ function renderFicha(){
     const b=by.final?by.final[d.k]:null;
     const dl=(a!=null&&b!=null)?b-a:null;
     const cls=dl==null?"delta-0":(dl>0?"delta-up":(dl<0?"delta-dn":"delta-0"));
-    return `<tr><td>${d.t}</td>
+    return `<tr><td>${dimT(d)}</td>
       <td class="muted">${by.inicio?(by.inicio[d.k]==null?"--":by.inicio[d.k]):"--"}</td>
       <td class="muted">${by.intermedio?(by.intermedio[d.k]==null?"--":by.intermedio[d.k]):"--"}</td>
       <td>${by.final?(by.final[d.k]==null?"--":by.final[d.k]):"--"}</td>
       <td class="${cls}">${dl==null?"--":(dl>0?"+":"")+dl}</td></tr>`;
   }).join("");
   const frases=MOMS.filter(m=>by[m]&&by[m].open_text).map(m=>
-    `<div class="quote">${esc(by[m].open_text)}<span class="who">${MOM_LABEL[m]}</span></div>`).join("");
+    `<div class="quote">${esc(by[m].open_text)}<span class="who">${momL(m)}</span></div>`).join("");
   const sat=by.final&&by.final.satisfaccion!=null?by.final.satisfaccion:(by.intermedio&&by.intermedio.satisfaccion!=null?by.intermedio.satisfaccion:null);
   const mejora=MOMS.filter(m=>by[m]&&by[m].mejora_text).map(m=>
-    `<div class="quote" style="border-left-color:var(--o);">${esc(by[m].mejora_text)}<span class="who">${MOM_LABEL[m]} &middot; que faltaria para un 10</span></div>`).join("");
+    `<div class="quote" style="border-left-color:var(--o);">${esc(by[m].mejora_text)}<span class="who">${momL(m)} &middot; ${L("qu\u00E9 faltar\u00EDa para un 10","what would make it a 10")}</span></div>`).join("");
   box.innerHTML=`
     <div style="margin-bottom:12px;font-size:13px;color:var(--mu);">
-      Satisfaccion: <b style="color:var(--text);">${sat==null?"--":sat+"/10"}</b> &nbsp;&middot;&nbsp;
+      ${L("Satisfacci\u00F3n","Satisfaction")}: <b style="color:var(--text);">${sat==null?"--":sat+"/10"}</b> &nbsp;&middot;&nbsp;
       NPS: <b style="color:var(--text);">${by.final&&by.final.nps!=null?by.final.nps:"--"}</b> &nbsp;&middot;&nbsp;
-      Momentos: ${MOMS.filter(m=>by[m]).map(m=>`<span class="tag ok">${MOM_LABEL[m]}</span>`).join(" ")||'<span class="tag">ninguno</span>'}
+      ${L("Momentos","Moments")}: ${MOMS.filter(m=>by[m]).map(m=>`<span class="tag ok">${momL(m)}</span>`).join(" ")||`<span class="tag">${L("ninguno","none")}</span>`}
     </div>
-    <table><tr><th>Dimension</th><th>Inicio</th><th>Interm.</th><th>Cierre</th><th>Delta</th></tr>${body}</table>
+    <table><tr><th>${L("Dimensi\u00F3n","Dimension")}</th><th>${momL("inicio")}</th><th>${momL("intermedio")}</th><th>${momL("final")}</th><th>${L("Delta","Delta")}</th></tr>${body}</table>
     ${frases?`<div style="margin-top:16px;">${frases}</div>`:""}
     ${mejora||""}`;
 }
@@ -391,37 +447,37 @@ function renderFicha(){
 function renderTestimonios(){
   const t=D.rows.filter(r=>r.testimonial_ok&&r.testimonial_text);
   const box=document.getElementById("testimonios");
-  if(!t.length){box.innerHTML='<div class="empty">Aun no hay testimonios autorizados.</div>';return;}
+  if(!t.length){box.innerHTML=`<div class="empty">${L("A\u00FAn no hay testimonios autorizados.","No authorized testimonials yet.")}</div>`;return;}
   box.innerHTML=t.map(r=>{
     const p=D.profiles[r.user_id];
-    return `<div class="quote">${esc(r.testimonial_text)}<span class="who">${esc(p&&p.full_name?p.full_name:"Cliente")}${r.nps!=null?" &middot; NPS "+r.nps:""}</span></div>`;
+    return `<div class="quote">${esc(r.testimonial_text)}<span class="who">${esc(p&&p.full_name?p.full_name:L("Cliente","Client"))}${r.nps!=null?" &middot; NPS "+r.nps:""}</span></div>`;
   }).join("");
 }
 
 /* ---------- Referidos ---------- */
 function renderReferidos(){
   const box=document.getElementById("referidos");
-  if(!D.refs.length){box.innerHTML='<div class="empty">Aun no hay leads referidos.</div>';return;}
+  if(!D.refs.length){box.innerHTML=`<div class="empty">${L("A\u00FAn no hay leads referidos.","No referred leads yet.")}</div>`;return;}
   const pend=D.refs.filter(r=>!r.synced_to_crm).length;
-  box.innerHTML=`<table><tr><th>Nombre</th><th>Contacto</th><th>Refiere</th><th>CRM</th></tr>`+
+  box.innerHTML=`<table><tr><th>${L("Nombre","Name")}</th><th>${L("Contacto","Contact")}</th><th>${L("Refiere","Referred by")}</th><th>CRM</th></tr>`+
     D.refs.map(r=>{
       const p=D.profiles[r.referred_by];
       return `<tr>
         <td>${esc(r.name)}${r.reason?`<div class="muted" style="font-size:11.5px;">${esc(r.reason)}</div>`:""}</td>
         <td class="muted">${esc(r.contact)}</td>
         <td class="muted">${esc(p&&p.full_name?p.full_name:"--")}</td>
-        <td>${r.synced_to_crm?'<span class="tag ok">Si</span>':'<span class="tag">Pend.</span>'}</td>
+        <td>${r.synced_to_crm?`<span class="tag ok">${L("S\u00ED","Yes")}</span>`:`<span class="tag">${L("Pend.","Pend.")}</span>`}</td>
       </tr>`;
     }).join("")+`</table>
     <div style="margin-top:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-      <button class="btn-ghost" id="btn-csv" onclick="exportReferidosCSV()"${pend?"":" disabled"}>Exportar CSV (${pend} pend.)</button>
-      <span class="muted" style="font-size:11.5px;">El CRM es otro proyecto Supabase: se importa a mano.</span>
+      <button class="btn-ghost" id="btn-csv" onclick="exportReferidosCSV()"${pend?"":" disabled"}>${L("Exportar CSV","Export CSV")} (${pend} ${L("pend.","pending")})</button>
+      <span class="muted" style="font-size:11.5px;">${L("El CRM es otro proyecto Supabase: se importa a mano.","The CRM is a separate Supabase project: import manually.")}</span>
     </div>`;
 }
 
-/* Export CSV de los referidos pendientes, con las columnas de `prospects`
-   del CRM (full_name, email, phone, city, country, tags) mas el contexto
-   MAAT. El contacto se reparte en email/phone segun tenga "@" o no. */
+/* Export CSV de los referidos pendientes. Las cabeceras del archivo son
+   fijas (nombres de columna de `prospects` del CRM) y NO cambian con el
+   idioma, para no romper el mapeo al importar. */
 function csvCell(v){
   const s=String(v==null?"":v);
   return /[",;\n\r]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;
@@ -451,11 +507,11 @@ async function exportReferidosCSV(){
   document.body.appendChild(a);a.click();a.remove();
   setTimeout(()=>URL.revokeObjectURL(url),1000);
 
-  if(!confirm("Se descargaron "+pend.length+" referido(s).\n\nMarcarlos como sincronizados al CRM? Dejaran de aparecer como pendientes."))return;
-  btn.disabled=true;btn.textContent="Marcando...";
+  if(!confirm(L("Se descargaron ","Downloaded ")+pend.length+L(" referido(s).\n\nMarcarlos como sincronizados al CRM? Dejaran de aparecer como pendientes."," referral(s).\n\nMark them as synced to the CRM? They will stop showing as pending.")))return;
+  btn.disabled=true;btn.textContent=L("Marcando...","Marking...");
   const ids=pend.map(r=>r.id);
   const{error}=await sb.from("client_referrals").update({synced_to_crm:true}).in("id",ids);
-  if(error){alert("No pudimos marcarlos: "+error.message);btn.disabled=false;return;}
+  if(error){alert(L("No pudimos marcarlos: ","Could not mark them: ")+error.message);btn.disabled=false;return;}
   pend.forEach(r=>{r.synced_to_crm=true;});
   renderKPIs(Object.keys(D.profiles).length);
   renderReferidos();
@@ -464,6 +520,10 @@ async function exportReferidosCSV(){
 ["a-email","a-pass"].forEach(id=>{
   document.getElementById(id).addEventListener("keydown",e=>{if(e.key==="Enter")doLogin();});
 });
+
+/* Init */
+renderLangToggle();
+applyStaticI18N();
 boot();
 </script>
 </body>

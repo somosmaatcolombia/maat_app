@@ -76,6 +76,19 @@ Instancia separada con `{ auth: { persistSession: false } }`.
 ### REGLA 6 — `Promise.allSettled()` para carga de datos
 NUNCA `Promise.all()`. Un fallo en una tabla no rompe la carga completa.
 
+### REGLA 7 — Todo sistema es bilingüe (ES/EN)
+Cada `.html` nuevo (cuestionarios, dashboards, landings, herramientas internas) DEBE tener toggle **ES/EN** visible.
+```js
+let lang=localStorage.getItem("maat-lang")||"es";   // MISMA clave que la app: el idioma se comparte
+function L(es,en){return lang==="es"?es:en;}
+function setLang(l){lang=l;localStorage.setItem("maat-lang",l);/* re-render UI + textos estaticos */}
+```
+- **Comparte `localStorage["maat-lang"]`** con la app del cliente para que la elección viaje entre sistemas.
+- Si el sistema autentica, tras el login `profiles.preferred_lang` MANDA sobre el localStorage.
+- Textos estáticos del HTML: déjalos vacíos con `id` y rellénalos en un `applyStaticI18N()`; los generados por JS usan `L("es","en")`.
+- Toggle visual: pill `ES | EN` (ver `src/maat_feedback.html` como referencia).
+- **NO** traduzcas datos que son formato/mapeo (ej. cabeceras de un CSV que mapea columnas de BD): esas quedan fijas.
+
 ## Credenciales Supabase
 
 ```
