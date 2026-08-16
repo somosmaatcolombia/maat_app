@@ -507,6 +507,10 @@ const CONFIG={
   VAPID_PUBLIC_KEY:"BG-NXBTYpdFywYHjaaMqHQdyWSktuHR3ivPCpcF601vhmNeTHwt-RZWRWHjnYmQk7MlD_OnUdxBHXuAlOj2Dops",
   IMG_BASE:"https://somosmaat.org/wp-content/uploads/2026/06/",
   LOGO_URL:"https://somosmaat.org/wp-content/uploads/2026/02/logo_app.png?v=1",
+  // Pagina del cuestionario de trazabilidad (src/maat_feedback.html).
+  // Debe vivir en el MISMO origen que la app para que la sesion se comparta
+  // y el cliente no tenga que volver a iniciar sesion.
+  FEEDBACK_URL:"https://somosmaat.org/feedback/",
   ASSET_VERSION:1
 };
 // Sufijo de cache-busting: agregar a las URLs de imagenes que vengan de CONFIG.IMG_BASE.
@@ -519,6 +523,8 @@ const sb=supabase.createClient(CONFIG.SUPABASE_URL,CONFIG.SUPABASE_ANON_KEY);
 
 /* ============ STATE ============ */
 let user=null,prof=null,cals=[],bels=[],wkp={},ht={},sh=null,aiCfg={};
+// Momentos del cuestionario de trazabilidad ya respondidos: ["inicio","intermedio","final"]
+let myFeedback=[];
 let hwk=1,notifHour=9;
 let chatHistory=[],chatLocked=false;
 let _calibStep=0,_calibAnswers={},_calibMode='express';
@@ -867,7 +873,9 @@ const OB_STEPS=[
   {icon:"\uD83E\uDDED",img:CONFIG.IMG_BASE+"onboarding-01-bienvenida.png"+ASSET_V,title_es:"Bienvenido a MAAT",title_en:"Welcome to MAAT",text_es:"No es un curso m\u00E1s. Es un proceso de 16 semanas para reconectar con tu sentido, tu energ\u00EDa y tu prop\u00F3sito. Hecho para personas exigentes como t\u00FA.",text_en:"This isn't just another course. It's a 16-week process to reconnect with your meaning, energy and purpose. Made for demanding people like you."},
   {icon:"\u26A1",img:CONFIG.IMG_BASE+"onboarding-02-Calibracion.png"+ASSET_V,title_es:"Calibrar toma 30 segundos",title_en:"Calibrating takes 30 seconds",text_es:"Cada d\u00EDa eliges conscientemente la actitud con la que vas a vivir. Un gesto peque\u00F1o que, repetido, lo cambia todo. Es el coraz\u00F3n del m\u00E9todo.",text_en:"Each day you consciously choose the attitude you'll live with. A small gesture that, repeated, changes everything. It's the heart of the method."},
   {icon:"\u2705",img:CONFIG.IMG_BASE+"onboarding-03-habitos.png"+ASSET_V,title_es:"H\u00E1bitos que te construyen",title_en:"Habits that build you",text_es:"Programa las acciones que construyen la versi\u00F3n de ti que quieres ser. Marca tus d\u00EDas y observa c\u00F3mo creces semana a semana.",text_en:"Program the actions that build the version of yourself you want to be. Check your days and watch yourself grow week by week."},
-  {icon:"\uD83E\uDD16",img:CONFIG.IMG_BASE+"onboarding-04-coach.png"+ASSET_V,title_es:"Nunca est\u00E1s solo",title_en:"You're never alone",text_es:"Tienes un Coach con IA disponible 24/7 para acompa\u00F1arte con preguntas, reflexiones y apoyo personalizado en cada paso.",text_en:"You have an AI Coach available 24/7 to accompany you with questions, reflections and personalized support every step."}
+  {icon:"\uD83E\uDD16",img:CONFIG.IMG_BASE+"onboarding-04-coach.png"+ASSET_V,title_es:"Nunca est\u00E1s solo",title_en:"You're never alone",text_es:"Tienes un Coach con IA disponible 24/7 para acompa\u00F1arte con preguntas, reflexiones y apoyo personalizado en cada paso.",text_en:"You have an AI Coach available 24/7 to accompany you with questions, reflections and personalized support every step."},
+  // Paso final: linea base de la trazabilidad. cta:"baseline" cambia el boton.
+  {icon:"\u{1F9ED}",img:CONFIG.IMG_BASE+"onboarding-01-bienvenida.png"+ASSET_V,cta:"baseline",title_es:"Tu punto de partida",title_en:"Your starting point",text_es:"Antes de empezar, queremos saber c\u00F3mo llegas hoy. Son 3 minutos y nos deja una foto de este momento: dentro de 16 semanas la vas a comparar y vas a ver, con n\u00FAmeros, cu\u00E1nto te moviste.",text_en:"Before you start, we want to know how you arrive today. It takes 3 minutes and captures a snapshot of this moment: in 16 weeks you'll compare it and see, in numbers, how far you've come."}
 ];
 function showOnboarding(){
   _obStep=0;
@@ -882,9 +890,10 @@ function renderObStep(){
       <div class="ob-title">${lang==='es'?s.title_es:s.title_en}</div>
       <div class="ob-text">${lang==='es'?s.text_es:s.text_en}</div>
       <div class="ob-dots">${OB_STEPS.map((_,i)=>`<div class="ob-dot ${i===_obStep?'active':''}"></div>`).join("")}</div>
-      <button class="btn-action" onclick="${last?'finishOnboarding()':'nextObStep()'}" style="width:auto;padding:12px 32px;margin:0 auto;">
-        ${last?(lang==='es'?'Empezar mi calibraci\u00F3n \u2192':'Start my calibration \u2192'):(lang==='es'?'Siguiente':'Next')}
+      <button class="btn-action" onclick="${s.cta==='baseline'?'startBaseline()':(last?'finishOnboarding()':'nextObStep()')}" style="width:auto;padding:12px 32px;margin:0 auto;">
+        ${s.cta==='baseline'?(lang==='es'?'Registrar mi punto de partida \u2192':'Record my starting point \u2192'):(last?(lang==='es'?'Empezar mi calibraci\u00F3n \u2192':'Start my calibration \u2192'):(lang==='es'?'Siguiente':'Next'))}
       </button>
+      ${s.cta==='baseline'?`<button class="btn-action secondary" onclick="finishOnboarding()" style="width:auto;padding:8px 20px;margin:8px auto 0;font-size:13px;">${lang==='es'?'Ahora no':'Not now'}</button>`:''}
       ${_obStep>0?`<button class="btn-action secondary" onclick="prevObStep()" style="width:auto;padding:8px 20px;margin:8px auto 0;font-size:13px;">\u2190 ${lang==='es'?'Anterior':'Back'}</button>`:''}
     </div>`;
 }
@@ -894,6 +903,25 @@ function finishOnboarding(){
   localStorage.setItem("maat-onboarded","1");
   document.getElementById("onboarding-overlay").classList.remove("visible");
   gv("v-calib");
+}
+/* Linea base de la trazabilidad. Abre el cuestionario en una pestania nueva:
+   mismo origen => comparte sesion, el cliente no vuelve a iniciar sesion.
+   Si el cliente no lo hace ahora, renderHome() se lo recuerda. */
+function startBaseline(){
+  localStorage.setItem("maat-onboarded","1");
+  document.getElementById("onboarding-overlay").classList.remove("visible");
+  openBaseline("onboarding");
+  gv("v-calib");
+}
+function openBaseline(from){
+  track("baseline_open",{from:from||"home"});
+  window.open(CONFIG.FEEDBACK_URL,"_blank","noopener");
+}
+/* Recordatorio en el home mientras la linea base siga pendiente.
+   Solo en la fase 1 (semanas 1-4) y una vez cargados los datos, para
+   no parpadear antes de saber si ya respondio. */
+function _baselinePending(){
+  return _appReady && hwk<=4 && !prof?.graduated && !myFeedback.includes("inicio");
 }
 
 /* ============ ACHIEVEMENT NOTIFICATIONS ============ */
@@ -1133,6 +1161,7 @@ async function loadDataSecondary(){
       sb.from("event_registrations").select("event_id,status").eq("user_id",uid),
       sb.rpc("get_community_pulse"),
       sb.from("mentor_sessions").select("modality,group_id,client_id,title,scheduled_at,location,status").eq("status","scheduled").gte("scheduled_at",new Date().toISOString()).order("scheduled_at",{ascending:true}).limit(20),
+      sb.from("client_feedback").select("moment").eq("user_id",uid),
     ]);
     if(results[0]?.status==="fulfilled"){const{data,error}=results[0].value;if(!error)bels=data||[];}
     if(results[1]?.status==="fulfilled"){const{data}=results[1].value;if(data)sh=data;}
@@ -1143,6 +1172,7 @@ async function loadDataSecondary(){
     if(results[7]?.status==="fulfilled"){const{data}=results[7].value;if(data)myEventRegs=data||[];}
     if(results[8]?.status==="fulfilled"){const{data}=results[8].value;if(data)communityPulse=data;}
     if(results[9]?.status==="fulfilled"){const{data}=results[9].value;if(data)mySessions=data||[];}
+    if(results[10]?.status==="fulfilled"){const{data}=results[10].value;if(data)myFeedback=(data||[]).map(r=>r.moment);}
   }catch(e){_w("loadDataSecondary:",e.message);}
 }
 
@@ -1351,6 +1381,7 @@ function renderHome(){
     </div>
     ${nextSes?`<div class="card" style="margin-top:16px;border-left:3px solid var(--o);cursor:pointer;background:linear-gradient(135deg,rgba(235,160,85,.08),transparent);" onclick="gv('v-sesiones')"><div style="display:flex;align-items:center;gap:12px;"><span style="font-size:22px;">\u{1F4C5}</span><div><div style="font-family:var(--font-title);font-size:14px;font-weight:600;color:var(--text);">${nextSes.modality==='group'?(lang==='es'?'Pr\u00F3xima sesi\u00F3n grupal':'Next group session'):(lang==='es'?'Pr\u00F3xima sesi\u00F3n 1:1':'Next 1:1 session')}</div><div style="font-size:12px;color:var(--o);">${fmtSesDateTime(nextSes.scheduled_at)}</div></div></div></div>`:''}
     ${cals.length===0?`<div class="onboarding-card"><h3>${lang==='es'?'\u00A1Bienvenido a MAAT! \u{1F44B}':'Welcome to MAAT! \u{1F44B}'}</h3><p>${lang==='es'?'Tu primer paso es calibrar tu d\u00EDa. Toma solo 30 segundos y es el inicio de todo tu proceso.':'Your first step is to calibrate your day. It takes just 30 seconds and is the start of your whole journey.'}</p><button class="btn-action" style="width:auto;padding:10px 24px;margin:0;" onclick="gv(\'v-calib\')">${lang==='es'?'Hacer mi primera calibraci\u00F3n \u2192':'Do my first calibration \u2192'}</button></div>`:''}
+    ${_baselinePending()?`<div class="onboarding-card"><h3>${lang==='es'?'Tu punto de partida \u{1F9ED}':'Your starting point \u{1F9ED}'}</h3><p>${lang==='es'?'Te faltan 3 minutos para dejar registrado c\u00F3mo llegas. Es la foto que vas a comparar al cerrar tus 16 semanas.':'You are 3 minutes away from recording how you arrive. It is the snapshot you will compare when you close your 16 weeks.'}</p><button class="btn-action" style="width:auto;padding:10px 24px;margin:0;" onclick="openBaseline()">${lang==='es'?'Registrar mi punto de partida \u2192':'Record my starting point \u2192'}</button></div>`:''}
     ${journeyCard()}
     <div class="cta-calib cta-hero" onclick="gv('v-calib')">
       <img class="cta-hero-img" src="${CONFIG.IMG_BASE}onboarding-02-Calibracion.png${ASSET_V}" alt="" loading="lazy" decoding="async" onerror="this.remove()">
@@ -2012,9 +2043,45 @@ async function loadMentorContact(){
     }
   }catch(e){_w("loadMentorContact:",e);}
 }
+// Biotipos: mapea el codigo (s/c/m/f) guardado en profiles a nombre + color + papercut.
+const BIOTIPOS={
+  s:{es:"Sangu\u00EDneo",en:"Sanguine",hex:"#EBA055",img:"onboarding-01-bienvenida.png"},
+  c:{es:"Col\u00E9rico",en:"Choleric",hex:"#D76B6E",img:"onboarding-04-coach.png"},
+  m:{es:"Melanc\u00F3lico",en:"Melancholic",hex:"#896C8E",img:"celebracion-primera-calib.png"},
+  f:{es:"Flem\u00E1tico",en:"Phlegmatic",hex:"#39A1C9",img:"onboarding-03-habitos.png"}
+};
+const BIOTIPO_URL="https://somosmaat.org/biotipo/";
+function biotipoCard(){
+  const P=BIOTIPOS[prof?.biotype_primary];
+  if(P){
+    const S=BIOTIPOS[prof?.biotype_secondary];
+    const sec=S?` <span style="color:var(--mu);font-weight:400;">\u00B7 ${S[lang]}</span>`:"";
+    return `<div class="card" style="margin-bottom:16px;border-left:3px solid ${P.hex};background:linear-gradient(135deg,${P.hex}18,transparent);cursor:pointer;" onclick="window.open('${BIOTIPO_URL}','_blank')" role="button" tabindex="0" aria-label="${lang==='es'?'Ver mi biotipo':'View my biotype'}">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <img class="pc-thumb" src="${CONFIG.IMG_BASE}${P.img}${ASSET_V}" alt="" loading="lazy" decoding="async" onerror="this.remove()">
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:11px;color:var(--mu);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:2px;">${lang==='es'?'Tu biotipo':'Your biotype'}</div>
+          <div style="font-size:16px;font-weight:600;color:var(--text);">${P[lang]}${sec}</div>
+        </div>
+        <div style="font-size:18px;color:${P.hex};flex-shrink:0;">\u203A</div>
+      </div>
+    </div>`;
+  }
+  return `<div class="card" style="margin-bottom:16px;border-left:3px solid var(--v);background:linear-gradient(135deg,rgba(137,108,142,.10),transparent);cursor:pointer;" onclick="window.open('${BIOTIPO_URL}','_blank')" role="button" tabindex="0" aria-label="${lang==='es'?'Descubre tu biotipo':'Discover your biotype'}">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <img class="pc-thumb" src="${CONFIG.IMG_BASE}onboarding-02-Calibracion.png${ASSET_V}" alt="" loading="lazy" decoding="async" onerror="this.remove()">
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:2px;">${lang==='es'?'Descubre tu biotipo':'Discover your biotype'}</div>
+          <div style="font-size:12px;color:var(--mu);line-height:1.5;">${lang==='es'?'Un test corto para conocerte y guardarlo en tu perfil.':'A short test to know yourself and save it to your profile.'}</div>
+        </div>
+        <div style="font-size:18px;color:var(--v);flex-shrink:0;">\u203A</div>
+      </div>
+    </div>`;
+}
 function renderMas(){
   document.getElementById("v-mas").innerHTML=`
     <h2 style="font-family:var(--font-title);font-size:24px;font-weight:600;margin-bottom:16px;">${lang==="es"?"M\u00E1s":"More"}</h2>
+    ${biotipoCard()}
     <div class="menu-grid">
       <div class="menu-item" onclick="gs('v-progreso')"><div class="menu-icon">\u{1F4CA}</div><div class="menu-label">${t("menu_progress")}</div></div>
       <div class="menu-item" onclick="nav('v-logros')"><div class="menu-icon">\u{1F3C6}</div><div class="menu-label">${lang==='es'?'MIS LOGROS':'ACHIEVEMENTS'}</div></div>

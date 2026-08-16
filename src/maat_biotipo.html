@@ -1,0 +1,609 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>MAAT &mdash; Descubre tu Biotipo</title>
+<meta name="description" content="Un cuestionario de autoconocimiento para descubrir tu biotipo principal y tu segundo dominante: c&oacute;mo piensas, c&oacute;mo habitas tu cuerpo y qu&eacute; procesos te toca integrar.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@400;600;700&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --c:#39A1C9; --o:#EBA055; --m:#7DCD93; --v:#896C8E; --r:#D76B6E;
+  --paper:#fdfaf6; --paper2:#f5efe6;
+  --ink:#2a2030; --ink2:#5a4f5e; --mu:#8a7d8c;
+  --bd:rgba(42,32,48,0.10);
+  --shadow:0 8px 30px rgba(42,32,48,0.08);
+  --shadow-lg:0 20px 60px rgba(42,32,48,0.12);
+  --radius:18px; --radius-sm:12px;
+  --font-title:'Saira Condensed',sans-serif;
+  --font-body:'Sora',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:var(--font-body);background:var(--paper);color:var(--ink);font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased;overflow-x:hidden;}
+img{max-width:100%;height:auto;display:block;}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+.wrap{max-width:680px;margin:0 auto;padding:20px 20px 80px;min-height:100vh;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:8px 0 20px;}
+.brand{display:flex;align-items:center;gap:10px;}
+.brand img{width:40px;height:40px;border-radius:10px;box-shadow:var(--shadow);}
+.brand span{font-family:var(--font-title);font-weight:700;letter-spacing:3px;font-size:18px;text-transform:uppercase;}
+.lang-toggle{display:flex;gap:2px;background:var(--paper2);border-radius:20px;padding:3px;}
+.lang-toggle button{padding:5px 12px;border-radius:16px;font-size:13px;font-weight:600;color:var(--mu);}
+.lang-toggle button.on{background:#fff;color:var(--ink);box-shadow:var(--shadow);}
+
+/* INTRO */
+.intro{text-align:center;padding:24px 6px;}
+.intro .eyebrow{font-family:var(--font-title);font-size:14px;font-weight:700;letter-spacing:4px;color:var(--v);text-transform:uppercase;margin-bottom:16px;}
+.intro h1{font-family:var(--font-title);font-size:clamp(34px,8vw,54px);font-weight:700;line-height:1.05;margin-bottom:18px;letter-spacing:-.5px;}
+.intro h1 em{font-style:italic;color:var(--v);}
+.intro p{color:var(--ink2);font-size:17px;max-width:520px;margin:0 auto 14px;line-height:1.7;}
+.intro .meta-note{font-size:14px;color:var(--mu);margin-top:8px;}
+.chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:26px 0;}
+.chip{padding:7px 14px;border-radius:20px;font-size:13px;font-weight:600;background:#fff;box-shadow:var(--shadow);}
+.btn-primary{display:inline-block;background:var(--v);color:#fff;font-weight:600;font-size:17px;padding:15px 40px;border-radius:30px;box-shadow:var(--shadow-lg);transition:transform .15s,box-shadow .15s;margin-top:12px;}
+.btn-primary:active{transform:translateY(1px);}
+.btn-ghost{display:inline-block;color:var(--v);font-weight:600;font-size:15px;padding:12px 24px;border-radius:24px;border:1.5px solid var(--bd);}
+
+/* CAPA CONTENEDORA DE IMAGEN (papercut) */
+.hero-illo{position:relative;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-lg);min-height:230px;display:flex;align-items:flex-end;isolation:isolate;}
+.hero-illo .illo-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 30%;z-index:0;}
+.hero-illo .illo-scrim{position:absolute;inset:0;z-index:1;pointer-events:none;}
+.hero-illo .illo-content{position:relative;z-index:2;width:100%;padding:26px 24px 24px;color:#fff;text-align:center;}
+.hero-illo .illo-content .eyebrow{font-family:var(--font-title);font-size:13px;font-weight:700;letter-spacing:4px;text-transform:uppercase;margin-bottom:10px;color:rgba(255,255,255,.92);text-shadow:0 1px 8px rgba(42,32,48,.35);}
+.hero-illo .illo-content h1{font-family:var(--font-title);font-size:clamp(34px,9vw,56px);font-weight:700;line-height:1.02;letter-spacing:-.5px;color:#fff;text-shadow:0 2px 14px rgba(42,32,48,.35);}
+.hero-illo .illo-content h1 em{font-style:italic;color:#fff;}
+.hero-illo .illo-content .poetic{font-style:italic;font-size:18px;margin-top:8px;color:rgba(255,255,255,.94);text-shadow:0 1px 8px rgba(42,32,48,.3);}
+.hero-illo .illo-content .second{font-size:15px;margin-top:12px;color:rgba(255,255,255,.88);text-shadow:0 1px 8px rgba(42,32,48,.3);}
+.hero-illo .illo-content .second b{color:#fff;}
+.intro-hero{margin-bottom:22px;min-height:210px;}
+.result-hero{margin-bottom:22px;}
+.illo-badge{width:64px;height:64px;border-radius:16px;object-fit:cover;margin:0 auto 12px;display:block;box-shadow:0 6px 20px rgba(42,32,48,.28);border:2px solid rgba(255,255,255,.6);background:#fff;}
+
+/* QUIZ */
+.progress{height:6px;background:var(--paper2);border-radius:6px;overflow:hidden;margin:6px 0 4px;}
+.progress-fill{height:100%;background:var(--v);border-radius:6px;transition:width .3s;}
+.progress-label{font-size:13px;color:var(--mu);text-align:center;margin-bottom:26px;font-weight:600;}
+.q-card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:34px 26px;text-align:center;animation:fade .3s ease;}
+@keyframes fade{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+.q-num{font-family:var(--font-title);font-size:15px;font-weight:700;letter-spacing:2px;color:var(--v);margin-bottom:14px;}
+.q-text{font-size:22px;font-weight:500;line-height:1.4;margin-bottom:30px;min-height:62px;display:flex;align-items:center;justify-content:center;}
+.scale{display:flex;gap:8px;justify-content:center;align-items:stretch;margin-bottom:16px;}
+.scale button{flex:1;max-width:64px;aspect-ratio:1/1;border-radius:14px;background:var(--paper2);font-family:var(--font-title);font-size:22px;font-weight:700;color:var(--ink2);transition:transform .12s,background .12s,color .12s;display:flex;align-items:center;justify-content:center;}
+.scale button:hover{background:#efe7db;}
+.scale button.sel{background:var(--v);color:#fff;transform:scale(1.06);}
+.scale-ends{display:flex;justify-content:space-between;font-size:12px;color:var(--mu);margin-bottom:8px;padding:0 2px;}
+.q-nav{display:flex;justify-content:center;margin-top:22px;}
+.q-back{font-size:14px;color:var(--mu);font-weight:600;padding:8px 18px;}
+
+/* RESULT */
+.res-head{text-align:center;padding:10px 0 4px;}
+.res-head .eyebrow{font-family:var(--font-title);font-size:13px;font-weight:700;letter-spacing:4px;text-transform:uppercase;margin-bottom:10px;}
+.res-head h1{font-family:var(--font-title);font-size:clamp(38px,10vw,62px);font-weight:700;line-height:1;letter-spacing:-.5px;}
+.res-head .poetic{font-style:italic;color:var(--ink2);font-size:18px;margin-top:8px;}
+.res-head .second{font-size:15px;color:var(--mu);margin-top:10px;}
+.res-head .second b{color:var(--ink);}
+.blend-note{background:#fff;border-radius:var(--radius-sm);box-shadow:var(--shadow);padding:12px 18px;font-size:14px;color:var(--ink2);margin:18px auto 0;max-width:440px;text-align:center;}
+
+.spectrum{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:22px 22px 14px;margin:26px 0;}
+.spectrum h3{font-family:var(--font-title);font-size:15px;letter-spacing:2px;text-transform:uppercase;color:var(--mu);margin-bottom:16px;text-align:center;font-weight:700;}
+.bar-row{margin-bottom:14px;}
+.bar-top{display:flex;justify-content:space-between;font-size:14px;font-weight:600;margin-bottom:5px;}
+.bar-top .pct{color:var(--mu);font-variant-numeric:tabular-nums;}
+.bar-track{height:12px;background:var(--paper2);border-radius:8px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:8px;transition:width .8s cubic-bezier(.2,.8,.2,1);}
+
+.section{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:24px 24px;margin-bottom:16px;}
+.section h2{font-family:var(--font-title);font-size:22px;font-weight:700;letter-spacing:.3px;margin-bottom:12px;display:flex;align-items:center;gap:10px;}
+.section h2 .dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+.section p{color:var(--ink2);line-height:1.7;font-size:15.5px;}
+.section.esencia{border-left:4px solid var(--v);}
+.matiz{background:var(--paper2);border-radius:var(--radius);padding:22px 24px;margin-bottom:16px;}
+.matiz h2{font-family:var(--font-title);font-size:20px;font-weight:700;margin-bottom:10px;}
+.matiz p{color:var(--ink2);line-height:1.7;font-size:15.5px;}
+.synergy{text-align:center;font-size:17px;color:var(--ink);font-style:italic;line-height:1.6;padding:24px 20px;max-width:520px;margin:0 auto 8px;}
+
+.cta-card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow-lg);padding:26px 24px;text-align:center;margin:24px 0 8px;}
+.cta-card h3{font-family:var(--font-title);font-size:24px;font-weight:700;margin-bottom:8px;}
+.cta-card p{color:var(--ink2);font-size:15px;margin-bottom:18px;line-height:1.6;}
+.field{display:flex;flex-direction:column;gap:10px;max-width:380px;margin:0 auto;}
+.field input{width:100%;padding:14px 16px;border-radius:12px;border:1.5px solid var(--bd);background:var(--paper);font-family:inherit;font-size:15px;color:var(--ink);}
+.field input:focus{outline:none;border-color:var(--v);}
+.saved-badge{display:inline-flex;align-items:center;gap:8px;background:var(--m);color:#fff;font-weight:600;padding:12px 22px;border-radius:24px;font-size:15px;}
+.res-actions{display:flex;flex-direction:column;align-items:center;gap:14px;margin-top:20px;}
+.disclaimer{text-align:center;font-size:12.5px;color:var(--mu);margin-top:30px;line-height:1.6;max-width:460px;margin-left:auto;margin-right:auto;}
+.hidden{display:none!important;}
+.spin{display:inline-block;width:34px;height:34px;border:3px solid var(--paper2);border-top-color:var(--v);border-radius:50%;animation:rot .7s linear infinite;}
+@keyframes rot{to{transform:rotate(360deg);}}
+.loading{text-align:center;padding:80px 0;}
+.err-msg{color:var(--r);font-size:14px;margin-top:10px;font-weight:600;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand">
+      <img id="brand-logo" src="" alt="MAAT" onerror="this.style.display='none'">
+      <span>MAAT</span>
+    </div>
+    <div class="lang-toggle">
+      <button id="lang-es" onclick="setLang('es')">ES</button>
+      <button id="lang-en" onclick="setLang('en')">EN</button>
+    </div>
+  </div>
+  <div id="app"><div class="loading"><div class="spin"></div></div></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+/* ============================================================ */
+/* CONFIG                                                       */
+/* ============================================================ */
+const CONFIG={
+  SUPABASE_URL:"https://pcclptmojjzqmfmzftot.supabase.co",
+  SUPABASE_ANON_KEY:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjY2xwdG1vamp6cW1mbXpmdG90Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4OTg3MjAsImV4cCI6MjA4NzQ3NDcyMH0.VuFBEy19fgNN5pSp_r8p2ZVViniunKdVW7Hy3AmqJXE",
+  APP_URL:"https://somosmaat.org/app/",
+  LANDING_URL:"https://somosmaat.org/",
+  IMG_BASE:"https://somosmaat.org/wp-content/uploads/2026/06/",
+  LOGO:"https://www.somosmaat.org/app/icon-192.png"
+};
+// Cliente con ajustes por defecto: comparte la sesi\u00f3n MAAT del mismo origen
+// (somosmaat.org) si el usuario ya inici\u00f3 sesi\u00f3n en la app.
+const sb=supabase.createClient(CONFIG.SUPABASE_URL,CONFIG.SUPABASE_ANON_KEY);
+document.getElementById("brand-logo").src=CONFIG.LOGO;
+
+// Ilustraciones papercut (capas contenedoras)
+const IMG_V="?v=1";
+const imgUrl=(f)=>CONFIG.IMG_BASE+f+IMG_V;
+const INTRO_IMG=imgUrl("onboarding-02-Calibracion.png");
+// Velo de color sobre la imagen: tinte suave arriba, solido abajo para leer el texto.
+const scrim=(hex)=>`linear-gradient(158deg, ${hex}1f 0%, ${hex}cc 62%, ${hex} 100%)`;
+
+/* ============================================================ */
+/* i18n de interfaz                                             */
+/* ============================================================ */
+let lang=(localStorage.getItem("maat-lang")||((navigator.language||"es").slice(0,2)==="en"?"en":"es"));
+const UI={
+  eyebrow:{es:"Autoconocimiento MAAT",en:"MAAT Self-knowledge"},
+  title:{es:"Descubre tu <em>biotipo</em>",en:"Discover your <em>biotype</em>"},
+  intro1:{es:"Los antiguos describieron cuatro temperamentos. No son cajas: son espejos. Este cuestionario te ayuda a reconocer tu biotipo principal y tu segundo dominante.",en:"The ancients described four temperaments. They are not boxes: they are mirrors. This questionnaire helps you recognize your primary biotype and your second dominant one."},
+  intro2:{es:"Al terminar entender\u00e1s c\u00f3mo piensas, c\u00f3mo habitas tu cuerpo y qu\u00e9 procesos te toca integrar.",en:"When you finish you will understand how you think, how you inhabit your body and which processes you need to integrate."},
+  chip1:{es:"40 preguntas",en:"40 questions"},
+  chip2:{es:"~6 minutos",en:"~6 minutes"},
+  chip3:{es:"Sin respuestas correctas",en:"No right answers"},
+  metaNote:{es:"Responde con honestidad, desde quien eres hoy, no desde quien quisieras ser.",en:"Answer honestly, from who you are today, not who you wish to be."},
+  start:{es:"Empezar",en:"Start"},
+  resume:{es:"Ver mi resultado anterior",en:"See my previous result"},
+  qOf:{es:"de",en:"of"},
+  endLow:{es:"Nada como yo",en:"Not like me"},
+  endHigh:{es:"Muy como yo",en:"Very like me"},
+  back:{es:"Atr\u00e1s",en:"Back"},
+  computing:{es:"Revelando tu biotipo...",en:"Revealing your biotype..."},
+  resEyebrow:{es:"Tu biotipo principal",en:"Your primary biotype"},
+  secondLabel:{es:"Con un segundo dominante",en:"With a second dominant"},
+  blend:{es:"Tus dos primeros biotipos est\u00e1n muy cerca: eres una mezcla viva de ambos. Lee los dos perfiles como uno solo.",en:"Your top two biotypes are very close: you are a living blend of both. Read both profiles as one."},
+  spectrumTitle:{es:"Tu espectro completo",en:"Your full spectrum"},
+  secCog:{es:"Procesos cognitivos",en:"Cognitive processes"},
+  secBody:{es:"Relaci\u00f3n con tu cuerpo",en:"Relationship with your body"},
+  secShadow:{es:"Procesos a identificar",en:"Processes to identify"},
+  secMaat:{es:"Tu camino en MAAT",en:"Your path in MAAT"},
+  secEssence:{es:"Tu esencia",en:"Your essence"},
+  emailSubject:{es:"Tu Biotipo MAAT",en:"Your MAAT Biotype"},
+  emailIntro:{es:"Esto no es una etiqueta: es un espejo. Aqu\u00ed est\u00e1 lo que tu forma de ser revela, y c\u00f3mo convertirlo en tu mayor ventaja.",en:"This is not a label: it's a mirror. Here's what your way of being reveals, and how to turn it into your greatest advantage."},
+  emailBridgeTitle:{es:"Tu biotipo es el punto de partida",en:"Your biotype is the starting point"},
+  emailBridgeText:{es:"Conocerte es el primer paso. En MAAT te acompa\u00f1amos 16 semanas para transformar esa autoconciencia en coherencia real: h\u00e1bitos, decisiones y energ\u00eda alineados con quien de verdad eres.",en:"Knowing yourself is the first step. At MAAT we walk with you for 16 weeks to turn that self-awareness into real coherence: habits, decisions and energy aligned with who you truly are."},
+  emailPS:{es:"PD: si algo de esto reson\u00f3 contigo, responde este correo. Me encantar\u00eda saber qu\u00e9 descubriste.",en:"PS: if any of this resonated with you, reply to this email. I'd love to hear what you discovered."},
+  matizTitle:{es:"El matiz de tu segundo dominante",en:"The nuance of your second dominant"},
+  saveProfile:{es:"Guardar en mi perfil MAAT",en:"Save to my MAAT profile"},
+  saving:{es:"Guardando...",en:"Saving..."},
+  saved:{es:"Guardado en tu perfil",en:"Saved to your profile"},
+  emailTitle:{es:"Ll\u00e9vate tu resultado",en:"Take your result with you"},
+  emailBody:{es:"D\u00e9janos tu correo y te enviaremos tu perfil completo m\u00e1s los pr\u00f3ximos pasos para trabajarlo.",en:"Leave us your email and we will send you your full profile plus the next steps to work on it."},
+  emailName:{es:"Tu nombre",en:"Your name"},
+  emailPh:{es:"tu@correo.com",en:"you@email.com"},
+  emailBtn:{es:"Enviarme mi resultado",en:"Send me my result"},
+  emailThanks:{es:"Listo. Cuida tu correo: tu resultado va en camino.",en:"Done. Watch your inbox: your result is on its way."},
+  emailErr:{es:"Escribe un correo v\u00e1lido.",en:"Enter a valid email."},
+  ctaTitle:{es:"Este es solo el comienzo",en:"This is only the beginning"},
+  ctaBody:{es:"Tu biotipo es la puerta. MAAT es el proceso de 16 semanas para transformarlo en coherencia real.",en:"Your biotype is the door. MAAT is the 16-week process to turn it into real coherence."},
+  ctaBtn:{es:"Conoce MAAT",en:"Discover MAAT"},
+  openApp:{es:"Ir a mi app MAAT",en:"Go to my MAAT app"},
+  retake:{es:"Repetir el test",en:"Retake the test"},
+  disclaimer:{es:"Los biotipos son un modelo de autoconocimiento inspirado en la teor\u00eda cl\u00e1sica de los temperamentos. No son un diagn\u00f3stico cl\u00ednico ni psicol\u00f3gico.",en:"Biotypes are a self-knowledge model inspired by the classical theory of temperaments. They are not a clinical or psychological diagnosis."}
+};
+const T=(k)=>UI[k]?UI[k][lang]:k;
+
+/* ============================================================ */
+/* Banco de \u00edtems (40): t = biotipo (s/c/m/f)                   */
+/* ============================================================ */
+const ITEMS=[
+  {t:"s",es:"Me energiza estar rodeado de gente y conversar.",en:"Being around people and talking energizes me."},
+  {t:"c",es:"Cuando me propongo una meta, voy con todo hasta lograrla.",en:"When I set a goal, I go all in until I achieve it."},
+  {t:"m",es:"Analizo las cosas a fondo antes de decidir.",en:"I analyze things deeply before deciding."},
+  {t:"f",es:"Mantengo la calma incluso en situaciones tensas.",en:"I stay calm even in tense situations."},
+  {t:"s",es:"Empiezo muchas cosas con entusiasmo aunque no todas las termine.",en:"I start many things enthusiastically even if I don't finish them all."},
+  {t:"c",es:"Tomo decisiones r\u00e1pido y con seguridad.",en:"I make decisions quickly and confidently."},
+  {t:"m",es:"Soy perfeccionista y me cuesta darme por satisfecho.",en:"I'm a perfectionist and rarely feel satisfied."},
+  {t:"f",es:"Evito el conflicto siempre que puedo.",en:"I avoid conflict whenever I can."},
+  {t:"s",es:"Expreso lo que siento con facilidad, casi sin filtro.",en:"I express what I feel easily, almost without a filter."},
+  {t:"c",es:"Me frustra la lentitud y la ineficiencia.",en:"Slowness and inefficiency frustrate me."},
+  {t:"m",es:"Le doy muchas vueltas a lo que ya pas\u00f3.",en:"I keep replaying things that already happened."},
+  {t:"f",es:"Prefiero la rutina y lo estable a los cambios bruscos.",en:"I prefer routine and stability over sudden changes."},
+  {t:"s",es:"Me aburro r\u00e1pido con la rutina y busco novedad.",en:"I get bored with routine quickly and seek novelty."},
+  {t:"c",es:"Tiendo a tomar el liderazgo cuando nadie lo hace.",en:"I tend to take the lead when no one else does."},
+  {t:"m",es:"Me afectan profundamente las cosas, aunque no siempre lo muestre.",en:"Things affect me deeply, even if I don't always show it."},
+  {t:"f",es:"Me cuesta arrancar, aunque cuando lo hago soy constante.",en:"I struggle to start, but once I do I'm consistent."},
+  {t:"s",es:"Tomo decisiones guiado por lo que siento en el momento.",en:"I make decisions guided by what I feel in the moment."},
+  {t:"c",es:"Me cuesta mostrarme vulnerable o pedir ayuda.",en:"I find it hard to be vulnerable or ask for help."},
+  {t:"m",es:"Necesito tiempo a solas para recargarme.",en:"I need time alone to recharge."},
+  {t:"f",es:"Rara vez me altero o pierdo la paciencia.",en:"I rarely get upset or lose my patience."},
+  {t:"s",es:"La gente me describe como alegre y expresivo.",en:"People describe me as cheerful and expressive."},
+  {t:"c",es:"Soy directo, a veces demasiado, al decir lo que pienso.",en:"I'm direct, sometimes too much, when I say what I think."},
+  {t:"m",es:"Busco sentido y significado en lo que hago.",en:"I look for meaning and purpose in what I do."},
+  {t:"f",es:"Me adapto con facilidad para no generar fricci\u00f3n.",en:"I adapt easily to avoid creating friction."},
+  {t:"s",es:"Me cuesta concentrarme en una sola tarea por mucho tiempo.",en:"I find it hard to focus on a single task for long."},
+  {t:"c",es:"Puedo trabajar largas horas empuj\u00e1ndome al l\u00edmite.",en:"I can work long hours pushing myself to the limit."},
+  {t:"m",es:"Noto los detalles y errores que otros pasan por alto.",en:"I notice details and mistakes others overlook."},
+  {t:"f",es:"A veces postergo decisiones esperando que se resuelvan solas.",en:"Sometimes I postpone decisions hoping they resolve themselves."},
+  {t:"s",es:"Disfruto ser el centro de atenci\u00f3n en un grupo.",en:"I enjoy being the center of attention in a group."},
+  {t:"c",es:"Me incomoda no tener el control de una situaci\u00f3n.",en:"I feel uncomfortable not being in control of a situation."},
+  {t:"m",es:"Me exijo est\u00e1ndares muy altos y me critico con dureza.",en:"I hold myself to very high standards and criticize myself harshly."},
+  {t:"f",es:"Necesito descanso y tranquilidad para sentirme bien.",en:"I need rest and calm to feel well."},
+  {t:"s",es:"Me motiva m\u00e1s la emoci\u00f3n de lo nuevo que el resultado final.",en:"The thrill of the new motivates me more than the final result."},
+  {t:"c",es:"Me exijo mucho y tambi\u00e9n exijo a los dem\u00e1s.",en:"I demand a lot from myself and from others too."},
+  {t:"m",es:"Prefiero pocas relaciones profundas a muchas superficiales.",en:"I prefer a few deep relationships over many shallow ones."},
+  {t:"f",es:"Me cuesta identificar o expresar lo que realmente quiero.",en:"I find it hard to identify or express what I really want."},
+  {t:"s",es:"Cuando estoy inquieto, necesito moverme o hablar con alguien.",en:"When I'm restless, I need to move or talk to someone."},
+  {t:"c",es:"Prefiero la acci\u00f3n a la reflexi\u00f3n prolongada.",en:"I prefer action over prolonged reflection."},
+  {t:"m",es:"A veces la tristeza o la desesperanza me visitan sin raz\u00f3n clara.",en:"Sometimes sadness or hopelessness visit me for no clear reason."},
+  {t:"f",es:"Soy quien pone paz y equilibrio en un grupo.",en:"I'm the one who brings peace and balance to a group."}
+];
+
+/* ============================================================ */
+/* Perfiles                                                     */
+/* ============================================================ */
+const BIOS={
+  s:{ color:"var(--o)", hex:"#EBA055", img:"onboarding-01-bienvenida.png",
+    name:{es:"Sangu\u00edneo",en:"Sanguine"},
+    poetic:{es:"El fuego que conecta",en:"The fire that connects"},
+    esencia:{es:"Vives en el presente, con un entusiasmo contagioso y una necesidad genuina de conexi\u00f3n. Tu energ\u00eda enciende a los dem\u00e1s.",en:"You live in the present, with contagious enthusiasm and a genuine need for connection. Your energy lights up others."},
+    cog:{es:"Piensas por asociaci\u00f3n, r\u00e1pido y en muchas direcciones a la vez. Aprendes hablando y con otros; decides desde la emoci\u00f3n del momento. Tu atenci\u00f3n es amplia pero corta: te enganchas r\u00e1pido y te desenganchas igual de r\u00e1pido. Memoria fuerte para personas y experiencias vividas.",en:"You think by association, fast and in many directions at once. You learn by talking and with others; you decide from the emotion of the moment. Your attention is broad but short: you latch on fast and let go just as fast. Strong memory for people and lived experiences."},
+    body:{es:"Energ\u00eda alta pero fluctuante, muy expresiva: gesticulas, te mueves. El cuerpo te pide est\u00edmulo y movimiento. Cuando te sobreestimulas, aparece la inquietud, el insomnio o la dispersi\u00f3n f\u00edsica. Te recargas con gente y con lo nuevo.",en:"High but fluctuating energy, very expressive: you gesture, you move. Your body asks for stimulation and movement. When you overstimulate, restlessness, insomnia or physical scattering appear. You recharge with people and novelty."},
+    shadow:{es:"La dispersi\u00f3n y dejar cosas a medias; huir de lo dif\u00edcil buscando novedad; depender de la aprobaci\u00f3n ajena; la impulsividad. Tu trabajo profundo es terminar y sostener lo que empiezas.",en:"Scattering and leaving things half-done; escaping the hard through novelty; depending on others' approval; impulsiveness. Your deep work is to finish and sustain what you start."},
+    maat:{es:"Brillas en la Fase de Gratitud (conexi\u00f3n, presente). Tu reto est\u00e1 en la Voluntad y la Integraci\u00f3n: la constancia cuando la emoci\u00f3n inicial se apaga. H\u00e1bito ancla: rituales cortos y repetidos, no grandes proyectos aislados.",en:"You shine in the Gratitude Phase (connection, presence). Your challenge is in Will and Integration: consistency when the initial excitement fades. Anchor habit: short, repeated rituals, not big isolated projects."},
+    secondary:{es:"le da calor, expresi\u00f3n y chispa social a tu esencia",en:"adds warmth, expression and social spark to your essence"}
+  },
+  c:{ color:"var(--r)", hex:"#D76B6E", img:"onboarding-04-coach.png",
+    name:{es:"Col\u00e9rico",en:"Choleric"},
+    poetic:{es:"La voluntad que dirige",en:"The will that leads"},
+    esencia:{es:"Naciste orientado a la meta. Decides, lideras y avanzas. Donde otros dudan, t\u00fa act\u00faas.",en:"You were born goal-oriented. You decide, lead and move forward. Where others hesitate, you act."},
+    cog:{es:"Pensamiento lineal y estrat\u00e9gico, siempre hacia un objetivo. Decides r\u00e1pido y con firmeza; aprendes haciendo y ret\u00e1ndote. Foco intenso y sostenido cuando algo te importa. Memoria orientada a metas y resultados.",en:"Linear, strategic thinking, always toward an objective. You decide fast and firmly; you learn by doing and challenging yourself. Intense, sustained focus when something matters. Memory oriented to goals and results."},
+    body:{es:"Energ\u00eda alta y sostenida, pero tiendes a empujar el cuerpo al l\u00edmite e ignorar sus se\u00f1ales. Acumulas tensi\u00f3n (mand\u00edbula, hombros, cuello). Somatizas con estr\u00e9s, presi\u00f3n y dificultad para descansar de verdad. Te cuesta parar.",en:"High, sustained energy, but you tend to push your body to the limit and ignore its signals. You accumulate tension (jaw, shoulders, neck). You somatize with stress, pressure and difficulty truly resting. Stopping is hard for you."},
+    shadow:{es:"El control y la impaciencia; la dureza contigo y con otros; la dificultad para la vulnerabilidad; el exceso de trabajo como identidad; la ira cuando pierdes el control. Tu trabajo profundo es rendirte y escuchar (al cuerpo, a los dem\u00e1s).",en:"Control and impatience; harshness with yourself and others; difficulty being vulnerable; overwork as identity; anger when you lose control. Your deep work is to surrender and listen (to your body, to others)."},
+    maat:{es:"Brillas en Intenci\u00f3n y Voluntad: ejecutas como nadie. Tu reto est\u00e1 en la Fase de Amor: la ternura, la pausa, soltar el control. H\u00e1bito ancla: descanso agendado como si fuera una meta.",en:"You shine in Intention and Will: you execute like no one else. Your challenge is in the Love Phase: tenderness, the pause, letting go of control. Anchor habit: rest scheduled as if it were a goal."},
+    secondary:{es:"le suma empuje, direcci\u00f3n y capacidad de ejecutar",en:"adds drive, direction and the ability to execute"}
+  },
+  m:{ color:"var(--v)", hex:"#896C8E", img:"celebracion-primera-calib.png",
+    name:{es:"Melanc\u00f3lico",en:"Melancholic"},
+    poetic:{es:"La profundidad que busca sentido",en:"The depth that seeks meaning"},
+    esencia:{es:"Sientes y piensas hondo. Buscas significado, belleza e ideal en todo lo que haces. Tu mundo interior es vasto.",en:"You feel and think deeply. You seek meaning, beauty and ideals in everything you do. Your inner world is vast."},
+    cog:{es:"Pensamiento anal\u00edtico, reflexivo y perfeccionista. Decides despacio, ponderando escenarios. Aprendes en profundidad y a solas. Atenci\u00f3n sostenida y detallista: ves lo que otros no ven. Memoria emocional larga: recuerdas c\u00f3mo te hizo sentir algo, por a\u00f1os.",en:"Analytical, reflective, perfectionist thinking. You decide slowly, weighing scenarios. You learn deeply and alone. Sustained, detailed attention: you see what others don't. Long emotional memory: you remember how something made you feel, for years."},
+    body:{es:"Energ\u00eda baja-media y sensible a los est\u00edmulos. Tiendes a vivir hacia adentro. Somatizas con fatiga, tensi\u00f3n digestiva u opresi\u00f3n en el pecho. La sobrecarga social te agota. Te recargas con soledad y calma.",en:"Low-to-medium energy, sensitive to stimuli. You tend to live inward. You somatize with fatigue, digestive tension or chest tightness. Social overload drains you. You recharge with solitude and calm."},
+    shadow:{es:"La autocr\u00edtica y la rumiaci\u00f3n; el perfeccionismo que paraliza; la melancol\u00eda o desesperanza sin causa; el aislamiento. Tu trabajo profundo es soltar el ideal y habitar lo que ya es (la gratitud del presente).",en:"Self-criticism and rumination; paralyzing perfectionism; melancholy or hopelessness without cause; isolation. Your deep work is to release the ideal and inhabit what already is (the gratitude of the present)."},
+    maat:{es:"Brillas en Intenci\u00f3n y en la profundidad de la reflexi\u00f3n. Tu reto est\u00e1 en la Fase de Gratitud: bajar del ideal y agradecer lo imperfecto. H\u00e1bito ancla: registro de lo bueno, concreto y peque\u00f1o, cada d\u00eda.",en:"You shine in Intention and in the depth of reflection. Your challenge is in the Gratitude Phase: coming down from the ideal and being grateful for the imperfect. Anchor habit: a record of what's good, concrete and small, every day."},
+    secondary:{es:"le agrega profundidad, criterio y sensibilidad al detalle",en:"adds depth, judgment and sensitivity to detail"}
+  },
+  f:{ color:"var(--c)", hex:"#39A1C9", img:"onboarding-03-habitos.png",
+    name:{es:"Flem\u00e1tico",en:"Phlegmatic"},
+    poetic:{es:"La calma que sostiene",en:"The calm that holds"},
+    esencia:{es:"Eres estable, paciente y arm\u00f3nico. Donde hay caos, t\u00fa traes paz. Tu constancia es tu superpoder silencioso.",en:"You are stable, patient and harmonious. Where there is chaos, you bring peace. Your consistency is your quiet superpower."},
+    cog:{es:"Pensamiento pausado, pr\u00e1ctico y sint\u00e9tico. Decides despacio y evitando el conflicto. Aprendes de forma ordenada y constante. Atenci\u00f3n estable y confiable; excelente para procesos y rutinas. No te apuras, pero tampoco te caes.",en:"Calm, practical, synthetic thinking. You decide slowly and avoiding conflict. You learn in an orderly, steady way. Stable, reliable attention; excellent for processes and routines. You don't rush, but you don't fall either."},
+    body:{es:"Energ\u00eda baja y muy estable. Relajaci\u00f3n natural, pero con tendencia a la quietud y el sedentarismo. Somatizas con letargo, lentitud, retenci\u00f3n. El cuerpo te pide movimiento que a veces no le das. Te recargas con descanso y rutina.",en:"Low, very stable energy. Natural relaxation, but with a tendency toward stillness and sedentarism. You somatize with lethargy, slowness, retention. Your body asks for movement you sometimes don't give it. You recharge with rest and routine."},
+    shadow:{es:"La pasividad y la evasi\u00f3n del conflicto; la procrastinaci\u00f3n suave; la resistencia al cambio; la desconexi\u00f3n de tus propios deseos (complacer antes que querer). Tu trabajo profundo es querer con claridad y actuar por ti.",en:"Passivity and conflict avoidance; soft procrastination; resistance to change; disconnection from your own desires (pleasing before wanting). Your deep work is to want clearly and act for yourself."},
+    maat:{es:"Brillas en la estabilidad y en sostener h\u00e1bitos. Tu reto est\u00e1 en la Voluntad: nombrar lo que quieres y moverte hacia ello. H\u00e1bito ancla: una acci\u00f3n inc\u00f3moda peque\u00f1a al d\u00eda, elegida por ti.",en:"You shine in stability and in sustaining habits. Your challenge is in Will: naming what you want and moving toward it. Anchor habit: one small uncomfortable action a day, chosen by you."},
+    secondary:{es:"le aporta calma, paciencia y constancia",en:"adds calm, patience and consistency"}
+  }
+};
+const ORDER=["s","c","m","f"];
+
+/* ============================================================ */
+/* Estado                                                       */
+/* ============================================================ */
+let idx=0;
+let answers=new Array(ITEMS.length).fill(0);
+let result=null;   // {primary, secondary, blend, scores:{s,c,m,f}}
+let sessionUser=null;
+const app=document.getElementById("app");
+
+function setLang(l){
+  lang=l; localStorage.setItem("maat-lang",l);
+  document.documentElement.lang=l;
+  document.getElementById("lang-es").classList.toggle("on",l==="es");
+  document.getElementById("lang-en").classList.toggle("on",l==="en");
+  rerender();
+}
+let screen="intro"; // intro | quiz | computing | result
+function rerender(){
+  if(screen==="intro")renderIntro();
+  else if(screen==="quiz")renderQuiz();
+  else if(screen==="result")renderResult();
+}
+
+/* ---- INTRO ---- */
+function renderIntro(){
+  screen="intro";
+  const saved=loadSaved();
+  app.innerHTML=`
+    <div class="hero-illo intro-hero">
+      <img class="illo-img" src="${INTRO_IMG}" alt="" loading="eager" decoding="async" onerror="this.remove()">
+      <div class="illo-scrim" style="background:${scrim('#896C8E')}"></div>
+      <div class="illo-content">
+        <div class="eyebrow">${T("eyebrow")}</div>
+        <h1>${T("title")}</h1>
+      </div>
+    </div>
+    <div class="intro">
+      <p>${T("intro1")}</p>
+      <p>${T("intro2")}</p>
+      <div class="chips">
+        <span class="chip">${T("chip1")}</span>
+        <span class="chip">${T("chip2")}</span>
+        <span class="chip">${T("chip3")}</span>
+      </div>
+      <div><button class="btn-primary" onclick="startQuiz()">${T("start")}</button></div>
+      ${saved?`<div style="margin-top:16px;"><button class="btn-ghost" onclick="showSaved()">${T("resume")}</button></div>`:""}
+      <p class="meta-note">${T("metaNote")}</p>
+    </div>`;
+}
+
+function startQuiz(){
+  idx=0; answers=new Array(ITEMS.length).fill(0);
+  screen="quiz"; renderQuiz();
+}
+
+/* ---- QUIZ ---- */
+function renderQuiz(){
+  screen="quiz";
+  const it=ITEMS[idx];
+  const pct=Math.round((idx)/ITEMS.length*100);
+  const cur=answers[idx];
+  let scaleBtns="";
+  for(let v=1;v<=5;v++){
+    scaleBtns+=`<button class="${cur===v?"sel":""}" onclick="answer(${v})">${v}</button>`;
+  }
+  app.innerHTML=`
+    <div class="progress"><div class="progress-fill" style="width:${pct}%"></div></div>
+    <div class="progress-label">${idx+1} ${T("qOf")} ${ITEMS.length}</div>
+    <div class="q-card">
+      <div class="q-num">${idx+1}</div>
+      <div class="q-text">${it[lang]}</div>
+      <div class="scale-ends"><span>${T("endLow")}</span><span>${T("endHigh")}</span></div>
+      <div class="scale">${scaleBtns}</div>
+      <div class="q-nav">${idx>0?`<button class="q-back" onclick="prevQ()">&#8592; ${T("back")}</button>`:""}</div>
+    </div>`;
+}
+function answer(v){
+  answers[idx]=v;
+  setTimeout(()=>{
+    if(idx<ITEMS.length-1){idx++;renderQuiz();}
+    else compute();
+  },180);
+}
+function prevQ(){ if(idx>0){idx--;renderQuiz();} }
+
+/* ---- C\u00f3mputo ---- */
+function compute(){
+  screen="computing";
+  app.innerHTML=`<div class="loading"><div class="spin"></div><p style="margin-top:18px;color:var(--mu);">${T("computing")}</p></div>`;
+  const raw={s:0,c:0,m:0,f:0};
+  ITEMS.forEach((it,i)=>{ raw[it.t]+=(answers[i]||1); });
+  // normalizar a % (rango 10-50 por biotipo)
+  const scores={};
+  ORDER.forEach(k=>{ scores[k]=Math.round((raw[k]-10)/40*100); });
+  const ranked=ORDER.slice().sort((a,b)=>scores[b]-scores[a]);
+  const primary=ranked[0], secondary=ranked[1];
+  const blend=(scores[primary]-scores[secondary])<=10;
+  result={primary,secondary,blend,scores};
+  saveLocal();
+  setTimeout(()=>{screen="result";renderResult();},900);
+}
+
+/* ---- RESULT ---- */
+function renderResult(){
+  screen="result";
+  const{primary,secondary,blend,scores}=result;
+  const P=BIOS[primary], Sd=BIOS[secondary];
+  const ranked=ORDER.slice().sort((a,b)=>scores[b]-scores[a]);
+  let bars="";
+  ranked.forEach(k=>{
+    const b=BIOS[k];
+    bars+=`<div class="bar-row">
+      <div class="bar-top"><span style="color:${b.hex}">${b.name[lang]}</span><span class="pct">${scores[k]}%</span></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.max(scores[k],2)}%;background:${b.hex}"></div></div>
+    </div>`;
+  });
+  const conector=lang==="es"?`Tu ${P.name.es} se combina con tu ${Sd.name.es}, que ${Sd.secondary.es}.`:`Your ${P.name.en} combines with your ${Sd.name.en}, which ${Sd.secondary.en}.`;
+
+  app.innerHTML=`
+    <div class="hero-illo result-hero">
+      <img class="illo-img" src="${imgUrl(P.img)}" alt="" loading="eager" decoding="async" onerror="this.remove()">
+      <div class="illo-scrim" style="background:${scrim(P.hex)}"></div>
+      <div class="illo-content">
+        <div class="eyebrow">${T("resEyebrow")}</div>
+        <h1>${P.name[lang]}</h1>
+        <div class="poetic">${P.poetic[lang]}</div>
+        <div class="second">${T("secondLabel")}: <b>${Sd.name[lang]}</b></div>
+      </div>
+    </div>
+    ${blend?`<div class="blend-note">${T("blend")}</div>`:""}
+
+    <div class="spectrum">
+      <h3>${T("spectrumTitle")}</h3>
+      ${bars}
+    </div>
+
+    <div class="section esencia" style="border-left-color:${P.hex}">
+      <p style="font-size:17px;color:var(--ink);">${P.esencia[lang]}</p>
+    </div>
+    <div class="section">
+      <h2><span class="dot" style="background:${P.hex}"></span>${T("secCog")}</h2>
+      <p>${P.cog[lang]}</p>
+    </div>
+    <div class="section">
+      <h2><span class="dot" style="background:${P.hex}"></span>${T("secBody")}</h2>
+      <p>${P.body[lang]}</p>
+    </div>
+    <div class="section">
+      <h2><span class="dot" style="background:${P.hex}"></span>${T("secShadow")}</h2>
+      <p>${P.shadow[lang]}</p>
+    </div>
+    <div class="section">
+      <h2><span class="dot" style="background:${P.hex}"></span>${T("secMaat")}</h2>
+      <p>${P.maat[lang]}</p>
+    </div>
+
+    <div class="matiz" style="text-align:center;">
+      <img class="illo-badge" src="${imgUrl(Sd.img)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">
+      <h2>${T("matizTitle")}</h2>
+      <p>${conector}</p>
+    </div>
+
+    <div id="save-slot"></div>
+    <div id="email-slot"></div>
+
+    <div class="res-actions">
+      <button class="btn-ghost" onclick="startQuiz()">${T("retake")}</button>
+    </div>
+    <p class="disclaimer">${T("disclaimer")}</p>`;
+
+  renderSaveOrCta();
+  renderEmailCard();
+}
+
+/* Guardar en perfil (si hay sesi\u00f3n) o CTA a MAAT (si no) */
+function renderSaveOrCta(){
+  const slot=document.getElementById("save-slot");
+  if(sessionUser){
+    slot.innerHTML=`<div class="cta-card">
+      <h3>${T("openApp")}</h3>
+      <div class="res-actions">
+        <button id="save-btn" class="btn-primary" onclick="saveToProfile()">${T("saveProfile")}</button>
+        <div id="save-msg"></div>
+      </div>
+    </div>`;
+  }else{
+    slot.innerHTML=`<div class="cta-card">
+      <h3>${T("ctaTitle")}</h3>
+      <p>${T("ctaBody")}</p>
+      <a class="btn-primary" href="${CONFIG.LANDING_URL}">${T("ctaBtn")}</a>
+    </div>`;
+  }
+}
+
+async function saveToProfile(){
+  const btn=document.getElementById("save-btn");
+  const msg=document.getElementById("save-msg");
+  if(!btn||!sessionUser)return;
+  btn.disabled=true; const orig=btn.textContent; btn.textContent=T("saving");
+  const{error}=await sb.from("profiles").update({
+    biotype_primary:result.primary,
+    biotype_secondary:result.secondary,
+    biotype_scores:result.scores,
+    biotype_taken_at:new Date().toISOString()
+  }).eq("id",sessionUser.id);
+  if(error){
+    btn.disabled=false; btn.textContent=orig;
+    msg.innerHTML=`<div class="err-msg">${error.message||"Error"}</div>`;
+    return;
+  }
+  const slot=document.getElementById("save-slot");
+  slot.innerHTML=`<div class="cta-card">
+    <div class="res-actions">
+      <span class="saved-badge">&#10003; ${T("saved")}</span>
+      <a class="btn-ghost" href="${CONFIG.APP_URL}">${T("openApp")}</a>
+    </div>
+  </div>`;
+}
+
+/* Captura de email opcional (lead) */
+function renderEmailCard(){
+  if(sessionUser)return; // ya es cliente, no pedimos email
+  const slot=document.getElementById("email-slot");
+  slot.innerHTML=`<div class="cta-card">
+    <h3>${T("emailTitle")}</h3>
+    <p>${T("emailBody")}</p>
+    <div class="field">
+      <input id="lead-name" type="text" placeholder="${T("emailName")}" autocomplete="name">
+      <input id="lead-email" type="email" placeholder="${T("emailPh")}" autocomplete="email" inputmode="email">
+      <button class="btn-primary" onclick="submitLead()">${T("emailBtn")}</button>
+      <div id="lead-msg"></div>
+    </div>
+  </div>`;
+}
+async function submitLead(){
+  const nm=(document.getElementById("lead-name").value||"").trim();
+  const em=(document.getElementById("lead-email").value||"").trim();
+  const msg=document.getElementById("lead-msg");
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)){ msg.innerHTML=`<div class="err-msg">${T("emailErr")}</div>`; return; }
+  // 1) Captura garantizada del lead (aunque el correo falle).
+  const{error}=await sb.from("biotype_leads").insert({
+    email:em, name:nm||null,
+    biotype_primary:result.primary, biotype_secondary:result.secondary,
+    scores:result.scores, lang:lang
+  });
+  const slot=document.getElementById("email-slot");
+  if(error){ msg.innerHTML=`<div class="err-msg">${error.message||"Error"}</div>`; return; }
+  // 2) Envio del resultado por correo (best-effort; el contenido va ya localizado).
+  sb.functions.invoke("send-biotipo-result",{body:{email:em,name:nm,render:buildEmailRender(nm)}})
+    .then(({error:e})=>{ if(e)console.warn("email biotipo:",e.message||e); });
+  slot.innerHTML=`<div class="cta-card"><div class="res-actions"><span class="saved-badge">&#10003; ${T("emailThanks")}</span></div></div>`;
+}
+
+/* Arma el contenido del correo (ES/EN) desde BIOS/UI: unica fuente de verdad. */
+function buildEmailRender(nm){
+  const P=BIOS[result.primary], Sd=BIOS[result.secondary];
+  const ranked=ORDER.slice().sort((a,b)=>result.scores[b]-result.scores[a]);
+  const conector=lang==="es"?`Tu ${P.name.es} se combina con tu ${Sd.name.es}, que ${Sd.secondary.es}.`:`Your ${P.name.en} combines with your ${Sd.name.en}, which ${Sd.secondary.en}.`;
+  return {
+    subject:`${T("emailSubject")}: ${P.name[lang]}`,
+    greeting:nm?(lang==="es"?`Hola ${nm},`:`Hi ${nm},`):(lang==="es"?"Hola,":"Hi,"),
+    intro:T("emailIntro"),
+    primaryName:P.name[lang], secondaryName:Sd.name[lang], poetic:P.poetic[lang],
+    primaryHex:P.hex, secondLabel:T("secondLabel"),
+    logo:CONFIG.LOGO, heroImg:imgUrl(P.img), badgeImg:imgUrl(Sd.img),
+    spectrumTitle:T("spectrumTitle"),
+    spectrum:ranked.map(k=>({name:BIOS[k].name[lang],pct:result.scores[k],hex:BIOS[k].hex})),
+    sections:[
+      {title:T("secEssence"),text:P.esencia[lang]},
+      {title:T("secCog"),text:P.cog[lang]},
+      {title:T("secBody"),text:P.body[lang]},
+      {title:T("secShadow"),text:P.shadow[lang]},
+      {title:T("secMaat"),text:P.maat[lang]},
+      {title:T("matizTitle"),text:conector}
+    ],
+    bridgeTitle:T("emailBridgeTitle"), bridgeText:T("emailBridgeText"),
+    ctaLabel:T("ctaBtn"), ctaUrl:CONFIG.LANDING_URL,
+    ps:T("emailPS"), footer:T("disclaimer")
+  };
+}
+
+/* ---- Persistencia local ---- */
+function saveLocal(){ try{localStorage.setItem("maat-biotipo",JSON.stringify(result));}catch(e){} }
+function loadSaved(){ try{return JSON.parse(localStorage.getItem("maat-biotipo")||"null");}catch(e){return null;} }
+function showSaved(){ const s=loadSaved(); if(s){result=s;screen="result";renderResult();} }
+
+/* ---- Init ---- */
+(async function init(){
+  document.documentElement.lang=lang;
+  document.getElementById("lang-es").classList.toggle("on",lang==="es");
+  document.getElementById("lang-en").classList.toggle("on",lang==="en");
+  try{
+    const{data:{session}}=await sb.auth.getSession();
+    if(session&&session.user)sessionUser=session.user;
+  }catch(e){}
+  renderIntro();
+})();
+</script>
+</body>
+</html>

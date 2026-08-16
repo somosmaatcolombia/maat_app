@@ -14,7 +14,7 @@ MINIFY=1
 [ "$1" = "--no-minify" ] && MINIFY=0
 
 rm -rf deploy
-mkdir -p deploy/app deploy/mentor deploy/onboarding
+mkdir -p deploy/app deploy/mentor deploy/onboarding deploy/feedback deploy/feedback-panel deploy/biotipo
 
 # App del cliente (PWA completa: index + service worker + manifest + iconos)
 cp src/maat_dashboard.html      deploy/app/index.html
@@ -28,11 +28,23 @@ cp src/maat_mentor_dashboard.html  deploy/mentor/index.html
 # Landing de onboarding
 cp src/maat_landing.html        deploy/onboarding/index.html
 
+# Cuestionario de trazabilidad (cliente). DEBE ir en el mismo dominio que /app/
+# para compartir la sesion de Supabase (ver CONFIG.FEEDBACK_URL en la app).
+cp src/maat_feedback.html       deploy/feedback/index.html
+
+# Dashboard de feedback (mentor/admin)
+cp src/maat_feedback_dashboard.html deploy/feedback-panel/index.html
+
+# Cuestionario de Biotipo (lead magnet + guarda en perfil). DEBE ir en el mismo
+# dominio que /app/ para compartir la sesion de Supabase (guardar en perfil).
+cp src/maat_biotipo.html        deploy/biotipo/index.html
+
 # Minificacion (opcional): reduce el peso de los .html ~15%.
 # ascii_only:true preserva la regla de archivos ASCII puro (\uXXXX en vez de UTF-8 crudo).
 if [ "$MINIFY" = "1" ] && command -v npx >/dev/null 2>&1; then
   echo "Minificando .html ..."
-  for f in deploy/app/index.html deploy/mentor/index.html deploy/onboarding/index.html; do
+  for f in deploy/app/index.html deploy/mentor/index.html deploy/onboarding/index.html \
+           deploy/feedback/index.html deploy/feedback-panel/index.html deploy/biotipo/index.html; do
     npx --yes html-minifier-terser \
       --collapse-whitespace --conservative-collapse --remove-comments \
       --minify-css true \
