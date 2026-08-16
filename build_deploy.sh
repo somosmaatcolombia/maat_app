@@ -39,6 +39,25 @@ cp src/maat_feedback_dashboard.html deploy/feedback-panel/index.html
 # dominio que /app/ para compartir la sesion de Supabase (guardar en perfil).
 cp src/maat_biotipo.html        deploy/biotipo/index.html
 
+# .htaccess por carpeta: evita que las caches (LiteSpeed / proxy / navegador)
+# sirvan HTML viejo tras un deploy. El HTML es pequenio: preferimos frescura.
+# NOTA: esto solo afecta a DESPUES de purgar la cache actual una vez.
+for d in app mentor onboarding feedback feedback-panel biotipo; do
+  cat > "deploy/$d/.htaccess" <<'HTACCESS'
+AddDefaultCharset utf-8
+<IfModule mod_headers.c>
+  <FilesMatch "\.(html|js|json)$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires "0"
+  </FilesMatch>
+</IfModule>
+<IfModule LiteSpeed>
+  CacheDisable public /
+</IfModule>
+HTACCESS
+done
+
 # Minificacion (opcional): reduce el peso de los .html ~15%.
 # ascii_only:true preserva la regla de archivos ASCII puro (\uXXXX en vez de UTF-8 crudo).
 if [ "$MINIFY" = "1" ] && command -v npx >/dev/null 2>&1; then
