@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MAAT &mdash; Dashboard de Feedback</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@400;600;700&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --c:#39A1C9; --o:#EBA055; --m:#7DCD93; --v:#896C8E; --r:#D76B6E;
+  --bg:#0d1117; --bg2:#111827; --text:#e8eaf0; --mu:#8892a4; --mu2:#6b7280;
+  --bd:rgba(255,255,255,0.08);
+  --font-title:'Saira Condensed',sans-serif;
+  --font-body:'Sora',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;padding:24px 16px 64px;}
+.wrap{max-width:1080px;margin:0 auto;}
+h1{font-family:var(--font-title);font-size:34px;font-weight:700;letter-spacing:.5px;}
+h2{font-family:var(--font-title);font-size:20px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--mu);margin-bottom:16px;}
+.head{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;flex-wrap:wrap;gap:12px;}
+.head .sub{color:var(--mu);font-size:13px;}
+.card{background:var(--bg2);border:1px solid var(--bd);border-radius:16px;padding:24px;margin-bottom:20px;}
+.hidden{display:none!important;}
+
+/* Auth */
+.auth{max-width:400px;margin:60px auto;}
+.field{margin-bottom:14px;}
+.field label{display:block;font-family:var(--font-title);font-size:12px;letter-spacing:1.5px;color:var(--mu);text-transform:uppercase;margin-bottom:6px;}
+.field input{width:100%;padding:12px 14px;background:var(--bg);border:1.5px solid var(--bd);border-radius:10px;font-family:var(--font-body);font-size:15px;color:var(--text);outline:none;}
+.field input:focus{border-color:var(--c);}
+.btn{width:100%;padding:14px;background:var(--v);color:#fff;border:none;border-radius:10px;font-family:var(--font-title);font-size:15px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;}
+.btn:hover{background:var(--c);}
+.btn:disabled{opacity:.6;cursor:not-allowed;}
+.btn-ghost{background:none;border:1px solid var(--bd);color:var(--mu);padding:8px 14px;border-radius:8px;font-family:var(--font-title);font-size:12px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;}
+.btn-ghost:hover{border-color:var(--c);color:var(--text);}
+.err-box{background:rgba(215,107,110,.12);color:var(--r);padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:12px;display:none;}
+.err-box.show{display:block;}
+
+/* KPIs */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:20px;}
+.kpi{background:var(--bg2);border:1px solid var(--bd);border-radius:14px;padding:18px;position:relative;overflow:hidden;}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--c);}
+.kpi[data-t="nps"]::before{background:var(--m);}
+.kpi[data-t="sat"]::before{background:var(--o);}
+.kpi[data-t="ref"]::before{background:var(--v);}
+.kpi .label{font-family:var(--font-title);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mu);margin-bottom:6px;}
+.kpi .val{font-family:var(--font-title);font-size:36px;font-weight:700;line-height:1;}
+.kpi .foot{font-size:11.5px;color:var(--mu2);margin-top:6px;}
+
+/* NPS bar */
+.npsbar{display:flex;height:26px;border-radius:8px;overflow:hidden;margin:10px 0 8px;background:var(--bg);}
+.npsbar div{display:flex;align-items:center;justify-content:center;font-size:11px;font-family:var(--font-title);font-weight:700;color:#0d1117;}
+.npslegend{display:flex;gap:16px;font-size:11.5px;color:var(--mu);flex-wrap:wrap;}
+.npslegend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;}
+
+/* Tabla */
+table{width:100%;border-collapse:collapse;font-size:13.5px;}
+th{font-family:var(--font-title);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--mu);text-align:left;padding:8px 10px;border-bottom:1px solid var(--bd);}
+td{padding:9px 10px;border-bottom:1px solid var(--bd);}
+tr:last-child td{border-bottom:none;}
+.delta-up{color:var(--m);font-weight:600;}
+.delta-dn{color:var(--r);font-weight:600;}
+.delta-0{color:var(--mu2);}
+.muted{color:var(--mu);}
+.quote{border-left:3px solid var(--v);padding:8px 14px;margin:8px 0;color:var(--text);font-size:13.5px;background:rgba(137,108,142,.08);border-radius:0 8px 8px 0;}
+.quote .who{display:block;font-size:11px;color:var(--mu);margin-top:4px;font-family:var(--font-title);letter-spacing:1px;text-transform:uppercase;}
+select{background:var(--bg);color:var(--text);border:1.5px solid var(--bd);border-radius:8px;padding:9px 12px;font-family:var(--font-body);font-size:14px;outline:none;min-width:220px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.empty{color:var(--mu2);font-size:13.5px;text-align:center;padding:24px 0;}
+.tag{display:inline-block;font-size:10.5px;font-family:var(--font-title);letter-spacing:1px;text-transform:uppercase;padding:2px 8px;border-radius:20px;border:1px solid var(--bd);color:var(--mu);}
+.tag.ok{color:var(--m);border-color:rgba(125,205,147,.4);}
+@media (max-width:860px){.grid2{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- AUTH -->
+  <div class="card auth" id="auth-card">
+    <h1 style="margin-bottom:6px;">Dashboard de Feedback</h1>
+    <p class="sub" style="color:var(--mu);margin-bottom:20px;">Solo mentores y administradores.</p>
+    <div class="err-box" id="auth-err"></div>
+    <div class="field"><label for="a-email">Correo</label><input type="email" id="a-email" autocomplete="email"></div>
+    <div class="field"><label for="a-pass">Contrase&ntilde;a</label><input type="password" id="a-pass" autocomplete="current-password"></div>
+    <button class="btn" id="a-btn" onclick="doLogin()">Entrar</button>
+  </div>
+
+  <!-- DASH -->
+  <div id="dash" class="hidden">
+    <div class="head">
+      <div>
+        <h1>Feedback &amp; Cierre</h1>
+        <div class="sub" id="head-sub"></div>
+      </div>
+      <button class="btn-ghost" onclick="doLogout()">Salir</button>
+    </div>
+
+    <div class="kpis" id="kpis"></div>
+
+    <div class="card">
+      <h2>Curva de transformaci&oacute;n</h2>
+      <div id="curve"></div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h2>Entorno: antes vs despu&eacute;s</h2>
+        <div id="radar"></div>
+      </div>
+      <div class="card">
+        <h2>Recomendaci&oacute;n (NPS)</h2>
+        <div id="nps"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Ficha individual</h2>
+      <select id="client-sel" onchange="renderFicha()"></select>
+      <div id="ficha" style="margin-top:18px;"></div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h2>Testimonios autorizados</h2>
+        <div id="testimonios"></div>
+      </div>
+      <div class="card">
+        <h2>Leads referidos</h2>
+        <div id="referidos"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+const CONFIG={
+  SUPABASE_URL:"https://pcclptmojjzqmfmzftot.supabase.co",
+  SUPABASE_ANON_KEY:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjY2xwdG1vamp6cW1mbXpmdG90Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4OTg3MjAsImV4cCI6MjA4NzQ3NDcyMH0.VuFBEy19fgNN5pSp_r8p2ZVViniunKdVW7Hy3AmqJXE"
+};
+const sb=supabase.createClient(CONFIG.SUPABASE_URL,CONFIG.SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+
+const DIMS=[
+  {k:"actitud",   t:"Actitud",     col:"var(--c)"},
+  {k:"claridad",  t:"Claridad",    col:"var(--o)"},
+  {k:"confianza", t:"Confianza",   col:"var(--m)"},
+  {k:"energia",   t:"Energia",     col:"var(--v)"}
+];
+const ENT=[
+  {k:"ent_profesional",   t:"Profesional"},
+  {k:"ent_relaciones",    t:"Relaciones"},
+  {k:"ent_familiar",      t:"Familiar"},
+  {k:"ent_intrapersonal", t:"Intrapersonal"}
+];
+const MOMS=["inicio","intermedio","final"];
+const MOM_LABEL={inicio:"Inicio",intermedio:"Intermedio",final:"Cierre"};
+
+const D={rows:[],refs:[],profiles:{},overview:null};
+
+function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");}
+function show(id){document.getElementById(id).classList.remove("hidden");}
+function hide(id){document.getElementById(id).classList.add("hidden");}
+function showErr(id,m){const e=document.getElementById(id);e.textContent=m;e.classList.add("show");}
+function avg(arr){const v=arr.filter(x=>x!=null);return v.length?v.reduce((a,b)=>a+b,0)/v.length:null;}
+function f1(n){return n==null?"--":(Math.round(n*10)/10).toFixed(1);}
+
+/* ---------- Auth ---------- */
+async function doLogin(){
+  document.getElementById("auth-err").classList.remove("show");
+  const email=document.getElementById("a-email").value.trim().toLowerCase();
+  const pass=document.getElementById("a-pass").value;
+  const btn=document.getElementById("a-btn");btn.disabled=true;btn.textContent="Entrando...";
+  const{error}=await sb.auth.signInWithPassword({email,password:pass});
+  if(error){showErr("auth-err","Credenciales incorrectas.");btn.disabled=false;btn.textContent="Entrar";return;}
+  await boot();
+}
+async function doLogout(){try{await sb.auth.signOut();}catch(_){}location.reload();}
+
+async function boot(){
+  const{data:{user}}=await sb.auth.getUser();
+  if(!user){hide("dash");show("auth-card");return;}
+  const{data:me}=await sb.from("profiles").select("role,full_name").eq("id",user.id).maybeSingle();
+  if(!me||!["mentor","admin"].includes(me.role)){
+    showErr("auth-err","Tu cuenta no tiene acceso a este panel.");
+    await sb.auth.signOut();hide("dash");show("auth-card");return;
+  }
+  hide("auth-card");show("dash");
+  document.getElementById("head-sub").textContent="Sesion de "+(me.full_name||"")+" \u00B7 rol "+me.role;
+  await loadData();
+}
+
+/* Regla 6: Promise.allSettled, nunca Promise.all */
+async function loadData(){
+  const res=await Promise.allSettled([
+    sb.from("client_feedback").select("*"),
+    sb.from("client_referrals").select("*").order("created_at",{ascending:false}),
+    sb.from("profiles").select("id,full_name,current_week").eq("role","client"),
+    sb.rpc("get_feedback_overview")
+  ]);
+  D.rows=(res[0].status==="fulfilled"&&res[0].value.data)||[];
+  D.refs=(res[1].status==="fulfilled"&&res[1].value.data)||[];
+  const profs=(res[2].status==="fulfilled"&&res[2].value.data)||[];
+  D.profiles={};profs.forEach(p=>{D.profiles[p.id]=p;});
+  D.overview=(res[3].status==="fulfilled"&&res[3].value.data)||null;
+
+  renderKPIs(profs.length);
+  renderCurve();
+  renderRadar();
+  renderNPS();
+  renderClientSel();
+  renderFicha();
+  renderTestimonios();
+  renderReferidos();
+}
+
+/* ---------- KPIs ---------- */
+function npsCalc(){
+  const v=D.rows.map(r=>r.nps).filter(x=>x!=null);
+  if(!v.length)return{n:0,score:null,p:0,pa:0,d:0};
+  const p=v.filter(x=>x>=9).length,d=v.filter(x=>x<=6).length,pa=v.length-p-d;
+  return{n:v.length,score:Math.round((p-d)/v.length*100),p,pa,d};
+}
+function renderKPIs(totalClients){
+  const n=npsCalc();
+  const sat=avg(D.rows.filter(r=>r.moment==="final").map(r=>r.satisfaccion));
+  const finales=D.rows.filter(r=>r.moment==="final").length;
+  const inicios=D.rows.filter(r=>r.moment==="inicio").length;
+  const pend=D.refs.filter(r=>!r.synced_to_crm).length;
+  document.getElementById("kpis").innerHTML=`
+    <div class="kpi" data-t="nps"><div class="label">NPS</div><div class="val">${n.score==null?"--":(n.score>0?"+":"")+n.score}</div><div class="foot">${n.n} respuesta(s) de cierre</div></div>
+    <div class="kpi" data-t="sat"><div class="label">Satisfaccion final</div><div class="val">${f1(sat)}</div><div class="foot">promedio sobre 10</div></div>
+    <div class="kpi"><div class="label">Cierres completados</div><div class="val">${finales}</div><div class="foot">${inicios} linea(s) base registrada(s)</div></div>
+    <div class="kpi" data-t="ref"><div class="label">Leads referidos</div><div class="val">${D.refs.length}</div><div class="foot">${pend} sin pasar al CRM</div></div>`;
+}
+
+/* ---------- Curva de transformacion ---------- */
+function renderCurve(){
+  const has=MOMS.some(m=>D.rows.some(r=>r.moment===m));
+  if(!has){document.getElementById("curve").innerHTML='<div class="empty">Aun no hay respuestas.</div>';return;}
+  const W=880,H=280,PL=44,PR=16,PT=18,PB=38;
+  const x=i=>PL+i*((W-PL-PR)/(MOMS.length-1));
+  const y=v=>PT+(10-v)/9*(H-PT-PB);
+  let svg=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;">`;
+  [1,4,7,10].forEach(g=>{
+    svg+=`<line x1="${PL}" y1="${y(g)}" x2="${W-PR}" y2="${y(g)}" stroke="rgba(255,255,255,.07)"/>
+          <text x="${PL-10}" y="${y(g)+4}" fill="#6b7280" font-size="11" text-anchor="end">${g}</text>`;
+  });
+  MOMS.forEach((m,i)=>{
+    const n=D.rows.filter(r=>r.moment===m).length;
+    /* Los extremos se anclan para que no se salgan del viewBox */
+    const anchor=i===0?"start":(i===MOMS.length-1?"end":"middle");
+    svg+=`<text x="${x(i)}" y="${H-14}" fill="#8892a4" font-size="12" text-anchor="${anchor}" font-family="Saira Condensed">${MOM_LABEL[m].toUpperCase()} (${n})</text>`;
+  });
+  DIMS.forEach(d=>{
+    const pts=MOMS.map((m,i)=>{
+      const a=avg(D.rows.filter(r=>r.moment===m).map(r=>r[d.k]));
+      return a==null?null:{x:x(i),y:y(a),v:a};
+    });
+    const valid=pts.filter(p=>p);
+    if(valid.length<1)return;
+    let path="";
+    pts.forEach((p,i)=>{if(p)path+=(path?" L":"M")+p.x+" "+p.y;});
+    svg+=`<path d="${path}" fill="none" stroke="${d.col}" stroke-width="2.5" stroke-linecap="round"/>`;
+    valid.forEach(p=>{svg+=`<circle cx="${p.x}" cy="${p.y}" r="4.5" fill="${d.col}"/>`;});
+  });
+  svg+=`</svg>`;
+  const legend=DIMS.map(d=>{
+    const ini=avg(D.rows.filter(r=>r.moment==="inicio").map(r=>r[d.k]));
+    const fin=avg(D.rows.filter(r=>r.moment==="final").map(r=>r[d.k]));
+    const dl=(ini!=null&&fin!=null)?(fin-ini):null;
+    const cls=dl==null?"delta-0":(dl>0.05?"delta-up":(dl<-0.05?"delta-dn":"delta-0"));
+    const txt=dl==null?"--":(dl>0?"+":"")+f1(dl);
+    return `<span style="margin-right:18px;font-size:12.5px;"><i style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${d.col};margin-right:6px;"></i>${d.t} <b class="${cls}">${txt}</b></span>`;
+  }).join("");
+  document.getElementById("curve").innerHTML=svg+`<div style="margin-top:10px;">${legend}</div>
+    <div class="muted" style="font-size:12px;margin-top:6px;">Delta = promedio de cierre menos promedio de inicio.</div>`;
+}
+
+/* ---------- Radar entorno ---------- */
+function renderRadar(){
+  const ini=ENT.map(e=>avg(D.rows.filter(r=>r.moment==="inicio").map(r=>r[e.k])));
+  const fin=ENT.map(e=>avg(D.rows.filter(r=>r.moment==="final").map(r=>r[e.k])));
+  if(ini.every(v=>v==null)&&fin.every(v=>v==null)){
+    document.getElementById("radar").innerHTML='<div class="empty">Aun no hay datos de entorno.</div>';return;
+  }
+  /* viewBox mas ancho que alto: los ejes laterales llevan etiquetas largas */
+  const W=400,H=300,cx=W/2,cy=H/2+6,R=100;
+  const ang=i=>(Math.PI*2*i/ENT.length)-Math.PI/2;
+  const pt=(i,v)=>[cx+Math.cos(ang(i))*(R*(v/10)),cy+Math.sin(ang(i))*(R*(v/10))];
+  let svg=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:380px;height:auto;display:block;margin:0 auto;">`;
+  [2.5,5,7.5,10].forEach(g=>{
+    const p=ENT.map((_,i)=>pt(i,g).join(",")).join(" ");
+    svg+=`<polygon points="${p}" fill="none" stroke="rgba(255,255,255,.08)"/>`;
+  });
+  ENT.forEach((e,i)=>{
+    const[ex,ey]=pt(i,10);
+    svg+=`<line x1="${cx}" y1="${cy}" x2="${ex}" y2="${ey}" stroke="rgba(255,255,255,.08)"/>`;
+    const[lx,ly]=pt(i,12.4);
+    svg+=`<text x="${lx}" y="${ly}" fill="#8892a4" font-size="10.5" text-anchor="middle" font-family="Saira Condensed">${e.t.toUpperCase()}</text>`;
+  });
+  function poly(vals,col,fill){
+    if(vals.some(v=>v==null))return"";
+    const p=vals.map((v,i)=>pt(i,v).join(",")).join(" ");
+    return `<polygon points="${p}" fill="${fill}" stroke="${col}" stroke-width="2"/>`;
+  }
+  svg+=poly(ini,"#8892a4","rgba(136,146,164,.12)");
+  svg+=poly(fin,"#7DCD93","rgba(125,205,147,.18)");
+  svg+=`</svg>`;
+  const rows=ENT.map((e,i)=>{
+    const a=ini[i],b=fin[i],dl=(a!=null&&b!=null)?b-a:null;
+    const cls=dl==null?"delta-0":(dl>0.05?"delta-up":(dl<-0.05?"delta-dn":"delta-0"));
+    return `<tr><td>${e.t}</td><td class="muted">${f1(a)}</td><td>${f1(b)}</td><td class="${cls}">${dl==null?"--":(dl>0?"+":"")+f1(dl)}</td></tr>`;
+  }).join("");
+  document.getElementById("radar").innerHTML=svg+
+    `<div style="margin:10px 0;font-size:12px;color:var(--mu);text-align:center;">
+      <i style="display:inline-block;width:9px;height:9px;background:#8892a4;border-radius:2px;margin-right:5px;"></i>Inicio
+      <i style="display:inline-block;width:9px;height:9px;background:#7DCD93;border-radius:2px;margin:0 5px 0 14px;"></i>Cierre
+     </div>
+     <table><tr><th>Eje</th><th>Inicio</th><th>Cierre</th><th>Delta</th></tr>${rows}</table>`;
+}
+
+/* ---------- NPS ---------- */
+function renderNPS(){
+  const n=npsCalc();
+  if(!n.n){document.getElementById("nps").innerHTML='<div class="empty">Aun no hay respuestas de cierre.</div>';return;}
+  const pc=v=>(v/n.n*100);
+  document.getElementById("nps").innerHTML=`
+    <div style="font-family:var(--font-title);font-size:52px;font-weight:700;line-height:1;">${n.score>0?"+":""}${n.score}</div>
+    <div class="muted" style="font-size:12.5px;margin-bottom:4px;">sobre ${n.n} respuesta(s) &middot; rango -100 a +100</div>
+    <div class="npsbar">
+      ${n.d?`<div style="width:${pc(n.d)}%;background:var(--r);">${n.d}</div>`:""}
+      ${n.pa?`<div style="width:${pc(n.pa)}%;background:var(--o);">${n.pa}</div>`:""}
+      ${n.p?`<div style="width:${pc(n.p)}%;background:var(--m);">${n.p}</div>`:""}
+    </div>
+    <div class="npslegend">
+      <span><i style="background:var(--m);"></i>Promotores 9-10: ${n.p}</span>
+      <span><i style="background:var(--o);"></i>Pasivos 7-8: ${n.pa}</span>
+      <span><i style="background:var(--r);"></i>Detractores 0-6: ${n.d}</span>
+    </div>`;
+}
+
+/* ---------- Ficha individual ---------- */
+function renderClientSel(){
+  const ids=[...new Set(D.rows.map(r=>r.user_id))];
+  const sel=document.getElementById("client-sel");
+  if(!ids.length){sel.innerHTML='<option>Sin respuestas</option>';return;}
+  sel.innerHTML=ids.map(id=>{
+    const p=D.profiles[id];
+    return `<option value="${esc(id)}">${esc(p&&p.full_name?p.full_name:id.slice(0,8))}</option>`;
+  }).join("");
+}
+function renderFicha(){
+  const id=document.getElementById("client-sel").value;
+  const box=document.getElementById("ficha");
+  const rows=D.rows.filter(r=>r.user_id===id);
+  if(!rows.length){box.innerHTML='<div class="empty">Selecciona un cliente con respuestas.</div>';return;}
+  const by={};rows.forEach(r=>{by[r.moment]=r;});
+  const all=[...DIMS,...ENT];
+  const body=all.map(d=>{
+    const a=by.inicio?by.inicio[d.k]:null;
+    const b=by.final?by.final[d.k]:null;
+    const dl=(a!=null&&b!=null)?b-a:null;
+    const cls=dl==null?"delta-0":(dl>0?"delta-up":(dl<0?"delta-dn":"delta-0"));
+    return `<tr><td>${d.t}</td>
+      <td class="muted">${by.inicio?(by.inicio[d.k]==null?"--":by.inicio[d.k]):"--"}</td>
+      <td class="muted">${by.intermedio?(by.intermedio[d.k]==null?"--":by.intermedio[d.k]):"--"}</td>
+      <td>${by.final?(by.final[d.k]==null?"--":by.final[d.k]):"--"}</td>
+      <td class="${cls}">${dl==null?"--":(dl>0?"+":"")+dl}</td></tr>`;
+  }).join("");
+  const frases=MOMS.filter(m=>by[m]&&by[m].open_text).map(m=>
+    `<div class="quote">${esc(by[m].open_text)}<span class="who">${MOM_LABEL[m]}</span></div>`).join("");
+  const sat=by.final&&by.final.satisfaccion!=null?by.final.satisfaccion:(by.intermedio&&by.intermedio.satisfaccion!=null?by.intermedio.satisfaccion:null);
+  const mejora=MOMS.filter(m=>by[m]&&by[m].mejora_text).map(m=>
+    `<div class="quote" style="border-left-color:var(--o);">${esc(by[m].mejora_text)}<span class="who">${MOM_LABEL[m]} &middot; que faltaria para un 10</span></div>`).join("");
+  box.innerHTML=`
+    <div style="margin-bottom:12px;font-size:13px;color:var(--mu);">
+      Satisfaccion: <b style="color:var(--text);">${sat==null?"--":sat+"/10"}</b> &nbsp;&middot;&nbsp;
+      NPS: <b style="color:var(--text);">${by.final&&by.final.nps!=null?by.final.nps:"--"}</b> &nbsp;&middot;&nbsp;
+      Momentos: ${MOMS.filter(m=>by[m]).map(m=>`<span class="tag ok">${MOM_LABEL[m]}</span>`).join(" ")||'<span class="tag">ninguno</span>'}
+    </div>
+    <table><tr><th>Dimension</th><th>Inicio</th><th>Interm.</th><th>Cierre</th><th>Delta</th></tr>${body}</table>
+    ${frases?`<div style="margin-top:16px;">${frases}</div>`:""}
+    ${mejora||""}`;
+}
+
+/* ---------- Testimonios ---------- */
+function renderTestimonios(){
+  const t=D.rows.filter(r=>r.testimonial_ok&&r.testimonial_text);
+  const box=document.getElementById("testimonios");
+  if(!t.length){box.innerHTML='<div class="empty">Aun no hay testimonios autorizados.</div>';return;}
+  box.innerHTML=t.map(r=>{
+    const p=D.profiles[r.user_id];
+    return `<div class="quote">${esc(r.testimonial_text)}<span class="who">${esc(p&&p.full_name?p.full_name:"Cliente")}${r.nps!=null?" &middot; NPS "+r.nps:""}</span></div>`;
+  }).join("");
+}
+
+/* ---------- Referidos ---------- */
+function renderReferidos(){
+  const box=document.getElementById("referidos");
+  if(!D.refs.length){box.innerHTML='<div class="empty">Aun no hay leads referidos.</div>';return;}
+  const pend=D.refs.filter(r=>!r.synced_to_crm).length;
+  box.innerHTML=`<table><tr><th>Nombre</th><th>Contacto</th><th>Refiere</th><th>CRM</th></tr>`+
+    D.refs.map(r=>{
+      const p=D.profiles[r.referred_by];
+      return `<tr>
+        <td>${esc(r.name)}${r.reason?`<div class="muted" style="font-size:11.5px;">${esc(r.reason)}</div>`:""}</td>
+        <td class="muted">${esc(r.contact)}</td>
+        <td class="muted">${esc(p&&p.full_name?p.full_name:"--")}</td>
+        <td>${r.synced_to_crm?'<span class="tag ok">Si</span>':'<span class="tag">Pend.</span>'}</td>
+      </tr>`;
+    }).join("")+`</table>
+    <div style="margin-top:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+      <button class="btn-ghost" id="btn-csv" onclick="exportReferidosCSV()"${pend?"":" disabled"}>Exportar CSV (${pend} pend.)</button>
+      <span class="muted" style="font-size:11.5px;">El CRM es otro proyecto Supabase: se importa a mano.</span>
+    </div>`;
+}
+
+/* Export CSV de los referidos pendientes, con las columnas de `prospects`
+   del CRM (full_name, email, phone, city, country, tags) mas el contexto
+   MAAT. El contacto se reparte en email/phone segun tenga "@" o no. */
+function csvCell(v){
+  const s=String(v==null?"":v);
+  return /[",;\n\r]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;
+}
+async function exportReferidosCSV(){
+  const pend=D.refs.filter(r=>!r.synced_to_crm);
+  if(!pend.length)return;
+  const btn=document.getElementById("btn-csv");
+  const cols=["full_name","email","phone","city","country","tags","motivo","referido_por","fecha"];
+  const lines=[cols.join(",")];
+  pend.forEach(r=>{
+    const c=(r.contact||"").trim();
+    const isMail=c.includes("@");
+    const p=D.profiles[r.referred_by];
+    lines.push([
+      r.name, isMail?c:"", isMail?"":c, "", "",
+      "referido-cliente", r.reason||"",
+      (p&&p.full_name)?p.full_name:"",
+      (r.created_at||"").slice(0,10)
+    ].map(csvCell).join(","));
+  });
+  /* BOM para que Excel respete los acentos */
+  const blob=new Blob(["\uFEFF"+lines.join("\r\n")],{type:"text/csv;charset=utf-8;"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;a.download="maat-referidos-"+new Date().toISOString().slice(0,10)+".csv";
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+
+  if(!confirm("Se descargaron "+pend.length+" referido(s).\n\nMarcarlos como sincronizados al CRM? Dejaran de aparecer como pendientes."))return;
+  btn.disabled=true;btn.textContent="Marcando...";
+  const ids=pend.map(r=>r.id);
+  const{error}=await sb.from("client_referrals").update({synced_to_crm:true}).in("id",ids);
+  if(error){alert("No pudimos marcarlos: "+error.message);btn.disabled=false;return;}
+  pend.forEach(r=>{r.synced_to_crm=true;});
+  renderKPIs(Object.keys(D.profiles).length);
+  renderReferidos();
+}
+
+["a-email","a-pass"].forEach(id=>{
+  document.getElementById(id).addEventListener("keydown",e=>{if(e.key==="Enter")doLogin();});
+});
+boot();
+</script>
+</body>
+</html>

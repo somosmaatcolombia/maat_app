@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>MAAT &mdash; Tu proceso, en tus palabras</title>
+<meta name="description" content="Cu&eacute;ntanos c&oacute;mo vas en tu proceso MAAT. Toma 3 minutos.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@400;600;700&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --c:#39A1C9; --o:#EBA055; --m:#7DCD93; --v:#896C8E; --r:#D76B6E;
+  --paper:#fdfaf6; --paper2:#f5efe6;
+  --ink:#2a2030; --ink2:#5a4f5e; --mu:#8a7d8c;
+  --bd:rgba(42,32,48,0.10);
+  --shadow:0 8px 30px rgba(42,32,48,0.08);
+  --shadow-lg:0 20px 60px rgba(42,32,48,0.12);
+  --radius:18px; --radius-sm:12px;
+  --font-title:'Saira Condensed',sans-serif;
+  --font-body:'Sora',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:var(--font-body);background:var(--paper);color:var(--ink);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;padding:24px 16px 64px;}
+.wrap{max-width:620px;margin:0 auto;}
+.head{text-align:center;margin:12px 0 28px;}
+.logo{width:64px;height:64px;border-radius:16px;margin:0 auto 16px;display:block;object-fit:cover;box-shadow:0 6px 24px rgba(42,32,48,0.10);}
+.eyebrow{font-family:var(--font-title);font-size:13px;font-weight:700;letter-spacing:3px;color:var(--c);text-transform:uppercase;margin-bottom:8px;}
+.head h1{font-family:var(--font-title);font-size:clamp(28px,6vw,40px);font-weight:700;line-height:1.1;color:var(--ink);}
+.head h1 em{font-style:italic;color:var(--v);}
+.head p{color:var(--ink2);font-size:15px;margin-top:10px;}
+.card{background:#fff;border:1px solid var(--bd);border-radius:var(--radius);padding:32px 28px;box-shadow:var(--shadow);margin-bottom:20px;}
+.hidden{display:none!important;}
+
+/* Auth */
+.field{margin-bottom:16px;}
+.field label{display:block;font-family:var(--font-title);font-size:12px;letter-spacing:1.5px;color:var(--mu);text-transform:uppercase;margin-bottom:8px;font-weight:600;}
+.field input{width:100%;padding:14px 16px;background:var(--paper);border:1.5px solid var(--bd);border-radius:var(--radius-sm);font-family:var(--font-body);font-size:16px;color:var(--ink);outline:none;transition:border-color .2s,background .2s;}
+.field input:focus{border-color:var(--c);background:#fff;}
+.field input.err{border-color:var(--r);background:rgba(215,107,110,.04);}
+.btn{width:100%;padding:16px;background:var(--v);color:#fff;border:none;border-radius:var(--radius-sm);font-family:var(--font-title);font-size:16px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:transform .2s,background .2s;}
+.btn:hover{transform:translateY(-2px);background:var(--c);}
+.btn:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+.err-box{background:rgba(215,107,110,.1);color:var(--r);padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:14px;display:none;}
+.err-box.show{display:block;}
+.note{text-align:center;font-size:12px;color:var(--mu);margin-top:16px;line-height:1.5;}
+
+/* Moment bar */
+.moment-bar{display:flex;gap:8px;margin-bottom:24px;background:var(--paper2);padding:6px;border-radius:var(--radius-sm);}
+.moment-bar button{flex:1;padding:12px 8px;border:none;background:transparent;border-radius:9px;font-family:var(--font-title);font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--mu);cursor:pointer;font-weight:600;transition:all .2s;}
+.moment-bar button.active{background:#fff;color:var(--v);box-shadow:var(--shadow);}
+.moment-hint{font-size:13px;color:var(--ink2);background:var(--paper2);border-left:3px solid var(--c);padding:12px 16px;border-radius:0 10px 10px 0;margin-bottom:24px;}
+
+/* Question */
+.q{margin-bottom:28px;padding-bottom:24px;border-bottom:1px dashed var(--bd);}
+.q:last-child{border-bottom:none;}
+.q-title{font-family:var(--font-title);font-size:19px;color:var(--ink);font-weight:600;margin-bottom:4px;line-height:1.25;}
+.q-sub{font-size:13.5px;color:var(--ink2);margin-bottom:14px;}
+.scale{display:flex;gap:6px;flex-wrap:wrap;}
+.scale button{flex:1;min-width:34px;aspect-ratio:1/1;border:1.5px solid var(--bd);background:var(--paper);border-radius:10px;font-family:var(--font-title);font-size:16px;font-weight:600;color:var(--ink2);cursor:pointer;transition:all .15s;}
+.scale button:hover{border-color:var(--c);}
+.scale button.sel{background:var(--v);border-color:var(--v);color:#fff;transform:scale(1.05);}
+.scale-anchors{display:flex;justify-content:space-between;font-size:11.5px;color:var(--mu);margin-top:8px;font-family:var(--font-title);letter-spacing:.5px;text-transform:uppercase;}
+.q textarea{width:100%;padding:12px 14px;background:var(--paper);border:1.5px solid var(--bd);border-radius:var(--radius-sm);font-family:var(--font-body);font-size:15px;color:var(--ink);outline:none;resize:vertical;min-height:64px;margin-top:6px;}
+.q textarea:focus{border-color:var(--c);background:#fff;}
+.section-label{font-family:var(--font-title);font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--c);font-weight:700;margin:8px 0 18px;}
+
+/* Referrals / checkbox */
+.ref-block{background:var(--paper2);border-radius:var(--radius-sm);padding:18px;margin-bottom:14px;}
+.ref-block .field{margin-bottom:12px;}
+.ref-block .field:last-child{margin-bottom:0;}
+.check-row{display:flex;align-items:flex-start;gap:12px;margin:6px 0 14px;cursor:pointer;}
+.check-row input{width:20px;height:20px;margin-top:2px;accent-color:var(--v);flex-shrink:0;}
+.check-row span{font-size:14px;color:var(--ink2);}
+
+/* Success */
+.success{text-align:center;padding:16px 0;}
+.success .check{width:76px;height:76px;border-radius:50%;background:linear-gradient(135deg,var(--m),var(--c));color:#fff;font-size:40px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 12px 30px rgba(125,205,147,.3);}
+.success h3{font-family:var(--font-title);font-size:26px;color:var(--ink);margin-bottom:10px;}
+.success p{font-size:15px;color:var(--ink2);max-width:420px;margin:0 auto 12px;}
+.topbar{display:flex;justify-content:flex-end;margin-bottom:8px;}
+.topbar button{background:none;border:none;color:var(--mu);font-size:12px;font-family:var(--font-title);letter-spacing:1px;text-transform:uppercase;cursor:pointer;}
+@media (max-width:600px){.card{padding:24px 18px;}.scale button{min-width:28px;font-size:14px;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="head">
+    <img class="logo" src="https://somosmaat.org/wp-content/uploads/2026/02/Fav-icon-1.png" alt="MAAT">
+    <div class="eyebrow">Tu proceso MAAT</div>
+    <h1>C&oacute;mo vas, <em>en tus palabras</em></h1>
+    <p>Un momento honesto contigo. No hay respuestas correctas.</p>
+  </div>
+
+  <!-- AUTH -->
+  <div class="card" id="auth-card">
+    <div class="err-box" id="auth-err"></div>
+    <div class="field">
+      <label for="a-email">Tu correo</label>
+      <input type="email" id="a-email" placeholder="tu@correo.com" autocomplete="email">
+    </div>
+    <div class="field">
+      <label for="a-pass">Tu contrase&ntilde;a</label>
+      <input type="password" id="a-pass" placeholder="La misma de tu app MAAT" autocomplete="current-password">
+    </div>
+    <button class="btn" id="a-btn" onclick="doLogin()">Entrar</button>
+    <p class="note">Usa el mismo correo y contrase&ntilde;a con los que entras a tu app MAAT.</p>
+  </div>
+
+  <!-- SURVEY -->
+  <div id="survey-card" class="hidden">
+    <div class="topbar"><button onclick="doLogout()">Cerrar sesi&oacute;n</button></div>
+    <div class="card">
+      <div class="moment-bar" id="moment-bar"></div>
+      <div class="moment-hint" id="moment-hint"></div>
+      <div class="err-box" id="survey-err"></div>
+      <div id="questions"></div>
+      <div id="extra"></div>
+      <button class="btn" id="s-btn" onclick="submitSurvey()">Guardar mis respuestas</button>
+      <p class="note">Tus respuestas son parte de tu proceso. Solo t&uacute; y tu mentor las ven.</p>
+    </div>
+  </div>
+
+  <!-- SUCCESS -->
+  <div id="success-card" class="hidden">
+    <div class="card">
+      <div class="success">
+        <div class="check">&#10003;</div>
+        <h3 id="succ-title"></h3>
+        <p id="succ-body"></p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+const CONFIG={
+  SUPABASE_URL:"https://pcclptmojjzqmfmzftot.supabase.co",
+  SUPABASE_ANON_KEY:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjY2xwdG1vamp6cW1mbXpmdG90Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4OTg3MjAsImV4cCI6MjA4NzQ3NDcyMH0.VuFBEy19fgNN5pSp_r8p2ZVViniunKdVW7Hy3AmqJXE"
+};
+const sb=supabase.createClient(CONFIG.SUPABASE_URL,CONFIG.SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+
+/* Estado */
+const STATE={user:null,profile:null,moment:null,answers:{},existing:{},refsLocked:false};
+
+/* Dimensiones nucleo (se repiten en los 3 momentos) */
+const CORE=[
+  {k:"actitud",   t:"Actitud hacia la vida",            s:"En las \u00FAltimas 2 semanas, mi actitud general hacia la vida ha sido...", lo:"Muy negativa", hi:"Muy positiva"},
+  {k:"claridad",  t:"Claridad",                          s:"Tengo claridad sobre lo que quiero y hacia d\u00F3nde voy.",                lo:"Nada claro",   hi:"Total claridad"},
+  {k:"confianza", t:"Confianza en m\u00ED mismo",         s:"Conf\u00EDo en mi capacidad para lograr lo que me propongo.",              lo:"Nada",         hi:"Plena"},
+  {k:"energia",   t:"Energ\u00EDa",                       s:"La energ\u00EDa con la que afronto mis d\u00EDas es...",                    lo:"Muy baja",     hi:"Muy alta"}
+];
+/* Sub-ejes de entorno (radar) */
+const ENTORNO=[
+  {k:"ent_profesional",   t:"Profesional / trabajo"},
+  {k:"ent_relaciones",    t:"Relaciones / v\u00EDnculos"},
+  {k:"ent_familiar",      t:"Familiar"},
+  {k:"ent_intrapersonal", t:"Contigo mismo (intrapersonal)"}
+];
+
+const MOMENTS={
+  inicio:      {label:"Inicio",     hint:"Esta es tu <b>l\u00EDnea base</b>. Responde seg\u00FAn c\u00F3mo te sientes hoy, al empezar el proceso. No busques la 'mejor' respuesta \u2014 busca la verdadera."},
+  intermedio:  {label:"Intermedio", hint:"Vamos a mitad de camino. Esto nos ayuda a <b>ajustar</b> lo que necesites para la segunda mitad."},
+  final:       {label:"Cierre",     hint:"Cierre del proceso. Compara con honestidad c\u00F3mo llegaste y c\u00F3mo te vas."}
+};
+
+function suggestMoment(week){
+  const w=parseInt(week,10);
+  if(!w||w<=4) return "inicio";
+  if(w<=12) return "intermedio";
+  return "final";
+}
+
+/* ---------- Helpers UI ---------- */
+function showErr(id,msg){const el=document.getElementById(id);el.textContent=msg;el.classList.add("show");}
+function clrErr(id){document.getElementById(id).classList.remove("show");}
+function esc(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");}
+function show(id){document.getElementById(id).classList.remove("hidden");}
+function hide(id){document.getElementById(id).classList.add("hidden");}
+
+/* ---------- Auth ---------- */
+async function doLogin(){
+  clrErr("auth-err");
+  const email=document.getElementById("a-email").value.trim().toLowerCase();
+  const pass=document.getElementById("a-pass").value;
+  if(!email||!pass){showErr("auth-err","Escribe tu correo y contrase\u00F1a.");return;}
+  const btn=document.getElementById("a-btn");btn.disabled=true;btn.textContent="Entrando...";
+  try{
+    const{data,error}=await sb.auth.signInWithPassword({email,password:pass});
+    if(error){showErr("auth-err","Correo o contrase\u00F1a incorrectos.");btn.disabled=false;btn.textContent="Entrar";return;}
+    await loadUser();
+  }catch(e){
+    showErr("auth-err","Algo sali\u00F3 mal. Intenta de nuevo.");btn.disabled=false;btn.textContent="Entrar";
+  }
+}
+async function doLogout(){
+  try{await sb.auth.signOut();}catch(_){}
+  location.reload();
+}
+
+async function loadUser(){
+  const{data:{user}}=await sb.auth.getUser();
+  if(!user){hide("survey-card");hide("success-card");show("auth-card");return;}
+  STATE.user=user;
+  const{data:prof}=await sb.from("profiles").select("full_name,current_week,role").eq("id",user.id).maybeSingle();
+  STATE.profile=prof||{};
+  /* Cargar respuestas existentes de este usuario */
+  const{data:rows}=await sb.from("client_feedback").select("*").eq("user_id",user.id);
+  STATE.existing={};(rows||[]).forEach(r=>{STATE.existing[r.moment]=r;});
+  /* Ya tiene referidos? bloquear para no duplicar */
+  const{count}=await sb.from("client_referrals").select("id",{count:"exact",head:true}).eq("referred_by",user.id);
+  STATE.refsLocked=(count||0)>0;
+
+  STATE.moment=suggestMoment(STATE.profile.current_week);
+  hide("auth-card");hide("success-card");show("survey-card");
+  renderMomentBar();
+  renderSurvey();
+}
+
+/* ---------- Render ---------- */
+function renderMomentBar(){
+  const bar=document.getElementById("moment-bar");
+  bar.innerHTML="";
+  Object.keys(MOMENTS).forEach(mk=>{
+    const b=document.createElement("button");
+    b.textContent=MOMENTS[mk].label+(STATE.existing[mk]?" \u2713":"");
+    if(mk===STATE.moment)b.classList.add("active");
+    b.onclick=()=>{STATE.moment=mk;STATE.answers={};renderMomentBar();renderSurvey();};
+    bar.appendChild(b);
+  });
+  document.getElementById("moment-hint").innerHTML=MOMENTS[STATE.moment].hint;
+}
+
+function scaleHTML(key,min,lo,hi){
+  let btns="";
+  for(let i=min;i<=10;i++){btns+=`<button type="button" data-k="${key}" data-v="${i}">${i}</button>`;}
+  return `<div class="scale" data-scale="${key}">${btns}</div>
+          <div class="scale-anchors"><span>${esc(lo)}</span><span>${esc(hi)}</span></div>`;
+}
+
+function qBlock(dim,min,lo,hi){
+  return `<div class="q">
+    <div class="q-title">${esc(dim.t)}</div>
+    ${dim.s?`<div class="q-sub">${esc(dim.s)}</div>`:""}
+    ${scaleHTML(dim.k,min===undefined?1:min,lo||"1",hi||"10")}
+  </div>`;
+}
+
+function renderSurvey(){
+  clrErr("survey-err");
+  const ex=STATE.existing[STATE.moment]||{};
+  const qc=document.getElementById("questions");
+  let html="";
+  CORE.forEach(d=>{html+=qBlock(d,1,d.lo,d.hi);});
+  html+=`<div class="section-label">Tu entorno hoy (1 = muy insatisfecho, 10 = pleno)</div>`;
+  ENTORNO.forEach(d=>{html+=qBlock(d,1,"Muy insatisfecho","Pleno");});
+  html+=`<div class="q">
+      <div class="q-title">Una frase</div>
+      <div class="q-sub">Describe en una frase c\u00F3mo te sientes hoy respecto a tu vida.</div>
+      <textarea id="f-open" placeholder="Escribe con tus palabras...">${esc(ex.open_text||"")}</textarea>
+    </div>`;
+  qc.innerHTML=html;
+
+  /* Extra segun momento */
+  let extra="";
+  if(STATE.moment!=="inicio"){
+    extra+=`<div class="q">
+        <div class="q-title">Satisfacci\u00F3n con la mentor\u00EDa</div>
+        <div class="q-sub">\u00BFQu\u00E9 tan satisfecho est\u00E1s con el proceso hasta ahora?</div>
+        ${scaleHTML("satisfaccion",1,"Nada","Totalmente")}
+      </div>
+      <div class="q">
+        <div class="q-title">\u00BFQu\u00E9 faltar\u00EDa para un 10?</div>
+        <textarea id="f-mejora" placeholder="Lo que mejorar\u00EDas o necesitas...">${esc(ex.mejora_text||"")}</textarea>
+      </div>`;
+  }
+  if(STATE.moment==="final"){
+    extra+=`<div class="section-label">Cierre</div>
+      <div class="q">
+        <div class="q-title">\u00BFNos recomendar\u00EDas?</div>
+        <div class="q-sub">Del 0 al 10, \u00BFqu\u00E9 tan probable es que recomiendes MAAT a alguien como t\u00FA?</div>
+        ${scaleHTML("nps",0,"Nada probable","Segur\u00EDsimo")}
+      </div>
+      <div class="q">
+        <div class="q-title">Testimonio</div>
+        <label class="check-row"><input type="checkbox" id="f-testok"><span>Autorizo a MAAT a usar mi frase de cierre como testimonio.</span></label>
+        <textarea id="f-testtext" placeholder="Si quieres, deja aqu\u00ED tu frase de cierre...">${esc(ex.testimonial_text||"")}</textarea>
+      </div>`;
+    if(STATE.refsLocked){
+      extra+=`<div class="q"><div class="q-title">Recomendaciones</div><div class="q-sub">Ya registramos tus recomendaciones. \u00A1Gracias!</div></div>`;
+    }else{
+      extra+=`<div class="q">
+        <div class="q-title">\u00BFQui\u00E9n m\u00E1s lo necesita?</div>
+        <div class="q-sub">Piensa en 2 personas a las que este proceso les cambiar\u00EDa la vida. Nos acercaremos con respeto de tu parte.</div>
+        ${refBlock(1)}${refBlock(2)}
+      </div>`;
+    }
+  }
+  document.getElementById("extra").innerHTML=extra;
+
+  /* Pre-cargar selecciones existentes */
+  STATE.answers={};
+  [...CORE,...ENTORNO].forEach(d=>{if(ex[d.k]!=null)setScale(d.k,ex[d.k]);});
+  if(ex.satisfaccion!=null)setScale("satisfaccion",ex.satisfaccion);
+  if(ex.nps!=null)setScale("nps",ex.nps);
+  if(ex.testimonial_ok)document.getElementById("f-testok").checked=true;
+
+  /* Delegacion de clicks en escalas */
+  document.querySelectorAll(".scale").forEach(sc=>{
+    sc.addEventListener("click",e=>{
+      const b=e.target.closest("button[data-k]");if(!b)return;
+      setScale(b.dataset.k,parseInt(b.dataset.v,10));
+    });
+  });
+  document.getElementById("s-btn").textContent=STATE.existing[STATE.moment]?"Actualizar mis respuestas":"Guardar mis respuestas";
+}
+
+function refBlock(n){
+  return `<div class="ref-block">
+    <div class="field"><label>Persona ${n} &middot; nombre</label><input type="text" id="ref${n}-name" placeholder="Nombre y apellido"></div>
+    <div class="field"><label>Correo o WhatsApp</label><input type="text" id="ref${n}-contact" placeholder="correo o +57..."></div>
+    <div class="field"><label>\u00BFPor qu\u00E9 crees que lo necesita?</label><input type="text" id="ref${n}-reason" placeholder="En una l\u00EDnea"></div>
+  </div>`;
+}
+
+function setScale(key,val){
+  STATE.answers[key]=val;
+  const sc=document.querySelector(`.scale[data-scale="${key}"]`);if(!sc)return;
+  sc.querySelectorAll("button").forEach(b=>{b.classList.toggle("sel",parseInt(b.dataset.v,10)===val);});
+}
+
+/* ---------- Submit ---------- */
+async function submitSurvey(){
+  clrErr("survey-err");
+  const a=STATE.answers;
+  const missing=[...CORE,...ENTORNO].filter(d=>a[d.k]==null);
+  if(missing.length){showErr("survey-err","Te faltan algunas preguntas por responder.");return;}
+  if(STATE.moment!=="inicio"&&a.satisfaccion==null){showErr("survey-err","Falta tu nivel de satisfacci\u00F3n.");return;}
+  if(STATE.moment==="final"&&a.nps==null){showErr("survey-err","Falta tu nivel de recomendaci\u00F3n.");return;}
+
+  const btn=document.getElementById("s-btn");btn.disabled=true;const prev=btn.textContent;btn.textContent="Guardando...";
+  try{
+    const row={
+      user_id:STATE.user.id,
+      moment:STATE.moment,
+      week:STATE.profile.current_week||null,
+      actitud:a.actitud,claridad:a.claridad,confianza:a.confianza,energia:a.energia,
+      ent_profesional:a.ent_profesional,ent_relaciones:a.ent_relaciones,
+      ent_familiar:a.ent_familiar,ent_intrapersonal:a.ent_intrapersonal,
+      open_text:(document.getElementById("f-open")||{}).value?document.getElementById("f-open").value.trim():null
+    };
+    if(STATE.moment!=="inicio"){
+      row.satisfaccion=a.satisfaccion;
+      const mj=document.getElementById("f-mejora");row.mejora_text=mj&&mj.value.trim()?mj.value.trim():null;
+    }
+    if(STATE.moment==="final"){
+      row.nps=a.nps;
+      row.testimonial_ok=!!(document.getElementById("f-testok")||{}).checked;
+      const tt=document.getElementById("f-testtext");row.testimonial_text=tt&&tt.value.trim()?tt.value.trim():null;
+    }
+    const{error}=await sb.from("client_feedback").upsert(row,{onConflict:"user_id,moment"});
+    if(error){showErr("survey-err","No pudimos guardar: "+error.message);btn.disabled=false;btn.textContent=prev;return;}
+
+    /* Referidos (solo final y si no estaban bloqueados) */
+    if(STATE.moment==="final"&&!STATE.refsLocked){
+      const refs=[];
+      [1,2].forEach(n=>{
+        const nm=(document.getElementById("ref"+n+"-name")||{}).value;
+        const ct=(document.getElementById("ref"+n+"-contact")||{}).value;
+        if(nm&&nm.trim()&&ct&&ct.trim()){
+          refs.push({
+            referred_by:STATE.user.id,
+            name:nm.trim(),contact:ct.trim(),
+            reason:((document.getElementById("ref"+n+"-reason")||{}).value||"").trim()||null
+          });
+        }
+      });
+      if(refs.length){
+        const{error:rErr}=await sb.from("client_referrals").insert(refs);
+        if(!rErr)STATE.refsLocked=true;
+      }
+    }
+    showSuccess();
+  }catch(e){
+    showErr("survey-err","Algo sali\u00F3 mal. Intenta de nuevo.");btn.disabled=false;btn.textContent=prev;
+  }
+}
+
+function showSuccess(){
+  const name=(STATE.profile.full_name||"").split(" ")[0]||"";
+  const msgs={
+    inicio:"Registramos tu punto de partida. Nos vemos dentro del proceso.",
+    intermedio:"Gracias por tu honestidad. Con esto ajustamos lo que necesites para la segunda mitad.",
+    final:"Gracias por confiar y por caminar este proceso. Tu voz cierra el c\u00EDrculo."
+  };
+  hide("survey-card");
+  document.getElementById("succ-title").textContent=(name?name+", ":"")+"\u00A1listo! \u2728";
+  document.getElementById("succ-body").textContent=msgs[STATE.moment]||"Respuestas guardadas.";
+  show("success-card");
+}
+
+/* Enter en login */
+["a-email","a-pass"].forEach(id=>{
+  document.getElementById(id).addEventListener("keydown",e=>{if(e.key==="Enter")doLogin();});
+});
+
+/* Sesion existente? */
+loadUser();
+</script>
+</body>
+</html>
