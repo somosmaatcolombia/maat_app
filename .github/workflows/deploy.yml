@@ -44,7 +44,7 @@ jobs:
         run: |
           python3 -c "
           import sys
-          for f in ['deploy/app/index.html','deploy/mentor/index.html','deploy/onboarding/index.html','deploy/biotipo/index.html']:
+          for f in ['deploy/app/index.html','deploy/mentor/index.html','deploy/onboarding/index.html','deploy/biotipo/index.html','deploy/feedback/index.html','deploy/feedback-panel/index.html']:
               ok = all(ord(c) < 128 for c in open(f, encoding='utf-8').read())
               print(f, 'ASCII:', ok)
               if not ok: sys.exit(1)
@@ -89,3 +89,23 @@ jobs:
           protocol: ftps
           local-dir: deploy/biotipo/
           server-dir: somosmaat.org/biotipo/
+
+      - name: Subir cuestionario de trazabilidad (/feedback/)
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          local-dir: deploy/feedback/
+          server-dir: somosmaat.org/feedback/
+
+      - name: Subir dashboard de feedback (/feedback-panel/)
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          local-dir: deploy/feedback-panel/
+          server-dir: somosmaat.org/feedback-panel/
