@@ -56,6 +56,11 @@ body{font-family:var(--font-body);background:var(--paper);color:var(--ink);font-
 .moment-bar button.active{background:#fff;color:var(--v);box-shadow:var(--shadow);}
 .moment-hint{font-size:13px;color:var(--ink2);background:var(--paper2);border-left:3px solid var(--c);padding:12px 16px;border-radius:0 10px 10px 0;margin-bottom:24px;}
 
+/* Ilustracion papercut por momento (traen fondo propio: van enmarcadas) */
+.moment-illo{text-align:center;margin-bottom:20px;}
+.moment-illo img{width:100%;max-width:300px;border-radius:16px;box-shadow:var(--shadow);display:block;margin:0 auto;}
+.success-illo{width:120px;height:120px;object-fit:cover;border-radius:20px;box-shadow:var(--shadow);margin:0 auto 18px;display:none;}
+
 /* Question */
 .q{margin-bottom:28px;padding-bottom:24px;border-bottom:1px dashed var(--bd);}
 .q:last-child{border-bottom:none;}
@@ -119,6 +124,7 @@ body{font-family:var(--font-body);background:var(--paper);color:var(--ink);font-
     <div class="topbar"><button id="btn-logout" onclick="doLogout()"></button></div>
     <div class="card">
       <div class="moment-bar" id="moment-bar"></div>
+      <div class="moment-illo" id="moment-illo"></div>
       <div class="moment-hint" id="moment-hint"></div>
       <div class="err-box" id="survey-err"></div>
       <div id="questions"></div>
@@ -132,7 +138,8 @@ body{font-family:var(--font-body);background:var(--paper);color:var(--ink);font-
   <div id="success-card" class="hidden">
     <div class="card">
       <div class="success">
-        <div class="check">&#10003;</div>
+        <img class="success-illo" id="succ-illo" alt="" onerror="this.style.display='none'">
+        <div class="check" id="succ-check">&#10003;</div>
         <h3 id="succ-title"></h3>
         <p id="succ-body"></p>
       </div>
@@ -209,6 +216,11 @@ const MOMENTS={
                en:{label:"Closing",    hint:"End of the process. Honestly compare how you arrived and how you're leaving."}}
 };
 
+/* Ilustraciones papercut (WordPress Media). Traen fondo propio -> enmarcadas. */
+const IMG_BASE="https://somosmaat.org/wp-content/uploads/2026/08/";
+const MOMENT_IMG={inicio:IMG_BASE+"Sunrise.png",intermedio:IMG_BASE+"waves.png",final:IMG_BASE+"circles.png"};
+const SUCCESS_IMG=IMG_BASE+"flower.png";
+
 function suggestMoment(week){
   const w=parseInt(week,10);
   if(!w||w<=4) return "inicio";
@@ -279,6 +291,8 @@ function renderMomentBar(){
     bar.appendChild(b);
   });
   document.getElementById("moment-hint").innerHTML=MOMENTS[STATE.moment][lang].hint;
+  const src=MOMENT_IMG[STATE.moment];
+  document.getElementById("moment-illo").innerHTML=src?`<img src="${src}" alt="" loading="lazy" onerror="this.parentNode.style.display='none'">`:"";
 }
 
 function scaleHTML(key,min,lo,hi){
@@ -445,6 +459,9 @@ function showSuccess(){
     final:L("Gracias por confiar y por caminar este proceso. Tu voz cierra el c\u00EDrculo.","Thank you for trusting and walking this process. Your voice closes the circle.")
   };
   hide("survey-card");
+  const illo=document.getElementById("succ-illo");
+  illo.src=SUCCESS_IMG;illo.style.display="block";
+  document.getElementById("succ-check").style.display="none";
   document.getElementById("succ-title").textContent=(name?name+", ":"")+L("\u00A1listo! \u2728","done! \u2728");
   document.getElementById("succ-body").textContent=msgs[STATE.moment]||L("Respuestas guardadas.","Answers saved.");
   show("success-card");
