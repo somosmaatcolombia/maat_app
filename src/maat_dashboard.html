@@ -482,6 +482,14 @@ input:focus-visible,textarea:focus-visible,select:focus-visible{outline:none;bor
     <div class="sheet-field"><label>Hora de notificaci&oacute;n (0-23)</label><input type="number" id="prof-notif" min="0" max="23"></div>
     <div class="sheet-field"><label>Idioma</label><select id="prof-lang" onchange="setLang(this.value)"><option value="es">Espa&ntilde;ol</option><option value="en">English</option></select></div>
     <div class="sheet-field"><label>Tema</label><select id="prof-theme" onchange="setTheme(this.value)"><option value="dark">Dark</option><option value="light">Light</option></select></div>
+    <div style="border-top:1px solid var(--bd);margin-top:6px;padding-top:14px;">
+      <label style="display:block;font-size:12px;color:var(--mu);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Cuenta</label>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <button type="button" class="btn-action" style="background:transparent;border:1px solid var(--bd);color:var(--text);text-align:left;" onclick="closeProfile();showSetPassword('change')">&#128273;&nbsp; Cambiar contrase&ntilde;a</button>
+        <button type="button" class="btn-action" style="background:transparent;border:1px solid var(--bd);color:var(--text);text-align:left;" onclick="exportProgress()">&#128229;&nbsp; Exportar mis datos</button>
+        <button type="button" class="btn-action" style="background:transparent;border:1px solid var(--bd);color:var(--text);text-align:left;" onclick="closeProfile();replayTutorial()">&#127891;&nbsp; Ver tutorial</button>
+      </div>
+    </div>
     <div class="sheet-actions">
       <button class="btn-action" id="btn-save-prof" onclick="saveProfile()">GUARDAR</button>
       <button class="btn-action btn-logout" onclick="doLogout()">SALIR</button>
@@ -2190,29 +2198,65 @@ function renderBiotipo(){
     <div style="text-align:center;margin:20px 0 8px;"><button class="btn-action" style="width:auto;padding:11px 24px;background:transparent;border:1.5px solid var(--bd);color:var(--mu);" onclick="window.open('${BIOTIPO_URL}','_blank')">${es?'Volver a hacer el test':'Retake the test'}</button></div>`;
 }
 
+// Tarjeta destacada de Comuni-MAAT (promueve el uso de la comunidad).
+function comunidadPromoCard(){
+  const es=lang==='es';
+  let pulse="";
+  if(typeof communityPulse!=="undefined"&&communityPulse){
+    const p=communityPulse,tod=p.today||0,wk=p.week||0,mem=p.members||0;
+    if(tod>=3)pulse=es?`${tod} personas ya calibraron hoy`:`${tod} people already calibrated today`;
+    else if(wk>=3)pulse=es?`${wk} personas calibraron esta semana`:`${wk} people calibrated this week`;
+    else if(mem>1)pulse=es?`${mem} personas en transformaci\u00F3n contigo`:`${mem} people transforming with you`;
+  }
+  return `<div class="card" style="margin-bottom:16px;padding:0;overflow:hidden;cursor:pointer;border:1px solid var(--m);background:linear-gradient(135deg,var(--m)18,transparent);" onclick="nav('v-comunimaat')" role="button" tabindex="0" aria-label="Comuni-MAAT">
+    <div style="display:flex;align-items:stretch;">
+      <img src="${CONFIG.IMG_BASE}onboarding-01-bienvenida.png${ASSET_V}" alt="" loading="lazy" decoding="async" style="width:92px;object-fit:cover;background:var(--bg2);flex-shrink:0;" onerror="this.remove()">
+      <div style="flex:1;min-width:0;padding:14px 16px;display:flex;flex-direction:column;justify-content:center;">
+        <div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--m);font-weight:700;">${es?'La comunidad':'The community'}</div>
+        <div style="font-family:var(--font-title);font-size:20px;font-weight:700;color:var(--text);margin:2px 0 4px;">Comuni-MAAT</div>
+        <div style="font-size:13px;color:var(--mu);line-height:1.5;">${pulse?san(pulse)+'. ':''}${es?'Comparte, reacciona y no camines solo.':'Share, react, and don\'t walk alone.'}</div>
+      </div>
+      <div style="align-self:center;padding-right:14px;font-size:20px;color:var(--m);">\u203A</div>
+    </div>
+  </div>`;
+}
+
 function renderMas(){
+  const es=lang==='es';
+  const H=(txt,color)=>`<div style="font-family:var(--font-title);font-size:12px;letter-spacing:2px;text-transform:uppercase;color:${color};font-weight:700;margin:22px 2px 10px;">${txt}</div>`;
+  const item=(onclick,icon,label)=>`<div class="menu-item" onclick="${onclick}"><div class="menu-icon">${icon}</div><div class="menu-label">${label}</div></div>`;
+  const mentoria=[
+    item("contactMentor()","\u{1F4AC}",es?'Contactar':'Contact'),
+    mentorNotes.length?item("gs('v-mentor-notes')","\u{1F5D2}\uFE0F",es?'NOTAS MENTOR':'MENTOR NOTES'):'',
+    mySessions.length?item("gs('v-sesiones')","\u{1F5D3}\uFE0F",es?'MIS SESIONES':'MY SESSIONS'):'',
+    prof?.graduated?item("nav('v-eventos')","\u{1F4C5}",es?'EVENTOS':'EVENTS'):''
+  ].join('');
   document.getElementById("v-mas").innerHTML=`
-    <h2 style="font-family:var(--font-title);font-size:24px;font-weight:600;margin-bottom:16px;">${lang==="es"?"M\u00E1s":"More"}</h2>
+    <h2 style="font-family:var(--font-title);font-size:24px;font-weight:600;margin-bottom:16px;">${es?"M\u00E1s":"More"}</h2>
+    ${comunidadPromoCard()}
     ${biotipoCard()}
+    ${H(es?'Mi proceso':'My process','var(--c)')}
     <div class="menu-grid">
-      <div class="menu-item" onclick="gs('v-progreso')"><div class="menu-icon">\u{1F4CA}</div><div class="menu-label">${t("menu_progress")}</div></div>
-      <div class="menu-item" onclick="nav('v-logros')"><div class="menu-icon">\u{1F3C6}</div><div class="menu-label">${lang==='es'?'MIS LOGROS':'ACHIEVEMENTS'}</div></div>
-      <div class="menu-item" onclick="gs('v-creencias')"><div class="menu-icon">\u{1F9EC}</div><div class="menu-label">${t("menu_beliefs")}</div></div>
-      <div class="menu-item" onclick="gs('v-statement')"><div class="menu-icon">\u{1F4DD}</div><div class="menu-label">${t("menu_statement")}</div></div>
-      <div class="menu-item" onclick="gs('v-historial')"><div class="menu-icon">\u{1F4CB}</div><div class="menu-label">${t("menu_history")}</div></div>
-      <div class="menu-item" onclick="gs('v-meditacion')"><div class="menu-icon">\u{1F9D8}</div><div class="menu-label">${t("menu_meditation")}</div></div>
-      <div class="menu-item" onclick="nav('v-biblioteca')"><div class="menu-icon">\u{1F3A7}</div><div class="menu-label">${lang==='es'?'MEDITACIONES GUIADAS':'GUIDED MEDITATIONS'}</div></div>
-      <div class="menu-item" onclick="gs('v-libro')" style="border-color:var(--v);"><div class="menu-icon">\u{1F5FA}\uFE0F</div><div class="menu-label">${t("menu_book")}</div></div>
-      <div class="menu-item" onclick="gs('v-pdf')"><div class="menu-icon">\u{1F4D6}</div><div class="menu-label">${t("menu_pdf")}</div></div>
-      <div class="menu-item" onclick="gs('v-dailymaat')" style="border-color:var(--o);"><div class="menu-icon">\u2600\uFE0F</div><div class="menu-label">DAILY MAAT</div></div>
-      ${prof?.graduated?`<div class="menu-item" onclick="nav('v-eventos')" style="border-color:var(--o);background:var(--o)11;"><div class="menu-icon">\u{1F4C5}</div><div class="menu-label">${lang==='es'?'EVENTOS':'EVENTS'}</div></div>`:''}
-      <div class="menu-item" onclick="contactMentor()" style="border-color:var(--m);background:var(--m)11;"><div class="menu-icon">\u{1F4AC}</div><div class="menu-label">${lang==='es'?'Contactar':'Contact'}</div></div>
-      ${mentorNotes.length?`<div class="menu-item" onclick="gs('v-mentor-notes')" style="border-color:var(--c);"><div class="menu-icon">\u{1F4CB}</div><div class="menu-label">${lang==='es'?'NOTAS MENTOR':'MENTOR NOTES'}</div></div>`:''}
-      ${mySessions.length?`<div class="menu-item" onclick="gs('v-sesiones')" style="border-color:var(--o);"><div class="menu-icon">\u{1F4C5}</div><div class="menu-label">${lang==='es'?'MIS SESIONES':'MY SESSIONS'}</div></div>`:''}
-      <div class="menu-item" onclick="nav('v-comunimaat')" style="border-color:var(--m);background:var(--m)11;"><div class="menu-icon">\u{1F331}</div><div class="menu-label">Comuni-MAAT</div></div>
-      <div class="menu-item" onclick="showSetPassword('change')" style="border-color:var(--mu2);"><div class="menu-icon">\u{1F511}</div><div class="menu-label">${lang==='es'?'CAMBIAR CLAVE':'CHANGE PASSWORD'}</div></div>
-      <div class="menu-item" onclick="exportProgress()" style="border-color:var(--mu2);"><div class="menu-icon">\u{1F4E5}</div><div class="menu-label">${lang==='es'?'EXPORTAR':'EXPORT'}</div></div>
-      <div class="menu-item" onclick="replayTutorial()" style="border-color:var(--mu2);"><div class="menu-icon">\u{1F393}</div><div class="menu-label">${lang==='es'?'VER TUTORIAL':'REPLAY TUTORIAL'}</div></div>
+      ${item("gs('v-progreso')","\u{1F4CA}",t("menu_progress"))}
+      ${item("nav('v-logros')","\u{1F3C6}",es?'MIS LOGROS':'ACHIEVEMENTS')}
+      ${item("gs('v-historial')","\u{1F4CB}",t("menu_history"))}
+      ${item("gs('v-creencias')","\u{1F9EC}",t("menu_beliefs"))}
+      ${item("gs('v-statement')","\u{1F4DD}",t("menu_statement"))}
+    </div>
+    ${H(es?'Pr\u00E1cticas':'Practices','var(--m)')}
+    <div class="menu-grid">
+      ${item("gs('v-meditacion')","\u{1F9D8}",t("menu_meditation"))}
+      ${item("nav('v-biblioteca')","\u{1F3A7}",es?'MEDITACIONES GUIADAS':'GUIDED MEDITATIONS')}
+      ${item("gs('v-dailymaat')","\u2600\uFE0F","DAILY MAAT")}
+    </div>
+    ${H(es?'Biblioteca':'Library','var(--v)')}
+    <div class="menu-grid">
+      ${item("gs('v-libro')","\u{1F5FA}\uFE0F",t("menu_book"))}
+      ${item("gs('v-pdf')","\u{1F4D6}",t("menu_pdf"))}
+    </div>
+    ${H(es?'Mentor\u00EDa':'Mentoring','var(--o)')}
+    <div class="menu-grid">
+      ${mentoria}
     </div>
   `;
 }
