@@ -86,6 +86,29 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .res-head .second b{color:var(--ink);}
 .blend-note{background:#fff;border-radius:var(--radius-sm);box-shadow:var(--shadow);padding:12px 18px;font-size:14px;color:var(--ink2);margin:18px auto 0;max-width:440px;text-align:center;}
 
+/* Seleccion de modo (intro) */
+.mode-cards{display:flex;flex-direction:column;gap:12px;margin:22px 0 10px;text-align:left;}
+.mode-card{background:#fff;border:1.5px solid var(--bd);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 20px;cursor:pointer;transition:transform .12s,box-shadow .12s,border-color .12s;width:100%;}
+.mode-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg);}
+.mode-card.mode-primary{border-color:var(--v);background:linear-gradient(135deg,rgba(137,108,142,.08),#fff);}
+.mode-title{font-family:var(--font-title);font-size:22px;font-weight:700;color:var(--ink);}
+.mode-sub{font-size:14px;color:var(--ink2);line-height:1.55;margin:4px 0 8px;}
+.mode-meta{font-size:12px;font-weight:600;color:var(--v);letter-spacing:.3px;}
+/* Bloque/seccion dentro del quiz */
+.q-block{font-family:var(--font-title);font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--v);margin-bottom:8px;}
+/* Desglose por dimension */
+.dim-block{margin:6px 0 8px;}
+.dim-h{font-family:var(--font-title);font-size:15px;letter-spacing:2px;text-transform:uppercase;color:var(--mu);text-align:center;font-weight:700;margin-bottom:6px;}
+.dim-intro{font-size:14px;color:var(--ink2);text-align:center;max-width:460px;margin:0 auto 16px;line-height:1.6;}
+.dim-card{background:#fff;border-radius:var(--radius-sm);box-shadow:var(--shadow);padding:14px 18px;margin-bottom:10px;}
+.dim-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;}
+.dim-name{font-family:var(--font-title);font-size:17px;font-weight:700;color:var(--ink);}
+.dim-sub{font-size:12px;color:var(--mu);}
+.dim-lead{display:flex;align-items:center;gap:8px;margin-top:6px;font-size:15px;}
+.dim-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.dim-pct{color:var(--mu);font-size:13px;font-variant-numeric:tabular-nums;margin-left:2px;}
+.dim-prelim{font-size:12px;color:var(--mu);font-style:italic;margin-top:8px;line-height:1.5;}
+
 .spectrum{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:22px 22px 14px;margin:26px 0;}
 .spectrum h3{font-family:var(--font-title);font-size:15px;letter-spacing:2px;text-transform:uppercase;color:var(--mu);margin-bottom:16px;text-align:center;font-weight:700;}
 .bar-row{margin-bottom:14px;}
@@ -210,55 +233,93 @@ const UI={
   ctaBtn:{es:"Conoce MAAT",en:"Discover MAAT"},
   openApp:{es:"Ir a mi app MAAT",en:"Go to my MAAT app"},
   retake:{es:"Repetir el test",en:"Retake the test"},
+  modeCompleteTitle:{es:"Perfil completo",en:"Complete profile"},
+  modeCompleteSub:{es:"Tu retrato en 4 dimensiones: c\u00f3mo sientes, act\u00faas, y c\u00f3mo es y funciona tu cuerpo.",en:"Your portrait in 4 dimensions: how you feel, act, and how your body is and works."},
+  modeCompleteMeta:{es:"56 preguntas \u00b7 ~10 min \u00b7 el m\u00e1s revelador",en:"56 questions \u00b7 ~10 min \u00b7 most revealing"},
+  modeShortTitle:{es:"Test r\u00e1pido",en:"Quick test"},
+  modeShortSub:{es:"Un primer vistazo a tu biotipo principal y tu segundo dominante.",en:"A first glimpse of your primary biotype and your second dominant one."},
+  modeShortMeta:{es:"24 preguntas \u00b7 ~4 min",en:"24 questions \u00b7 ~4 min"},
+  blockOf:{es:"Bloque",en:"Section"},
+  radarTitle:{es:"El mapa de tu biotipo",en:"Your biotype map"},
+  dimTitle:{es:"Tu perfil por dimensi\u00f3n",en:"Your profile by dimension"},
+  dimIntro:{es:"Aqu\u00ed se ven tus matices: puedes tener una mente de un biotipo y un cuerpo de otro. Esas tensiones son material de trabajo.",en:"Here you see your nuances: you can have the mind of one biotype and the body of another. Those tensions are working material."},
+  morPrelim:{es:"Preliminar \u2014 tu mentor lo afina en la primera sesi\u00f3n con lo que observa.",en:"Preliminary \u2014 your mentor refines it in the first session from observation."},
   disclaimer:{es:"Los biotipos son un modelo de autoconocimiento inspirado en la teor\u00eda cl\u00e1sica de los temperamentos. No son un diagn\u00f3stico cl\u00ednico ni psicol\u00f3gico.",en:"Biotypes are a self-knowledge model inspired by the classical theory of temperaments. They are not a clinical or psychological diagnosis."}
 };
 const T=(k)=>UI[k]?UI[k][lang]:k;
 
 /* ============================================================ */
-/* Banco de \u00edtems (40): t = biotipo (s/c/m/f)                   */
+/* Banco de items: t=biotipo (s/c/m/f) \u00b7 dim=dimension          */
+/* dim: psi=psicologica \u00b7 con=conductual \u00b7 fis=fisiologica \u00b7     */
+/*      mor=morfologica.  short:true = va en el test rapido.     */
 /* ============================================================ */
 const ITEMS=[
-  {t:"s",es:"Me energiza estar rodeado de gente y conversar.",en:"Being around people and talking energizes me."},
-  {t:"c",es:"Cuando me propongo una meta, voy con todo hasta lograrla.",en:"When I set a goal, I go all in until I achieve it."},
-  {t:"m",es:"Analizo las cosas a fondo antes de decidir.",en:"I analyze things deeply before deciding."},
-  {t:"f",es:"Mantengo la calma incluso en situaciones tensas.",en:"I stay calm even in tense situations."},
-  {t:"s",es:"Empiezo muchas cosas con entusiasmo aunque no todas las termine.",en:"I start many things enthusiastically even if I don't finish them all."},
-  {t:"c",es:"Tomo decisiones r\u00e1pido y con seguridad.",en:"I make decisions quickly and confidently."},
-  {t:"m",es:"Soy perfeccionista y me cuesta darme por satisfecho.",en:"I'm a perfectionist and rarely feel satisfied."},
-  {t:"f",es:"Evito el conflicto siempre que puedo.",en:"I avoid conflict whenever I can."},
-  {t:"s",es:"Expreso lo que siento con facilidad, casi sin filtro.",en:"I express what I feel easily, almost without a filter."},
-  {t:"c",es:"Me frustra la lentitud y la ineficiencia.",en:"Slowness and inefficiency frustrate me."},
-  {t:"m",es:"Le doy muchas vueltas a lo que ya pas\u00f3.",en:"I keep replaying things that already happened."},
-  {t:"f",es:"Prefiero la rutina y lo estable a los cambios bruscos.",en:"I prefer routine and stability over sudden changes."},
-  {t:"s",es:"Me aburro r\u00e1pido con la rutina y busco novedad.",en:"I get bored with routine quickly and seek novelty."},
-  {t:"c",es:"Tiendo a tomar el liderazgo cuando nadie lo hace.",en:"I tend to take the lead when no one else does."},
-  {t:"m",es:"Me afectan profundamente las cosas, aunque no siempre lo muestre.",en:"Things affect me deeply, even if I don't always show it."},
-  {t:"f",es:"Me cuesta arrancar, aunque cuando lo hago soy constante.",en:"I struggle to start, but once I do I'm consistent."},
-  {t:"s",es:"Tomo decisiones guiado por lo que siento en el momento.",en:"I make decisions guided by what I feel in the moment."},
-  {t:"c",es:"Me cuesta mostrarme vulnerable o pedir ayuda.",en:"I find it hard to be vulnerable or ask for help."},
-  {t:"m",es:"Necesito tiempo a solas para recargarme.",en:"I need time alone to recharge."},
-  {t:"f",es:"Rara vez me altero o pierdo la paciencia.",en:"I rarely get upset or lose my patience."},
-  {t:"s",es:"La gente me describe como alegre y expresivo.",en:"People describe me as cheerful and expressive."},
-  {t:"c",es:"Soy directo, a veces demasiado, al decir lo que pienso.",en:"I'm direct, sometimes too much, when I say what I think."},
-  {t:"m",es:"Busco sentido y significado en lo que hago.",en:"I look for meaning and purpose in what I do."},
-  {t:"f",es:"Me adapto con facilidad para no generar fricci\u00f3n.",en:"I adapt easily to avoid creating friction."},
-  {t:"s",es:"Me cuesta concentrarme en una sola tarea por mucho tiempo.",en:"I find it hard to focus on a single task for long."},
-  {t:"c",es:"Puedo trabajar largas horas empuj\u00e1ndome al l\u00edmite.",en:"I can work long hours pushing myself to the limit."},
-  {t:"m",es:"Noto los detalles y errores que otros pasan por alto.",en:"I notice details and mistakes others overlook."},
-  {t:"f",es:"A veces postergo decisiones esperando que se resuelvan solas.",en:"Sometimes I postpone decisions hoping they resolve themselves."},
-  {t:"s",es:"Disfruto ser el centro de atenci\u00f3n en un grupo.",en:"I enjoy being the center of attention in a group."},
-  {t:"c",es:"Me incomoda no tener el control de una situaci\u00f3n.",en:"I feel uncomfortable not being in control of a situation."},
-  {t:"m",es:"Me exijo est\u00e1ndares muy altos y me critico con dureza.",en:"I hold myself to very high standards and criticize myself harshly."},
-  {t:"f",es:"Necesito descanso y tranquilidad para sentirme bien.",en:"I need rest and calm to feel well."},
-  {t:"s",es:"Me motiva m\u00e1s la emoci\u00f3n de lo nuevo que el resultado final.",en:"The thrill of the new motivates me more than the final result."},
-  {t:"c",es:"Me exijo mucho y tambi\u00e9n exijo a los dem\u00e1s.",en:"I demand a lot from myself and from others too."},
-  {t:"m",es:"Prefiero pocas relaciones profundas a muchas superficiales.",en:"I prefer a few deep relationships over many shallow ones."},
-  {t:"f",es:"Me cuesta identificar o expresar lo que realmente quiero.",en:"I find it hard to identify or express what I really want."},
-  {t:"s",es:"Cuando estoy inquieto, necesito moverme o hablar con alguien.",en:"When I'm restless, I need to move or talk to someone."},
-  {t:"c",es:"Prefiero la acci\u00f3n a la reflexi\u00f3n prolongada.",en:"I prefer action over prolonged reflection."},
-  {t:"m",es:"A veces la tristeza o la desesperanza me visitan sin raz\u00f3n clara.",en:"Sometimes sadness or hopelessness visit me for no clear reason."},
-  {t:"f",es:"Soy quien pone paz y equilibrio en un grupo.",en:"I'm the one who brings peace and balance to a group."}
+  {t:"s",dim:"con",short:true,es:"Me energiza estar rodeado de gente y conversar.",en:"Being around people and talking energizes me."},
+  {t:"c",dim:"psi",short:true,es:"Cuando me propongo una meta, voy con todo hasta lograrla.",en:"When I set a goal, I go all in until I achieve it."},
+  {t:"m",dim:"psi",short:true,es:"Analizo las cosas a fondo antes de decidir.",en:"I analyze things deeply before deciding."},
+  {t:"f",dim:"psi",short:true,es:"Mantengo la calma incluso en situaciones tensas.",en:"I stay calm even in tense situations."},
+  {t:"s",dim:"con",short:true,es:"Empiezo muchas cosas con entusiasmo aunque no todas las termine.",en:"I start many things enthusiastically even if I don't finish them all."},
+  {t:"c",dim:"con",short:true,es:"Tomo decisiones r\u00e1pido y con seguridad.",en:"I make decisions quickly and confidently."},
+  {t:"m",dim:"psi",short:true,es:"Soy perfeccionista y me cuesta darme por satisfecho.",en:"I'm a perfectionist and rarely feel satisfied."},
+  {t:"f",dim:"con",short:true,es:"Evito el conflicto siempre que puedo.",en:"I avoid conflict whenever I can."},
+  {t:"s",dim:"con",short:true,es:"Expreso lo que siento con facilidad, casi sin filtro.",en:"I express what I feel easily, almost without a filter."},
+  {t:"c",dim:"psi",short:true,es:"Me frustra la lentitud y la ineficiencia.",en:"Slowness and inefficiency frustrate me."},
+  {t:"m",dim:"psi",short:true,es:"Le doy muchas vueltas a lo que ya pas\u00f3.",en:"I keep replaying things that already happened."},
+  {t:"f",dim:"con",short:true,es:"Prefiero la rutina y lo estable a los cambios bruscos.",en:"I prefer routine and stability over sudden changes."},
+  {t:"s",dim:"psi",es:"Me aburro r\u00e1pido con la rutina y busco novedad.",en:"I get bored with routine quickly and seek novelty."},
+  {t:"c",dim:"con",short:true,es:"Tiendo a tomar el liderazgo cuando nadie lo hace.",en:"I tend to take the lead when no one else does."},
+  {t:"m",dim:"psi",short:true,es:"Me afectan profundamente las cosas, aunque no siempre lo muestre.",en:"Things affect me deeply, even if I don't always show it."},
+  {t:"f",dim:"con",short:true,es:"Me cuesta arrancar, aunque cuando lo hago soy constante.",en:"I struggle to start, but once I do I'm consistent."},
+  {t:"s",dim:"psi",es:"Tomo decisiones guiado por lo que siento en el momento.",en:"I make decisions guided by what I feel in the moment."},
+  {t:"c",dim:"psi",es:"Me cuesta mostrarme vulnerable o pedir ayuda.",en:"I find it hard to be vulnerable or ask for help."},
+  {t:"m",dim:"con",es:"Necesito tiempo a solas para recargarme.",en:"I need time alone to recharge."},
+  {t:"f",dim:"psi",short:true,es:"Rara vez me altero o pierdo la paciencia.",en:"I rarely get upset or lose my patience."},
+  {t:"s",dim:"psi",short:true,es:"La gente me describe como alegre y expresivo.",en:"People describe me as cheerful and expressive."},
+  {t:"c",dim:"con",short:true,es:"Soy directo, a veces demasiado, al decir lo que pienso.",en:"I'm direct, sometimes too much, when I say what I think."},
+  {t:"m",dim:"psi",short:true,es:"Busco sentido y significado en lo que hago.",en:"I look for meaning and purpose in what I do."},
+  {t:"f",dim:"con",es:"Me adapto con facilidad para no generar fricci\u00f3n.",en:"I adapt easily to avoid creating friction."},
+  {t:"s",dim:"psi",short:true,es:"Me cuesta concentrarme en una sola tarea por mucho tiempo.",en:"I find it hard to focus on a single task for long."},
+  {t:"c",dim:"con",es:"Puedo trabajar largas horas empuj\u00e1ndome al l\u00edmite.",en:"I can work long hours pushing myself to the limit."},
+  {t:"m",dim:"psi",es:"Noto los detalles y errores que otros pasan por alto.",en:"I notice details and mistakes others overlook."},
+  {t:"f",dim:"con",short:true,es:"A veces postergo decisiones esperando que se resuelvan solas.",en:"Sometimes I postpone decisions hoping they resolve themselves."},
+  {t:"s",dim:"con",es:"Disfruto ser el centro de atenci\u00f3n en un grupo.",en:"I enjoy being the center of attention in a group."},
+  {t:"c",dim:"psi",es:"Me incomoda no tener el control de una situaci\u00f3n.",en:"I feel uncomfortable not being in control of a situation."},
+  {t:"m",dim:"psi",es:"Me exijo est\u00e1ndares muy altos y me critico con dureza.",en:"I hold myself to very high standards and criticize myself harshly."},
+  {t:"f",dim:"con",es:"Necesito descanso y tranquilidad para sentirme bien.",en:"I need rest and calm to feel well."},
+  {t:"s",dim:"psi",short:true,es:"Me motiva m\u00e1s la emoci\u00f3n de lo nuevo que el resultado final.",en:"The thrill of the new motivates me more than the final result."},
+  {t:"c",dim:"con",es:"Me exijo mucho y tambi\u00e9n exijo a los dem\u00e1s.",en:"I demand a lot from myself and from others too."},
+  {t:"m",dim:"con",short:true,es:"Prefiero pocas relaciones profundas a muchas superficiales.",en:"I prefer a few deep relationships over many shallow ones."},
+  {t:"f",dim:"psi",es:"Me cuesta identificar o expresar lo que realmente quiero.",en:"I find it hard to identify or express what I really want."},
+  {t:"s",dim:"con",es:"Cuando estoy inquieto, necesito moverme o hablar con alguien.",en:"When I'm restless, I need to move or talk to someone."},
+  {t:"c",dim:"con",short:true,es:"Prefiero la acci\u00f3n a la reflexi\u00f3n prolongada.",en:"I prefer action over prolonged reflection."},
+  {t:"m",dim:"psi",short:true,es:"A veces la tristeza o la desesperanza me visitan sin raz\u00f3n clara.",en:"Sometimes sadness or hopelessness visit me for no clear reason."},
+  {t:"f",dim:"con",short:true,es:"Soy quien pone paz y equilibrio en un grupo.",en:"I'm the one who brings peace and balance to a group."},
+  {t:"s",dim:"fis",es:"Mi energ\u00eda es alta pero sube y baja; me enciendo y me apago r\u00e1pido.",en:"My energy is high but rises and falls; I flare up and fade fast."},
+  {t:"s",dim:"fis",es:"Duermo f\u00e1cil pero a veces poco porque me sobreestimulo.",en:"I fall asleep easily but sometimes sleep little because I overstimulate."},
+  {t:"c",dim:"fis",es:"Tengo energ\u00eda alta y sostenida; aguanto largas jornadas de esfuerzo.",en:"I have high, sustained energy; I endure long stretches of effort."},
+  {t:"c",dim:"fis",es:"Acumulo tensi\u00f3n en la mand\u00edbula, el cuello o los hombros.",en:"I build up tension in my jaw, neck or shoulders."},
+  {t:"m",dim:"fis",es:"Mi energ\u00eda es baja-media y la sobrecarga social me agota.",en:"My energy is low-to-medium and social overload drains me."},
+  {t:"m",dim:"fis",es:"Tengo sue\u00f1o ligero o me despierto d\u00e1ndole vueltas a las cosas.",en:"I'm a light sleeper or wake up mulling things over."},
+  {t:"f",dim:"fis",es:"Mi energ\u00eda es baja pero muy estable; rara vez me fatigo.",en:"My energy is low but very stable; I rarely get fatigued."},
+  {t:"f",dim:"fis",es:"Duermo profundo y largo; me cuesta arrancar en la ma\u00f1ana.",en:"I sleep deep and long; mornings are hard to get going."},
+  {t:"s",dim:"mor",es:"Mi cara refleja de inmediato lo que siento.",en:"My face immediately shows what I feel."},
+  {t:"s",dim:"mor",es:"Me han descrito como de aspecto vital, c\u00e1lido y expresivo.",en:"People have described me as vital, warm and expressive-looking."},
+  {t:"c",dim:"mor",es:"Tengo un cuerpo fuerte o resistente y una presencia que se nota.",en:"I have a strong or sturdy body and a presence people notice."},
+  {t:"c",dim:"mor",es:"Bajo esfuerzo me caliento y enrojezco r\u00e1pido.",en:"Under exertion I heat up and flush quickly."},
+  {t:"m",dim:"mor",es:"Soy de complexi\u00f3n m\u00e1s bien delgada y me cuesta subir de peso.",en:"I have a rather thin build and find it hard to gain weight."},
+  {t:"m",dim:"mor",es:"Suelo tener las manos o los pies fr\u00edos.",en:"My hands or feet tend to be cold."},
+  {t:"f",dim:"mor",es:"Tiendo a redondear o retener peso y a moverme sin prisa.",en:"I tend to round out or retain weight and move unhurriedly."},
+  {t:"f",dim:"mor",es:"Mi piel es suave y fresca, y mi ritmo f\u00edsico es tranquilo.",en:"My skin is soft and cool, and my physical pace is calm."}
 ];
+// Metadatos de dimension (orden de bloques en el test completo)
+const DIMS=[
+  {k:"psi",es:"Psicol\u00f3gica",en:"Psychological",subEs:"c\u00f3mo sientes y piensas",subEn:"how you feel and think"},
+  {k:"con",es:"Conductual",en:"Behavioral",subEs:"c\u00f3mo act\u00faas",subEn:"how you act"},
+  {k:"fis",es:"Fisiol\u00f3gica",en:"Physiological",subEs:"c\u00f3mo funciona tu cuerpo",subEn:"how your body works"},
+  {k:"mor",es:"Morfol\u00f3gica",en:"Morphological",subEs:"tu constituci\u00f3n f\u00edsica",subEn:"your physical build"}
+];
+const DIM_LABEL=Object.fromEntries(DIMS.map(d=>[d.k,d]));
+const DIM_WEIGHT={psi:0.30,con:0.30,fis:0.25,mor:0.15};
 
 /* ============================================================ */
 /* Perfiles                                                     */
@@ -310,11 +371,75 @@ const ORDER=["s","c","m","f"];
 /* ============================================================ */
 /* Estado                                                       */
 /* ============================================================ */
+let mode="complete";        // "complete" | "short"
+let activeItems=[];         // items del test en curso (segun modo)
 let idx=0;
-let answers=new Array(ITEMS.length).fill(0);
-let result=null;   // {primary, secondary, blend, scores:{s,c,m,f}}
+let answers=[];
+let result=null;            // {mode, primary, secondary, blend, scores, dims}
 let sessionUser=null;
 const app=document.getElementById("app");
+
+// Construye la lista de items segun el modo. Completo: ordenado por bloque
+// (psi, con, fis, mor). Rapido: solo los items short:true, en su orden natural.
+function buildItems(m){
+  if(m==="short")return ITEMS.filter(it=>it.short);
+  const order={psi:0,con:1,fis:2,mor:3};
+  return ITEMS.slice().sort((a,b)=>order[a.dim]-order[b.dim]);
+}
+
+// Puntaje: por dimension (proporcion entre biotipos) y agregado ponderado.
+function computeScores(items,ans){
+  const dims={};
+  items.forEach((it,i)=>{
+    const d=it.dim,t=it.t,v=ans[i]||0;
+    if(!dims[d]){dims[d]={sum:{s:0,c:0,m:0,f:0},n:{s:0,c:0,m:0,f:0}};}
+    dims[d].sum[t]+=v; dims[d].n[t]++;
+  });
+  const dimResult={}; const overall={s:0,c:0,m:0,f:0}; let wsum=0;
+  for(const d in dims){
+    // Promedio por biotipo (no suma): evita que un biotipo con mas items en la
+    // dimension quede inflado si el numero de items no esta balanceado.
+    const mean={}; ORDER.forEach(t=>mean[t]=dims[d].n[t]?dims[d].sum[t]/dims[d].n[t]:0);
+    const tot=ORDER.reduce((a,t)=>a+mean[t],0)||1;
+    const props={}; ORDER.forEach(t=>props[t]=mean[t]/tot);
+    const rank=ORDER.slice().sort((a,b)=>props[b]-props[a]);
+    dimResult[d]={props,lead:rank[0]};
+    const w=DIM_WEIGHT[d]||0; wsum+=w;
+    ORDER.forEach(t=>overall[t]+=w*props[t]);
+  }
+  ORDER.forEach(t=>overall[t]=overall[t]/(wsum||1));
+  const maxp=Math.max(...ORDER.map(t=>overall[t]))||1;
+  const scores={}; ORDER.forEach(t=>scores[t]=Math.round(overall[t]/maxp*100));
+  return {scores,dims:dimResult};
+}
+
+// Radar (arana) SVG de los 4 biotipos. s=arriba, c=derecha, m=abajo, f=izquierda.
+function radarSVG(scores){
+  const W=380,H=300,cx=W/2,cy=H/2,R=98;
+  const pts=ORDER.map((t,i)=>{
+    const a=-Math.PI/2+i*Math.PI/2;
+    const r=Math.max(0.05,(scores[t]||0)/100)*R;
+    return{t,a,hex:BIOS[t].hex,name:BIOS[t].name[lang],
+      x:cx+Math.cos(a)*r,y:cy+Math.sin(a)*r,
+      ax:cx+Math.cos(a)*R,ay:cy+Math.sin(a)*R};
+  });
+  let rings="";[0.25,0.5,0.75,1].forEach(fr=>{
+    const p=ORDER.map((t,i)=>{const a=-Math.PI/2+i*Math.PI/2;return(cx+Math.cos(a)*R*fr).toFixed(1)+","+(cy+Math.sin(a)*R*fr).toFixed(1);}).join(" ");
+    rings+=`<polygon points="${p}" fill="none" stroke="#e6ddd0" stroke-width="1"/>`;
+  });
+  const axes=pts.map(p=>`<line x1="${cx}" y1="${cy}" x2="${p.ax.toFixed(1)}" y2="${p.ay.toFixed(1)}" stroke="#e6ddd0" stroke-width="1"/>`).join("");
+  const shape=pts.map(p=>p.x.toFixed(1)+","+p.y.toFixed(1)).join(" ");
+  const verts=pts.map(p=>`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="4.5" fill="${p.hex}"/>`).join("");
+  const labels=pts.map(p=>{
+    const lx=cx+Math.cos(p.a)*(R+16),ly=cy+Math.sin(p.a)*(R+16);
+    const anchor=Math.abs(Math.cos(p.a))<0.3?"middle":(Math.cos(p.a)>0?"start":"end");
+    return `<text x="${lx.toFixed(1)}" y="${(ly+4).toFixed(1)}" text-anchor="${anchor}" font-size="13" font-weight="700" fill="${p.hex}">${p.name}</text>`;
+  }).join("");
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:360px;margin:0 auto;display:block;" role="img" aria-label="Radar biotipos">
+    ${rings}${axes}
+    <polygon points="${shape}" fill="rgba(137,108,142,.18)" stroke="var(--v)" stroke-width="2.5" stroke-linejoin="round"/>
+    ${verts}${labels}</svg>`;
+}
 
 function setLang(l){
   lang=l; localStorage.setItem("maat-lang",l);
@@ -345,37 +470,47 @@ function renderIntro(){
     </div>
     <div class="intro">
       <p>${T("intro1")}</p>
-      <p>${T("intro2")}</p>
-      <div class="chips">
-        <span class="chip">${T("chip1")}</span>
-        <span class="chip">${T("chip2")}</span>
-        <span class="chip">${T("chip3")}</span>
+      <div class="mode-cards">
+        <button class="mode-card mode-primary" onclick="startQuiz('complete')">
+          <div class="mode-title">${T("modeCompleteTitle")}</div>
+          <div class="mode-sub">${T("modeCompleteSub")}</div>
+          <div class="mode-meta">${T("modeCompleteMeta")}</div>
+        </button>
+        <button class="mode-card" onclick="startQuiz('short')">
+          <div class="mode-title">${T("modeShortTitle")}</div>
+          <div class="mode-sub">${T("modeShortSub")}</div>
+          <div class="mode-meta">${T("modeShortMeta")}</div>
+        </button>
       </div>
-      <div><button class="btn-primary" onclick="startQuiz()">${T("start")}</button></div>
-      ${saved?`<div style="margin-top:16px;"><button class="btn-ghost" onclick="showSaved()">${T("resume")}</button></div>`:""}
+      ${saved?`<div><button class="btn-ghost" onclick="showSaved()">${T("resume")}</button></div>`:""}
       <p class="meta-note">${T("metaNote")}</p>
     </div>`;
 }
 
-function startQuiz(){
-  idx=0; answers=new Array(ITEMS.length).fill(0);
+function startQuiz(m){
+  mode=(m==="short")?"short":"complete";
+  activeItems=buildItems(mode);
+  idx=0; answers=new Array(activeItems.length).fill(0);
   screen="quiz"; renderQuiz();
 }
 
 /* ---- QUIZ ---- */
 function renderQuiz(){
   screen="quiz";
-  const it=ITEMS[idx];
-  const pct=Math.round((idx)/ITEMS.length*100);
+  const it=activeItems[idx];
+  const pct=Math.round((idx)/activeItems.length*100);
   const cur=answers[idx];
   let scaleBtns="";
   for(let v=1;v<=5;v++){
     scaleBtns+=`<button class="${cur===v?"sel":""}" onclick="answer(${v})">${v}</button>`;
   }
+  const dim=DIM_LABEL[it.dim];
+  const block=(mode==="complete"&&dim)?`<div class="q-block">${T("blockOf")}: ${dim[lang]}</div>`:"";
   app.innerHTML=`
     <div class="progress"><div class="progress-fill" style="width:${pct}%"></div></div>
-    <div class="progress-label">${idx+1} ${T("qOf")} ${ITEMS.length}</div>
+    <div class="progress-label">${idx+1} ${T("qOf")} ${activeItems.length}</div>
     <div class="q-card">
+      ${block}
       <div class="q-num">${idx+1}</div>
       <div class="q-text">${it[lang]}</div>
       <div class="scale-ends"><span>${T("endLow")}</span><span>${T("endHigh")}</span></div>
@@ -386,7 +521,7 @@ function renderQuiz(){
 function answer(v){
   answers[idx]=v;
   setTimeout(()=>{
-    if(idx<ITEMS.length-1){idx++;renderQuiz();}
+    if(idx<activeItems.length-1){idx++;renderQuiz();}
     else compute();
   },180);
 }
@@ -396,17 +531,35 @@ function prevQ(){ if(idx>0){idx--;renderQuiz();} }
 function compute(){
   screen="computing";
   app.innerHTML=`<div class="loading"><div class="spin"></div><p style="margin-top:18px;color:var(--mu);">${T("computing")}</p></div>`;
-  const raw={s:0,c:0,m:0,f:0};
-  ITEMS.forEach((it,i)=>{ raw[it.t]+=(answers[i]||1); });
-  // normalizar a % (rango 10-50 por biotipo)
-  const scores={};
-  ORDER.forEach(k=>{ scores[k]=Math.round((raw[k]-10)/40*100); });
+  const cs=computeScores(activeItems,answers);
+  const scores=cs.scores;
   const ranked=ORDER.slice().sort((a,b)=>scores[b]-scores[a]);
   const primary=ranked[0], secondary=ranked[1];
   const blend=(scores[primary]-scores[secondary])<=10;
-  result={primary,secondary,blend,scores};
+  result={mode,primary,secondary,blend,scores,dims:cs.dims};
   saveLocal();
   setTimeout(()=>{screen="result";renderResult();},900);
+}
+
+// Tarjetas de perfil por dimension (solo modo completo).
+function dimBreakdown(){
+  const dims=result.dims||{};
+  let cards="";
+  DIMS.forEach(d=>{
+    const dr=dims[d.k]; if(!dr)return;
+    const lead=BIOS[dr.lead]; const pct=Math.round(dr.props[dr.lead]*100);
+    const prelim=d.k==="mor"?`<div class="dim-prelim">${T("morPrelim")}</div>`:"";
+    cards+=`<div class="dim-card" style="border-left:3px solid ${lead.hex}">
+      <div class="dim-top"><span class="dim-name">${d[lang]}</span><span class="dim-sub">${lang==='es'?d.subEs:d.subEn}</span></div>
+      <div class="dim-lead"><span class="dim-dot" style="background:${lead.hex}"></span><b style="color:${lead.hex}">${lead.name[lang]}</b><span class="dim-pct">${pct}%</span></div>
+      ${prelim}
+    </div>`;
+  });
+  return `<div class="dim-block">
+    <h3 class="dim-h">${T("dimTitle")}</h3>
+    <p class="dim-intro">${T("dimIntro")}</p>
+    ${cards}
+  </div>`;
 }
 
 /* ---- RESULT ---- */
@@ -439,9 +592,16 @@ function renderResult(){
     ${blend?`<div class="blend-note">${T("blend")}</div>`:""}
 
     <div class="spectrum">
+      <h3>${T("radarTitle")}</h3>
+      ${radarSVG(scores)}
+    </div>
+
+    <div class="spectrum">
       <h3>${T("spectrumTitle")}</h3>
       ${bars}
     </div>
+
+    ${result.mode==="complete"?dimBreakdown():""}
 
     <div class="section esencia" style="border-left-color:${P.hex}">
       <p style="font-size:17px;color:var(--ink);">${P.esencia[lang]}</p>
