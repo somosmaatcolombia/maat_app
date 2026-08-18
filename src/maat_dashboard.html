@@ -433,6 +433,7 @@ input:focus-visible,textarea:focus-visible,select:focus-visible{outline:none;bor
     <section id="v-mentor-notes" class="view" aria-label="Notas del mentor"></section>
     <section id="v-sesiones" class="view" aria-label="Pr&oacute;ximas sesiones de mentor&iacute;a"></section>
     <section id="v-comunimaat" class="view" aria-label="Comuni-MAAT"></section>
+    <section id="v-biotipo" class="view" aria-label="Biotipo"></section>
     <section id="v-biblioteca" class="view" aria-label="Biblioteca de Meditaciones"></section>
     <section id="v-eventos" class="view" aria-label="Pr&oacute;ximos Eventos"></section>
     <section id="v-logros" class="view" aria-label="Logros"></section>
@@ -475,6 +476,7 @@ input:focus-visible,textarea:focus-visible,select:focus-visible{outline:none;bor
       </div>
       <input type="file" id="prof-avatar-file" accept="image/*" style="display:none;" onchange="uploadAvatar(this)">
     </div>
+    <div id="prof-biotipo" style="margin-bottom:16px;"></div>
     <div class="sheet-field"><label>Nombre completo</label><input type="text" id="prof-name"></div>
     <div class="sheet-field"><label>Semana actual (1-16)</label><input type="number" id="prof-week" min="1" max="16"></div>
     <div class="sheet-field"><label>Hora de notificaci&oacute;n (0-23)</label><input type="number" id="prof-notif" min="0" max="23"></div>
@@ -1218,6 +1220,7 @@ function nav(id){
   else if(id==="v-mentor-notes")renderMentorNotes();
   else if(id==="v-sesiones")renderSesiones();
   else if(id==="v-comunimaat")renderComunidad();
+  else if(id==="v-biotipo")renderBiotipo();
   else if(id==="v-biblioteca"){
     // Datos secundarios aun cargando -> skeleton
     if(!_appReady&&!meditations.length){document.getElementById("v-biblioteca").innerHTML=skelBiblioteca();}
@@ -2045,10 +2048,34 @@ async function loadMentorContact(){
 }
 // Biotipos: mapea el codigo (s/c/m/f) guardado en profiles a nombre + color + papercut.
 const BIOTIPOS={
-  s:{es:"Sangu\u00EDneo",en:"Sanguine",hex:"#EBA055",img:"onboarding-01-bienvenida.png"},
-  c:{es:"Col\u00E9rico",en:"Choleric",hex:"#D76B6E",img:"onboarding-04-coach.png"},
-  m:{es:"Melanc\u00F3lico",en:"Melancholic",hex:"#896C8E",img:"celebracion-primera-calib.png"},
-  f:{es:"Flem\u00E1tico",en:"Phlegmatic",hex:"#39A1C9",img:"onboarding-03-habitos.png"}
+  s:{es:"Sangu\u00EDneo",en:"Sanguine",hex:"#EBA055",img:"onboarding-01-bienvenida.png",sym:"\uD83D\uDCA8",
+     elem:{es:"Aire",en:"Air"},poetic:{es:"El fuego que conecta",en:"The fire that connects"},
+     esencia:{es:"Vives en el presente, con entusiasmo contagioso y una necesidad genuina de conexi\u00F3n. Tu energ\u00EDa enciende a los dem\u00E1s.",en:"You live in the present, with contagious enthusiasm and a genuine need for connection. Your energy lights up others."},
+     cog:{es:"Piensas por asociaci\u00F3n, r\u00E1pido y en muchas direcciones. Decides desde la emoci\u00F3n del momento; tu atenci\u00F3n es amplia pero corta.",en:"You think by association, fast and in many directions. You decide from the emotion of the moment; your attention is broad but short."},
+     body:{es:"Energ\u00EDa alta pero fluctuante y expresiva. El cuerpo te pide est\u00EDmulo y movimiento; te recargas con gente y con lo nuevo.",en:"High but fluctuating, expressive energy. Your body asks for stimulation and movement; you recharge with people and novelty."},
+     shadow:{es:"Dispersi\u00F3n, dejar cosas a medias, depender de la aprobaci\u00F3n. Tu trabajo: terminar y sostener lo que empiezas.",en:"Scattering, leaving things half-done, seeking approval. Your work: to finish and sustain what you start."},
+     maat:{es:"Brillas en Gratitud (conexi\u00F3n, presente). Tu reto es la constancia cuando la emoci\u00F3n inicial se apaga.",en:"You shine in Gratitude (connection, presence). Your challenge is consistency when the initial excitement fades."}},
+  c:{es:"Col\u00E9rico",en:"Choleric",hex:"#D76B6E",img:"onboarding-04-coach.png",sym:"\uD83D\uDD25",
+     elem:{es:"Fuego",en:"Fire"},poetic:{es:"La voluntad que dirige",en:"The will that leads"},
+     esencia:{es:"Naciste orientado a la meta. Decides, lideras y avanzas. Donde otros dudan, t\u00FA act\u00FAas.",en:"You were born goal-oriented. You decide, lead and move forward. Where others hesitate, you act."},
+     cog:{es:"Pensamiento lineal y estrat\u00E9gico, siempre hacia un objetivo. Decides r\u00E1pido y con firmeza; foco intenso.",en:"Linear, strategic thinking, always toward an objective. You decide fast and firmly; intense focus."},
+     body:{es:"Energ\u00EDa alta y sostenida, pero empujas el cuerpo al l\u00EDmite. Acumulas tensi\u00F3n y te cuesta descansar de verdad.",en:"High, sustained energy, but you push your body to the limit. You accumulate tension and struggle to truly rest."},
+     shadow:{es:"Control, impaciencia, dureza, exceso de trabajo como identidad. Tu trabajo: rendirte y escuchar.",en:"Control, impatience, harshness, overwork as identity. Your work: to surrender and listen."},
+     maat:{es:"Brillas en Intenci\u00F3n y Voluntad. Tu reto est\u00E1 en el Amor: la ternura, la pausa, soltar el control.",en:"You shine in Intention and Will. Your challenge is in Love: tenderness, the pause, letting go of control."}},
+  m:{es:"Melanc\u00F3lico",en:"Melancholic",hex:"#896C8E",img:"celebracion-primera-calib.png",sym:"\u26F0\uFE0F",
+     elem:{es:"Tierra",en:"Earth"},poetic:{es:"La profundidad que busca sentido",en:"The depth that seeks meaning"},
+     esencia:{es:"Sientes y piensas hondo. Buscas significado, belleza e ideal en todo lo que haces. Tu mundo interior es vasto.",en:"You feel and think deeply. You seek meaning, beauty and ideals in everything you do. Your inner world is vast."},
+     cog:{es:"Pensamiento anal\u00EDtico, reflexivo y perfeccionista. Decides despacio; atenci\u00F3n sostenida y detallista.",en:"Analytical, reflective, perfectionist thinking. You decide slowly; sustained, detailed attention."},
+     body:{es:"Energ\u00EDa baja-media y sensible. Vives hacia adentro; la sobrecarga social te agota. Te recargas con soledad y calma.",en:"Low-to-medium, sensitive energy. You live inward; social overload drains you. You recharge with solitude and calm."},
+     shadow:{es:"Autocr\u00EDtica, rumiaci\u00F3n, perfeccionismo que paraliza, aislamiento. Tu trabajo: soltar el ideal y habitar lo que ya es.",en:"Self-criticism, rumination, paralyzing perfectionism, isolation. Your work: to release the ideal and inhabit what already is."},
+     maat:{es:"Brillas en Intenci\u00F3n y en la reflexi\u00F3n. Tu reto est\u00E1 en la Gratitud: bajar del ideal y agradecer lo imperfecto.",en:"You shine in Intention and reflection. Your challenge is in Gratitude: coming down from the ideal and being grateful for the imperfect."}},
+  f:{es:"Flem\u00E1tico",en:"Phlegmatic",hex:"#39A1C9",img:"onboarding-03-habitos.png",sym:"\uD83D\uDCA7",
+     elem:{es:"Agua",en:"Water"},poetic:{es:"La calma que sostiene",en:"The calm that holds"},
+     esencia:{es:"Eres estable, paciente y arm\u00F3nico. Donde hay caos, t\u00FA traes paz. Tu constancia es tu superpoder silencioso.",en:"You are stable, patient and harmonious. Where there is chaos, you bring peace. Your consistency is your quiet superpower."},
+     cog:{es:"Pensamiento pausado, pr\u00E1ctico y sint\u00E9tico. Decides despacio y evitando el conflicto; atenci\u00F3n estable y confiable.",en:"Calm, practical, synthetic thinking. You decide slowly and avoiding conflict; stable, reliable attention."},
+     body:{es:"Energ\u00EDa baja pero muy estable. Relajaci\u00F3n natural con tendencia a la quietud. Te recargas con descanso y rutina.",en:"Low but very stable energy. Natural relaxation with a tendency toward stillness. You recharge with rest and routine."},
+     shadow:{es:"Pasividad, evasi\u00F3n del conflicto, procrastinaci\u00F3n, desconexi\u00F3n del deseo propio. Tu trabajo: querer con claridad y actuar por ti.",en:"Passivity, conflict avoidance, procrastination, disconnection from your own desire. Your work: to want clearly and act for yourself."},
+     maat:{es:"Brillas sosteniendo h\u00E1bitos. Tu reto est\u00E1 en la Voluntad: nombrar lo que quieres y moverte hacia ello.",en:"You shine sustaining habits. Your challenge is in Will: naming what you want and moving toward it."}}
 };
 const BIOTIPO_URL="https://somosmaat.org/biotipo/";
 function biotipoCard(){
@@ -2056,7 +2083,7 @@ function biotipoCard(){
   if(P){
     const S=BIOTIPOS[prof?.biotype_secondary];
     const sec=S?` <span style="color:var(--mu);font-weight:400;">\u00B7 ${S[lang]}</span>`:"";
-    return `<div class="card" style="margin-bottom:16px;border-left:3px solid ${P.hex};background:linear-gradient(135deg,${P.hex}18,transparent);cursor:pointer;" onclick="window.open('${BIOTIPO_URL}','_blank')" role="button" tabindex="0" aria-label="${lang==='es'?'Ver mi biotipo':'View my biotype'}">
+    return `<div class="card" style="margin-bottom:16px;border-left:3px solid ${P.hex};background:linear-gradient(135deg,${P.hex}18,transparent);cursor:pointer;" onclick="nav('v-biotipo')" role="button" tabindex="0" aria-label="${lang==='es'?'Ver mi biotipo':'View my biotype'}">
       <div style="display:flex;align-items:center;gap:12px;">
         <img class="pc-thumb" src="${CONFIG.IMG_BASE}${P.img}${ASSET_V}" alt="" loading="lazy" decoding="async" onerror="this.remove()">
         <div style="flex:1;min-width:0;">
@@ -2067,7 +2094,7 @@ function biotipoCard(){
       </div>
     </div>`;
   }
-  return `<div class="card" style="margin-bottom:16px;border-left:3px solid var(--v);background:linear-gradient(135deg,rgba(137,108,142,.10),transparent);cursor:pointer;" onclick="window.open('${BIOTIPO_URL}','_blank')" role="button" tabindex="0" aria-label="${lang==='es'?'Descubre tu biotipo':'Discover your biotype'}">
+  return `<div class="card" style="margin-bottom:16px;border-left:3px solid var(--v);background:linear-gradient(135deg,rgba(137,108,142,.10),transparent);cursor:pointer;" onclick="nav('v-biotipo')" role="button" tabindex="0" aria-label="${lang==='es'?'Descubre tu biotipo':'Discover your biotype'}">
       <div style="display:flex;align-items:center;gap:12px;">
         <img class="pc-thumb" src="${CONFIG.IMG_BASE}onboarding-02-Calibracion.png${ASSET_V}" alt="" loading="lazy" decoding="async" onerror="this.remove()">
         <div style="flex:1;min-width:0;">
@@ -2078,6 +2105,91 @@ function biotipoCard(){
       </div>
     </div>`;
 }
+// Radar (arana) de los 4 biotipos para tema oscuro.
+function biotipoRadar(scores,hex){
+  const ORD=["s","c","m","f"];
+  const W=380,H=300,cx=W/2,cy=H/2,R=98;
+  const pts=ORD.map((k,i)=>{
+    const a=-Math.PI/2+i*Math.PI/2;
+    const r=Math.max(0.05,(scores[k]||0)/100)*R;
+    const b=BIOTIPOS[k];
+    return{k,a,hex:b.hex,name:b[lang],x:cx+Math.cos(a)*r,y:cy+Math.sin(a)*r,ax:cx+Math.cos(a)*R,ay:cy+Math.sin(a)*R};
+  });
+  let rings="";[0.25,0.5,0.75,1].forEach(fr=>{
+    const p=ORD.map((k,i)=>{const a=-Math.PI/2+i*Math.PI/2;return(cx+Math.cos(a)*R*fr).toFixed(1)+","+(cy+Math.sin(a)*R*fr).toFixed(1);}).join(" ");
+    rings+=`<polygon points="${p}" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="1"/>`;
+  });
+  const axes=pts.map(p=>`<line x1="${cx}" y1="${cy}" x2="${p.ax.toFixed(1)}" y2="${p.ay.toFixed(1)}" stroke="rgba(255,255,255,.12)" stroke-width="1"/>`).join("");
+  const shape=pts.map(p=>p.x.toFixed(1)+","+p.y.toFixed(1)).join(" ");
+  const verts=pts.map(p=>`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="4.5" fill="${p.hex}"/>`).join("");
+  const labels=pts.map(p=>{
+    const lx=cx+Math.cos(p.a)*(R+16),ly=cy+Math.sin(p.a)*(R+16);
+    const anchor=Math.abs(Math.cos(p.a))<0.3?"middle":(Math.cos(p.a)>0?"start":"end");
+    return `<text x="${lx.toFixed(1)}" y="${(ly+4).toFixed(1)}" text-anchor="${anchor}" font-size="13" font-weight="700" fill="${p.hex}">${p.name}</text>`;
+  }).join("");
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:360px;margin:0 auto;display:block;" role="img" aria-label="Radar biotipo">
+    ${rings}${axes}
+    <polygon points="${shape}" fill="${hex}33" stroke="${hex}" stroke-width="2.5" stroke-linejoin="round"/>
+    ${verts}${labels}</svg>`;
+}
+
+// Vista "Mi Biotipo": diagrama + resultados guardados en el perfil.
+function renderBiotipo(){
+  const el=document.getElementById("v-biotipo");
+  const es=lang==='es';
+  const P=BIOTIPOS[prof?.biotype_primary];
+  const back=`<div class="sv-header"><button class="btn-back" onclick="gv('v-mas')">\u2039</button><h2>${es?'Mi Biotipo':'My Biotype'}</h2></div>`;
+  if(!P){
+    el.innerHTML=`${back}
+      <div class="card" style="text-align:center;padding:28px 20px;">
+        <div style="font-size:40px;margin-bottom:10px;">\u1f9ed</div>
+        <h3 style="font-family:var(--font-title);font-size:22px;margin-bottom:8px;">${es?'A\u00fan no conoces tu biotipo':'You don\'t know your biotype yet'}</h3>
+        <p style="color:var(--mu);font-size:14px;margin-bottom:18px;line-height:1.6;">${es?'Haz el test de autoconocimiento y tu diagrama y resultados quedan guardados aqu\u00ed para siempre.':'Take the self-knowledge test and your diagram and results are saved here forever.'}</p>
+        <button class="btn-action" style="width:auto;padding:12px 28px;" onclick="window.open('${BIOTIPO_URL}','_blank')">${es?'HACER EL TEST':'TAKE THE TEST'}</button>
+      </div>`;
+    return;
+  }
+  const S=BIOTIPOS[prof?.biotype_secondary];
+  const scores=prof?.biotype_scores||{};
+  const ORD=["s","c","m","f"];
+  const ranked=ORD.slice().sort((a,b)=>(scores[b]||0)-(scores[a]||0));
+  let bars="";
+  ranked.forEach(k=>{const b=BIOTIPOS[k];const v=Math.round(scores[k]||0);
+    bars+=`<div style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;margin-bottom:4px;"><span style="color:${b.hex}">${b.sym} ${b[lang]}</span><span style="color:var(--mu)">${v}%</span></div><div style="height:10px;background:var(--bg2);border-radius:6px;overflow:hidden;"><div style="height:100%;width:${Math.max(v,2)}%;background:${b.hex};border-radius:6px;"></div></div></div>`;
+  });
+  let dimHtml="";
+  const dims=prof?.biotype_dims;
+  if(dims){
+    const DMETA=[["psi",es?'Psicol\u00f3gica':'Psychological'],["con",es?'Conductual':'Behavioral'],["fis",es?'Fisiol\u00f3gica':'Physiological'],["mor",es?'Morfol\u00f3gica':'Morphological']];
+    let cards="";
+    DMETA.forEach(([dk,dname])=>{const dr=dims[dk];if(!dr)return;
+      const lead=ORD.slice().sort((a,b)=>(dr[b]||0)-(dr[a]||0))[0];const L=BIOTIPOS[lead];const pct=Math.round((dr[lead]||0)*100);
+      const prelim=dk==='mor'?`<div style="font-size:11px;color:var(--mu);font-style:italic;margin-top:4px;">${es?'Preliminar \u2014 tu mentor lo afina':'Preliminary \u2014 your mentor refines it'}</div>`:"";
+      cards+=`<div style="background:var(--bg2);border-left:3px solid ${L.hex};border-radius:10px;padding:12px 14px;margin-bottom:8px;"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;"><span style="font-size:14px;font-weight:600;color:var(--text)">${dname}</span><span style="font-size:13px;font-weight:600;color:${L.hex}">${L.sym} ${L[lang]} ${pct}%</span></div>${prelim}</div>`;
+    });
+    dimHtml=`<h3 style="font-family:var(--font-title);font-size:16px;margin:22px 0 10px;">${es?'Tu perfil por dimensi\u00f3n':'Your profile by dimension'}</h3>${cards}`;
+  }
+  const secLine=S?`<div style="font-size:13px;color:var(--mu);margin-top:6px;">${es?'Segundo dominante':'Second dominant'}: <b style="color:${S.hex}">${S.sym} ${S[lang]}</b></div>`:"";
+  const section=(title,text)=>`<div class="card" style="margin-bottom:12px;"><h3 style="font-family:var(--font-title);font-size:16px;margin-bottom:6px;display:flex;align-items:center;gap:8px;"><span style="width:8px;height:8px;border-radius:50%;background:${P.hex};display:inline-block;flex-shrink:0;"></span>${title}</h3><p style="color:var(--mu);font-size:14px;line-height:1.65;">${text}</p></div>`;
+  el.innerHTML=`${back}
+    <div style="text-align:center;padding:20px 16px;background:linear-gradient(160deg,${P.hex}22,transparent);border-radius:16px;margin-bottom:16px;">
+      <div style="width:76px;height:76px;border-radius:50%;background:${P.hex};display:flex;align-items:center;justify-content:center;font-size:38px;margin:0 auto 12px;box-shadow:0 6px 20px ${P.hex}66;">${P.sym}</div>
+      <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--mu);">${es?'Tu biotipo':'Your biotype'} \u00b7 ${P.elem[lang]}</div>
+      <div style="font-family:var(--font-title);font-size:34px;font-weight:700;color:${P.hex};line-height:1.05;">${P[lang]}</div>
+      <div style="font-style:italic;color:var(--mu);font-size:15px;">${P.poetic[lang]}</div>
+      ${secLine}
+    </div>
+    <div class="card" style="margin-bottom:16px;"><h3 style="font-family:var(--font-title);font-size:15px;text-align:center;letter-spacing:1px;text-transform:uppercase;color:var(--mu);margin-bottom:10px;">${es?'El mapa de tu biotipo':'Your biotype map'}</h3>${biotipoRadar(scores,P.hex)}</div>
+    <div class="card" style="margin-bottom:16px;"><h3 style="font-family:var(--font-title);font-size:15px;text-align:center;letter-spacing:1px;text-transform:uppercase;color:var(--mu);margin-bottom:14px;">${es?'Tu espectro':'Your spectrum'}</h3>${bars}</div>
+    ${dimHtml}
+    ${section(es?'Tu esencia':'Your essence',P.esencia[lang])}
+    ${section(es?'Procesos cognitivos':'Cognitive processes',P.cog[lang])}
+    ${section(es?'Relaci\u00f3n con tu cuerpo':'Relationship with your body',P.body[lang])}
+    ${section(es?'Procesos a identificar':'Processes to identify',P.shadow[lang])}
+    ${section(es?'Tu camino en MAAT':'Your path in MAAT',P.maat[lang])}
+    <div style="text-align:center;margin:20px 0 8px;"><button class="btn-action" style="width:auto;padding:11px 24px;background:transparent;border:1.5px solid var(--bd);color:var(--mu);" onclick="window.open('${BIOTIPO_URL}','_blank')">${es?'Volver a hacer el test':'Retake the test'}</button></div>`;
+}
+
 function renderMas(){
   document.getElementById("v-mas").innerHTML=`
     <h2 style="font-family:var(--font-title);font-size:24px;font-weight:600;margin-bottom:16px;">${lang==="es"?"M\u00E1s":"More"}</h2>
@@ -3013,8 +3125,33 @@ function openProfile(){
   document.getElementById("prof-lang").value=lang;
   document.getElementById("prof-theme").value=theme;
   paintAvatar(document.getElementById("prof-avatar"));
+  paintBiotipo();
   document.getElementById("prof-avatar-status").textContent="";
   document.getElementById("profile-sheet").classList.add("show");
+}
+
+// Emblema de biotipo en el perfil (simbolo del elemento + color). Lleva a la vista.
+function paintBiotipo(){
+  const el=document.getElementById("prof-biotipo"); if(!el)return;
+  const es=lang==='es';
+  const P=BIOTIPOS[prof?.biotype_primary];
+  if(P){
+    const S=BIOTIPOS[prof?.biotype_secondary];
+    const sec=S?` <span style="color:var(--mu);font-weight:400;">\u00b7 ${S[lang]}</span>`:"";
+    el.innerHTML=`<div onclick="closeProfile();nav('v-biotipo')" style="cursor:pointer;display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;background:linear-gradient(135deg,${P.hex}22,transparent);border:1px solid ${P.hex}55;">
+      <div style="width:44px;height:44px;border-radius:50%;background:${P.hex};display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">${P.sym}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:11px;color:var(--mu);text-transform:uppercase;letter-spacing:1px;">${es?'Tu biotipo':'Your biotype'}</div>
+        <div style="font-size:16px;font-weight:600;color:var(--text);">${P[lang]}${sec}</div>
+      </div>
+      <div style="font-size:12px;color:${P.hex};white-space:nowrap;">${es?'Ver':'View'} \u203a</div>
+    </div>`;
+  }else{
+    el.innerHTML=`<div onclick="closeProfile();nav('v-biotipo')" style="cursor:pointer;padding:12px 14px;border-radius:14px;background:rgba(137,108,142,.12);border:1px dashed var(--v);text-align:center;">
+      <div style="font-size:14px;font-weight:600;color:var(--text);">${es?'Descubre tu biotipo \u203a':'Discover your biotype \u203a'}</div>
+      <div style="font-size:12px;color:var(--mu);margin-top:2px;">${es?'Un test corto para conocerte':'A short test to know yourself'}</div>
+    </div>`;
+  }
 }
 
 // Pinta la foto de perfil (o la inicial) en un contenedor circular.
@@ -3025,6 +3162,9 @@ function paintAvatar(el){
   }else{
     el.textContent=(prof?.full_name||"?")[0].toUpperCase();
   }
+  // Tinta el aro con el color del biotipo (cue de identidad persistente).
+  const bp=BIOTIPOS[prof?.biotype_primary];
+  el.style.borderColor=bp?bp.hex:"";
 }
 
 // Sube la foto: recorte cuadrado + resize a 256px en el navegador (canvas),

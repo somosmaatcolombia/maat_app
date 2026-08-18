@@ -11,6 +11,7 @@ ALTER TABLE public.profiles
   ADD COLUMN IF NOT EXISTS biotype_primary   text,   -- 's' | 'c' | 'm' | 'f'
   ADD COLUMN IF NOT EXISTS biotype_secondary text,   -- 's' | 'c' | 'm' | 'f'
   ADD COLUMN IF NOT EXISTS biotype_scores    jsonb,  -- { "s":25,"c":100,"m":75,"f":25 }
+  ADD COLUMN IF NOT EXISTS biotype_dims      jsonb,  -- { "psi":{s..f}, "con":{}, "fis":{}, "mor":{} } (proporciones 0-1)
   ADD COLUMN IF NOT EXISTS biotype_taken_at  timestamptz;
 
 -- NOTA RLS: guardar en perfil usa un UPDATE del propio usuario sobre su
