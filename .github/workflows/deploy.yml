@@ -89,9 +89,6 @@ jobs:
           protocol: ftps
           local-dir: deploy/biotipo/
           server-dir: somosmaat.org/biotipo/
-          # Re-subida limpia: ignora el estado de sync previo (que quedo a medias
-          # en el primer publish) y vuelve a crear la carpeta + index.html.
-          dangerous-clean-slate: true
 
       - name: Subir cuestionario de trazabilidad (/feedback/)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
