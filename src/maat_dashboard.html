@@ -526,6 +526,8 @@ const CONFIG={
 // Sufijo de cache-busting: agregar a las URLs de imagenes que vengan de CONFIG.IMG_BASE.
 // Subir ASSET_VERSION cuando se reemplacen las imagenes papercut (mismo nombre, archivo nuevo).
 const ASSET_V="?v="+CONFIG.ASSET_VERSION;
+// Banco papercut nuevo (WordPress Media, agosto 2026). URLs completas por imagen.
+const ILLO="https://somosmaat.org/wp-content/uploads/2026/08/";
 // Activar para ver warnings de fallos silenciosos (catch blocks). En prod: false.
 const MAAT_DEBUG=(typeof localStorage!=="undefined"&&localStorage.getItem("maat-debug")==="1");
 const _w=MAAT_DEBUG?console.warn.bind(console):function(){};
@@ -880,12 +882,12 @@ function skelCoach(){
 /* ============ ONBOARDING \u2014 first-time users ============ */
 let _obStep=0;
 const OB_STEPS=[
-  {icon:"\uD83E\uDDED",img:CONFIG.IMG_BASE+"onboarding-01-bienvenida.png"+ASSET_V,title_es:"Bienvenido a MAAT",title_en:"Welcome to MAAT",text_es:"No es un curso m\u00E1s. Es un proceso de 16 semanas para reconectar con tu sentido, tu energ\u00EDa y tu prop\u00F3sito. Hecho para personas exigentes como t\u00FA.",text_en:"This isn't just another course. It's a 16-week process to reconnect with your meaning, energy and purpose. Made for demanding people like you."},
-  {icon:"\u26A1",img:CONFIG.IMG_BASE+"onboarding-02-Calibracion.png"+ASSET_V,title_es:"Calibrar toma 30 segundos",title_en:"Calibrating takes 30 seconds",text_es:"Cada d\u00EDa eliges conscientemente la actitud con la que vas a vivir. Un gesto peque\u00F1o que, repetido, lo cambia todo. Es el coraz\u00F3n del m\u00E9todo.",text_en:"Each day you consciously choose the attitude you'll live with. A small gesture that, repeated, changes everything. It's the heart of the method."},
-  {icon:"\u2705",img:CONFIG.IMG_BASE+"onboarding-03-habitos.png"+ASSET_V,title_es:"H\u00E1bitos que te construyen",title_en:"Habits that build you",text_es:"Programa las acciones que construyen la versi\u00F3n de ti que quieres ser. Marca tus d\u00EDas y observa c\u00F3mo creces semana a semana.",text_en:"Program the actions that build the version of yourself you want to be. Check your days and watch yourself grow week by week."},
-  {icon:"\uD83E\uDD16",img:CONFIG.IMG_BASE+"onboarding-04-coach.png"+ASSET_V,title_es:"Nunca est\u00E1s solo",title_en:"You're never alone",text_es:"Tienes un Coach con IA disponible 24/7 para acompa\u00F1arte con preguntas, reflexiones y apoyo personalizado en cada paso.",text_en:"You have an AI Coach available 24/7 to accompany you with questions, reflections and personalized support every step."},
+  {icon:"\uD83E\uDDED",img:ILLO+"Sunrise.png",title_es:"Bienvenido a MAAT",title_en:"Welcome to MAAT",text_es:"No es un curso m\u00E1s. Es un proceso de 16 semanas para reconectar con tu sentido, tu energ\u00EDa y tu prop\u00F3sito. Hecho para personas exigentes como t\u00FA.",text_en:"This isn't just another course. It's a 16-week process to reconnect with your meaning, energy and purpose. Made for demanding people like you."},
+  {icon:"\u26A1",img:ILLO+"Sunburst.png",title_es:"Calibrar toma 30 segundos",title_en:"Calibrating takes 30 seconds",text_es:"Cada d\u00EDa eliges conscientemente la actitud con la que vas a vivir. Un gesto peque\u00F1o que, repetido, lo cambia todo. Es el coraz\u00F3n del m\u00E9todo.",text_en:"Each day you consciously choose the attitude you'll live with. A small gesture that, repeated, changes everything. It's the heart of the method."},
+  {icon:"\u2705",img:ILLO+"plant.png",title_es:"H\u00E1bitos que te construyen",title_en:"Habits that build you",text_es:"Programa las acciones que construyen la versi\u00F3n de ti que quieres ser. Marca tus d\u00EDas y observa c\u00F3mo creces semana a semana.",text_en:"Program the actions that build the version of yourself you want to be. Check your days and watch yourself grow week by week."},
+  {icon:"\uD83E\uDD16",img:ILLO+"Embrace.png",title_es:"Nunca est\u00E1s solo",title_en:"You're never alone",text_es:"Tienes un Coach con IA disponible 24/7 para acompa\u00F1arte con preguntas, reflexiones y apoyo personalizado en cada paso.",text_en:"You have an AI Coach available 24/7 to accompany you with questions, reflections and personalized support every step."},
   // Paso final: linea base de la trazabilidad. cta:"baseline" cambia el boton.
-  {icon:"\u{1F9ED}",img:CONFIG.IMG_BASE+"onboarding-01-bienvenida.png"+ASSET_V,cta:"baseline",title_es:"Tu punto de partida",title_en:"Your starting point",text_es:"Antes de empezar, queremos saber c\u00F3mo llegas hoy. Son 3 minutos y nos deja una foto de este momento: dentro de 16 semanas la vas a comparar y vas a ver, con n\u00FAmeros, cu\u00E1nto te moviste.",text_en:"Before you start, we want to know how you arrive today. It takes 3 minutes and captures a snapshot of this moment: in 16 weeks you'll compare it and see, in numbers, how far you've come."}
+  {icon:"\u{1F9ED}",img:ILLO+"circles.png",cta:"baseline",title_es:"Tu punto de partida",title_en:"Your starting point",text_es:"Antes de empezar, queremos saber c\u00F3mo llegas hoy. Son 3 minutos y nos deja una foto de este momento: dentro de 16 semanas la vas a comparar y vas a ver, con n\u00FAmeros, cu\u00E1nto te moviste.",text_en:"Before you start, we want to know how you arrive today. It takes 3 minutes and captures a snapshot of this moment: in 16 weeks you'll compare it and see, in numbers, how far you've come."}
 ];
 function showOnboarding(){
   _obStep=0;
@@ -1667,7 +1669,7 @@ function renderHabits(){
           <div class="habit-progress"><div class="fill" style="width:${pct}%;background:${isFulfilled?'var(--m)':'var(--o)'}"></div></div>
         </div>`;
       }).join(""):`<div style="text-align:center;padding:24px 0;">
-        <img loading="lazy" decoding="async" src="${CONFIG.IMG_BASE}empty-habits.png${ASSET_V}" alt="" style="max-width:200px;width:55%;height:auto;display:block;margin:0 auto 14px;opacity:.95;" onerror="this.style.display='none'">
+        <img loading="lazy" decoding="async" src="${ILLO}plant.png" alt="" style="max-width:200px;width:55%;height:auto;display:block;margin:0 auto 14px;opacity:.95;" onerror="this.style.display='none'">
         <p class="text-mu" style="margin-bottom:12px;">${t("no_habits")}</p>
         ${(()=>{const prev=getHabits(w-1);return w>1&&prev.length?`<button onclick="copyHabitsFromWeek(${w-1})" style="background:var(--bg2);border:1px dashed var(--c);color:var(--c);padding:10px 20px;border-radius:var(--radius-sm);font-size:13px;cursor:pointer;">\u{1F4CB} ${lang==='es'?'Copiar h\u00E1bitos de semana '+(w-1):'Copy habits from week '+(w-1)}</button>`:''})()}
       </div>`}
@@ -2366,7 +2368,7 @@ function renderBeliefs(){
         <button class="btn-del" data-bid="${b.id}" onclick="delBelief(this)">\u2715</button>
       </div>
     `).join("")||`<div style="text-align:center;padding:32px 20px;">
-      <img loading="lazy" decoding="async" src="${CONFIG.IMG_BASE}empty-creencias.png${ASSET_V}" alt="" style="max-width:200px;width:55%;height:auto;display:block;margin:0 auto 14px;opacity:.95;" onerror="this.style.display='none'">
+      <img loading="lazy" decoding="async" src="${ILLO}brain.png" alt="" style="max-width:200px;width:55%;height:auto;display:block;margin:0 auto 14px;opacity:.95;" onerror="this.style.display='none'">
       <p class="text-mu">${lang==='es'?'Sin creencias a\u00FAn. Empieza registrando una.':'No beliefs yet. Start by adding one.'}</p>
     </div>`}</div>
   `;
@@ -2498,7 +2500,7 @@ function renderHistorial(){
         </div>
       </div>
     `).join(""):`<div style="text-align:center;padding:32px 20px;">
-      <img loading="lazy" decoding="async" src="${CONFIG.IMG_BASE}empty-historial.png${ASSET_V}" alt="" style="max-width:200px;width:55%;height:auto;display:block;margin:0 auto 14px;opacity:.95;" onerror="this.style.display='none'">
+      <img loading="lazy" decoding="async" src="${ILLO}waves.png" alt="" style="max-width:200px;width:55%;height:auto;display:block;margin:0 auto 14px;opacity:.95;" onerror="this.style.display='none'">
       <p class="text-mu">${t("no_calib")}</p>
     </div>`}
   `;
@@ -2568,7 +2570,7 @@ function renderBibliotecaMed(){
       ${cats.map(c=>`<button onclick="_medCatFilter='${c}';renderBibliotecaMed();" style="flex-shrink:0;padding:6px 14px;border-radius:20px;border:1px solid ${_medCatFilter===c?'var(--c)':'var(--bd)'};background:${_medCatFilter===c?'var(--c)':'transparent'};color:${_medCatFilter===c?'#fff':'var(--mu)'};font-size:13px;cursor:pointer;white-space:nowrap;">${medCatLabel(c)}</button>`).join('')}
     </div>
     ${filtered.length===0?`<div style="text-align:center;padding:32px 20px;">
-      <img loading="lazy" decoding="async" src="${CONFIG.IMG_BASE}empty-meditaciones.png${ASSET_V}" alt="" style="max-width:220px;width:60%;height:auto;display:block;margin:0 auto 14px;opacity:.95;" onerror="this.style.display='none'">
+      <img loading="lazy" decoding="async" src="${ILLO}waterlife.png" alt="" style="max-width:220px;width:60%;height:auto;display:block;margin:0 auto 14px;opacity:.95;" onerror="this.style.display='none'">
       <p style="color:var(--mu);">${lang==='es'?'Sin meditaciones en esta categor\u00eda.':'No meditations in this category.'}</p>
     </div>`:''}
     <div style="display:flex;flex-direction:column;gap:12px;">
@@ -2654,7 +2656,7 @@ function renderEventos(){
     </div>
     ${!isGrad?`<div style="background:var(--o)11;border:1px solid var(--o)44;border-radius:var(--radius-sm);padding:14px;margin-bottom:16px;font-size:13px;color:var(--o);">\u{1F393} ${lang==='es'?'Los eventos exclusivos para graduados se ver\u00e1n disponibles cuando completes las 16 semanas.':'Exclusive graduate events will be available when you complete 16 weeks.'}</div>`:''}
     ${visible.length===0?`<div style="text-align:center;padding:32px 20px;">
-      <img loading="lazy" decoding="async" src="${CONFIG.IMG_BASE}empty-eventos.png${ASSET_V}" alt="" style="max-width:220px;width:60%;height:auto;display:block;margin:0 auto 14px;opacity:.95;" onerror="this.style.display='none'">
+      <img loading="lazy" decoding="async" src="${ILLO}banner_nature.png" alt="" style="max-width:220px;width:60%;height:auto;display:block;margin:0 auto 14px;opacity:.95;" onerror="this.style.display='none'">
       <p style="color:var(--mu);font-size:14px;">${lang==='es'?'No hay eventos pr\u00f3ximos por ahora. \u00a1Vuelve pronto!':'No upcoming events right now. Check back soon!'}</p>
     </div>`:`
     <div style="display:flex;flex-direction:column;gap:14px;">
