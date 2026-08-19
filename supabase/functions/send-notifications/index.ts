@@ -29,9 +29,12 @@ const DEFAULTS: Record<string, { title: string; body: string }> = {
   evening: { title: "Cierra tu día", body: "Marca tus hábitos y toma un momento para reflexionar." },
   coherence: { title: "Vuelve a ti", body: "La coherencia no es perfección, es volver. Hoy es un buen día para volver." },
   weekly: { title: "Cierra tu semana", body: "Evalúa tu semana y elige cómo empiezas la próxima." },
+  inactive: { title: "Hace días que no te veo", body: "Tu proceso te espera cuando estés listo. Un paso pequeño hoy." },
+  community_prompt: { title: "Tu voz suma", body: "Comparte un aprendizaje de tu semana en ComuniMAAT." },
 };
 const VIEW_BY_TYPE: Record<string, string> = {
   push_morning: "calib", push_evening: "habitos", push_coherence: "home", push_weekly: "progreso",
+  push_inactive: "home", push_community_prompt: "comunimaat",
 };
 
 serve(async (req) => {
@@ -74,6 +77,7 @@ serve(async (req) => {
     const startToday = new Date(todayStr + "T00:00:00.000Z").getTime() + CO_OFFSET_MS; // medianoche CO en UTC
     const mon0 = (coNow.getUTCDay() + 6) % 7; // 0=Lun .. 6=Dom
     const isSunday = coNow.getUTCDay() === 0;
+    const isFriday = coNow.getUTCDay() === 5;
     const startWeek = startToday - mon0 * 86400000;
     const startTodayISO = new Date(startToday).toISOString();
     const startWeekISO = new Date(startWeek).toISOString();
@@ -129,6 +133,31 @@ serve(async (req) => {
     for (const r of habWR.data || []) addDay(r.user_id, r.updated_at);
     for (const r of logWR.data || []) addDay(r.user_id, r.sent_at);
 
+    // ---- Datos extra: inactividad (app_open, 12 dias) y comunidad (post de la semana) ----
+    const lookbackISO = new Date(startToday - 12 * 86400000).toISOString();
+    const [openR, postWR] = await Promise.all([
+      sb.from("usage_events").select("user_id,created_at").in("user_id", ids).eq("event", "app_open").gte("created_at", lookbackISO),
+      sb.from("community_posts").select("user_id").in("user_id", ids).gte("created_at", startWeekISO),
+    ]);
+    // Ultimo dia activo por usuario: app_open (12d) o calibracion/habito de la semana.
+    const lastActiveDay = new Map<string, string>();
+    const noteActive = (uid: string, ts: string) => {
+      const d = dayKey(ts);
+      const cur = lastActiveDay.get(uid);
+      if (!cur || d > cur) lastActiveDay.set(uid, d);
+    };
+    for (const r of openR.data || []) noteActive(r.user_id, r.created_at);
+    for (const r of calWR.data || []) noteActive(r.user_id, r.created_at);
+    for (const r of habWR.data || []) noteActive(r.user_id, r.updated_at);
+    const postedThisWeek = new Set((postWR.data || []).map((r) => r.user_id));
+    // Dias desde la ultima actividad (null si no hay senal en 12 dias -> no molestar).
+    const daysSinceActive = (uid: string): number | null => {
+      const d = lastActiveDay.get(uid);
+      if (!d) return null;
+      const ms = new Date(todayStr + "T00:00:00Z").getTime() - new Date(d + "T00:00:00Z").getTime();
+      return Math.round(ms / 86400000);
+    };
+
     // ---- Decision por usuario: arma la cola de envios (todavia no envia nada) ----
     const nowISO = new Date(now).toISOString();
     const decisionByUser = new Map<string, string>();
@@ -145,9 +174,22 @@ serve(async (req) => {
       const eh = c.notif_evening_hour ?? 20;
       let decision: { type: string; copy: { title: string; body: string } } | null = null;
 
-      if (mh === coHour && !tt.includes("push_morning") && !calToday.has(c.id)) {
-        decision = { type: "push_morning", copy: copyOf("morning") };
-      } else if (eh === coHour && !tt.some((x) => x === "push_evening" || x === "push_coherence" || x === "push_weekly")) {
+      // --- Franja MAÑANA: el re-enganche por ausencia tiene prioridad sobre la rutina ---
+      if (mh === coHour) {
+        const ds = daysSinceActive(c.id);
+        if (ds !== null && ds >= 2) {
+          // Ausente: solo un toque en los dias 2, 5 y 9 (nunca a diario = sin fatiga).
+          if ((ds === 2 || ds === 5 || ds === 9) && !tt.includes("push_inactive")) {
+            decision = { type: "push_inactive", copy: copyOf("inactive") };
+          }
+        } else if (!tt.includes("push_morning") && !calToday.has(c.id)) {
+          decision = { type: "push_morning", copy: copyOf("morning") };
+        }
+      }
+
+      // --- Franja NOCHE: reflexion / ancla / semanal / invitacion a postear ---
+      if (!decision && eh === coHour &&
+          !tt.some((x) => x === "push_evening" || x === "push_coherence" || x === "push_weekly" || x === "push_community_prompt")) {
         if (isSunday) {
           decision = { type: "push_weekly", copy: copyOf("weekly") };
         } else {
@@ -158,6 +200,9 @@ serve(async (req) => {
             decision = { type: "push_coherence", copy: copyOf("coherence") };
           } else if (!habToday.has(c.id)) {
             decision = { type: "push_evening", copy: copyOf("evening") };
+          } else if (isFriday && !postedThisWeek.has(c.id)) {
+            // Viernes, ya con ritmo (habitos hechos): invitacion suave a compartir.
+            decision = { type: "push_community_prompt", copy: copyOf("community_prompt") };
           }
         }
       }

@@ -75,7 +75,7 @@ serve(async (req) => {
     // ---- Sesiones agendadas en la ventana proxima ----
     const { data: sessions, error: sErr } = await sb
       .from("mentor_sessions")
-      .select("id, modality, group_id, client_id, title, scheduled_at, location, reminder_offsets, reminders_sent")
+      .select("id, modality, group_id, client_id, title, scheduled_at, location, reminder_offsets, reminders_sent, prep_sent")
       .eq("status", "scheduled")
       .gte("scheduled_at", nowIso)
       .lte("scheduled_at", windowEnd);
@@ -177,11 +177,124 @@ serve(async (req) => {
       fired.push(s.id);
     }
 
+    // =====================================================
+    // PREP: 1 dia antes de la sesion, con tareas pendientes.
+    // Bloque aislado: solo usa la columna prep_sent (no toca los offsets).
+    // Se dispara la primera corrida en que faltan <= 24h para la sesion,
+    // respetando horario noble (nada entre 22:00 y 06:00 hora Colombia).
+    // =====================================================
+    const CO = 5 * 60 * 60 * 1000; // Colombia UTC-5
+    const coHourNow = new Date(now - CO).getUTCHours();
+    const quiet = coHourNow >= 22 || coHourNow < 6;
+    let prepSent = 0;
+    const prepFired: string[] = [];
+
+    if (!quiet) {
+      // Marco de "hoy" y "esta semana" en zona Colombia para calcular pendientes.
+      const coNow = new Date(now - CO);
+      const todayStr = coNow.toISOString().slice(0, 10);
+      const startTodayISO = new Date(new Date(todayStr + "T00:00:00.000Z").getTime() + CO).toISOString();
+      const mon0 = (coNow.getUTCDay() + 6) % 7; // 0=Lun..6=Dom
+      const startWeekISO = new Date(new Date(todayStr + "T00:00:00.000Z").getTime() + CO - mon0 * 86400000).toISOString();
+
+      for (const s of sessions) {
+        if (s.prep_sent) continue;
+        const scheduledMs = new Date(s.scheduled_at).getTime();
+        // Ventana: dentro de las proximas 24h y aun no paso la sesion.
+        if (!(now >= scheduledMs - 24 * 60 * 60 * 1000 && now < scheduledMs)) continue;
+
+        // Destinatarios (mismo criterio que los recordatorios).
+        let recipientIds: string[] = [];
+        if (s.modality === "group" && s.group_id) {
+          const { data: mem } = await sb.from("mentor_group_members")
+            .select("client_id").eq("group_id", s.group_id).eq("active", true);
+          recipientIds = (mem || []).map((m) => m.client_id);
+        } else if (s.client_id) {
+          recipientIds = [s.client_id];
+        }
+        if (recipientIds.length === 0) {
+          await sb.from("mentor_sessions").update({ prep_sent: true }).eq("id", s.id);
+          continue;
+        }
+
+        // Pendientes de cada destinatario: calibracion de hoy y habitos de la semana.
+        const [subsR, calR, habR] = await Promise.all([
+          sb.from("push_subscriptions").select("id,user_id,endpoint,p256dh,auth_key").in("user_id", recipientIds),
+          sb.from("calibrations").select("user_id").in("user_id", recipientIds).gte("created_at", startTodayISO),
+          sb.from("habit_tracker").select("user_id").in("user_id", recipientIds).gte("updated_at", startWeekISO),
+        ]);
+        const calSet = new Set((calR.data || []).map((r) => r.user_id));
+        const habSet = new Set((habR.data || []).map((r) => r.user_id));
+        const subsByUser = new Map<string, Array<{ id: string; endpoint: string; p256dh: string; auth_key: string }>>();
+        for (const sub of subsR.data || []) {
+          if (!subsByUser.has(sub.user_id)) subsByUser.set(sub.user_id, []);
+          subsByUser.get(sub.user_id)!.push(sub);
+        }
+
+        const isGroup = s.modality === "group";
+        const title = isGroup ? "Manana tienes sesion grupal" : "Manana tienes tu sesion 1:1";
+        const whenTxt = `Comienza manana a las ${formatTimeCO(s.scheduled_at)}.`;
+
+        const sendJobs: Array<Promise<{ ok: boolean; status: number }>> = [];
+        const jobMeta: Array<{ userId: string; subId: string }> = [];
+        const notifiedUsers = new Set<string>();
+
+        for (const uid of recipientIds) {
+          const subs = subsByUser.get(uid);
+          if (!subs || subs.length === 0) continue;
+          const needCal = !calSet.has(uid);
+          const needHab = !habSet.has(uid);
+          let tasks: string;
+          if (needCal && needHab) tasks = " Antes: te falta calibrar hoy y marcar tus habitos.";
+          else if (needCal) tasks = " Antes: te falta tu calibracion de hoy.";
+          else if (needHab) tasks = " Antes: te falta marcar tus habitos esta semana.";
+          else tasks = " Vas al dia. Nos vemos.";
+          const body = `${s.title ? s.title + ". " : ""}${whenTxt}${tasks}`;
+          const payload = JSON.stringify({
+            title, body,
+            icon: "https://www.somosmaat.org/app/icon-192.png",
+            badge: "https://www.somosmaat.org/app/icon-192.png",
+            data: { view: "sesiones" },
+          });
+          notifiedUsers.add(uid);
+          for (const sub of subs) {
+            sendJobs.push(sendPush({ endpoint: sub.endpoint, p256dh: sub.p256dh, auth_key: sub.auth_key }, payload));
+            jobMeta.push({ userId: uid, subId: sub.id });
+          }
+        }
+
+        if (sendJobs.length > 0) {
+          const expiredIds: string[] = [];
+          const results = await Promise.allSettled(sendJobs);
+          results.forEach((r, i) => {
+            if (r.status === "fulfilled") {
+              if (r.value.ok) prepSent++;
+              else if (r.value.status === 410 || r.value.status === 404) expiredIds.push(jobMeta[i].subId);
+            } else console.error("prep push error:", r.reason);
+          });
+          if (expiredIds.length > 0) await sb.from("push_subscriptions").delete().in("id", expiredIds);
+          if (notifiedUsers.size > 0) {
+            await sb.from("notification_log").insert(
+              [...notifiedUsers].map((uid) => ({
+                user_id: uid, type: "push_session_prep",
+                sent_at: new Date().toISOString(), days_absent: null as number | null,
+              })),
+            );
+          }
+        }
+
+        await sb.from("mentor_sessions").update({ prep_sent: true }).eq("id", s.id);
+        prepFired.push(s.id);
+      }
+    }
+
     return json({
       sent: totalSent,
       expired: totalExpired,
       sessions_fired: fired.length,
-      message: `Reminders fired for ${fired.length} session(s)`,
+      prep_sent: prepSent,
+      prep_fired: prepFired.length,
+      message: `Reminders: ${fired.length} sesion(es), prep: ${prepFired.length}`,
     }, 200);
   } catch (err) {
     console.error("session-reminders error:", err);
