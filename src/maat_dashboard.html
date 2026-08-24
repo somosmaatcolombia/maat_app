@@ -2174,7 +2174,7 @@ function renderBiotipo(){
   if(!P){
     el.innerHTML=`${back}
       <div class="card" style="text-align:center;padding:28px 20px;">
-        <div style="font-size:40px;margin-bottom:10px;">\u1f9ed</div>
+        <div style="font-size:40px;margin-bottom:10px;">\u{1F9ED}</div>
         <h3 style="font-family:var(--font-title);font-size:22px;margin-bottom:8px;">${es?'A\u00fan no conoces tu biotipo':'You don\'t know your biotype yet'}</h3>
         <p style="color:var(--mu);font-size:14px;margin-bottom:18px;line-height:1.6;">${es?'Haz el test de autoconocimiento y tu diagrama y resultados quedan guardados aqu\u00ed para siempre.':'Take the self-knowledge test and your diagram and results are saved here forever.'}</p>
         <button class="btn-action" style="width:auto;padding:12px 28px;" onclick="window.open('${BIOTIPO_URL}','_blank')">${es?'HACER EL TEST':'TAKE THE TEST'}</button>

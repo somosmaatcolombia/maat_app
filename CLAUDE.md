@@ -181,6 +181,10 @@ $$;
 - **XSS:** san() en TODA inyección a innerHTML
 - **Eventos:** data-attributes + event delegation, NUNCA onclick con datos
 - **Contraseñas:** crypto.getRandomValues(), NUNCA Math.random()
+- **Emojis en JS (trampa real):** `\uXXXX` solo acepta **4** dígitos hex. Los emojis
+  (U+1F300+) son astrales y NO caben: `Ὄ5` se lee como `Ὄ` + `"5"` y sale basura en
+  pantalla. Usar SIEMPRE llaves — `\u{1F4C5}` — o el par suplente `📅`.
+  Verificar con: `grep -oE '\\u1[0-9A-Fa-f]{4}' archivo.html` (debe salir vacío).
 - **Encoding (CRÍTICO):** NUNCA escribir acentos/emojis literales en los `.html`. Elementor los lee como Mac Roman y rompe el UTF-8 (`día`→`d√≠a`). Usar SIEMPRE escapes `\uXXXX` dentro de `<script>` (ej: `í`=í, `ñ`=ñ, `✍️`=✍️) y entidades HTML (`&iquest;`, `&aacute;`) fuera del script. Ambos `.html` deben ser ASCII puro (`file` debe decir "ASCII text"). Verificar con: `python3 -c "print(all(ord(c)<128 for c in open('archivo.html').read()))"`
 
 ## Métricas clave
