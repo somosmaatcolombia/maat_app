@@ -479,7 +479,19 @@ input:focus-visible,textarea:focus-visible,select:focus-visible{outline:none;bor
     <div id="prof-biotipo" style="margin-bottom:16px;"></div>
     <div class="sheet-field"><label>Nombre completo</label><input type="text" id="prof-name"></div>
     <div class="sheet-field"><label>Semana actual (1-16)</label><input type="number" id="prof-week" min="1" max="16"></div>
-    <div class="sheet-field"><label>Hora de notificaci&oacute;n (0-23)</label><input type="number" id="prof-notif" min="0" max="23"></div>
+    <div class="sheet-field" style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+      <label id="lbl-notif-on" style="margin:0;">Recibir notificaciones</label>
+      <input type="checkbox" id="prof-notif-on" style="width:22px;height:22px;accent-color:var(--c);flex-shrink:0;">
+    </div>
+    <div style="display:flex;gap:10px;">
+      <div class="sheet-field" style="flex:1;"><label id="lbl-notif-am">Hora de la ma&ntilde;ana</label><input type="number" id="prof-notif-am" min="0" max="23"></div>
+      <div class="sheet-field" style="flex:1;"><label id="lbl-notif-pm">Hora de la noche</label><input type="number" id="prof-notif-pm" min="0" max="23"></div>
+    </div>
+    <div class="sheet-field">
+      <label id="lbl-notif-msg">Tu mensaje de la ma&ntilde;ana (opcional)</label>
+      <textarea id="prof-notif-msg" rows="2" maxlength="140" style="width:100%;padding:12px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--bg2);color:var(--text);font-family:var(--font-body);font-size:15px;outline:none;resize:vertical;"></textarea>
+      <div id="hint-notif-msg" style="font-size:12px;color:var(--mu);margin-top:4px;"></div>
+    </div>
     <div class="sheet-field"><label>Idioma</label><select id="prof-lang" onchange="setLang(this.value)"><option value="es">Espa&ntilde;ol</option><option value="en">English</option></select></div>
     <div class="sheet-field"><label>Tema</label><select id="prof-theme" onchange="setTheme(this.value)"><option value="dark">Dark</option><option value="light">Light</option></select></div>
     <div style="border-top:1px solid var(--bd);margin-top:6px;padding-top:14px;">
@@ -3167,8 +3179,19 @@ function renderDailyMaat(){
 function openProfile(){
   document.getElementById("prof-name").value=prof?.full_name||"";
   document.getElementById("prof-week").value=hwk;
-  document.getElementById("prof-notif").value=notifHour;
   document.getElementById("prof-lang").value=lang;
+  // Notificaciones: horas + switch + mensaje personal de la manana
+  const es=lang==='es';
+  document.getElementById("prof-notif-on").checked=(prof?.notif_enabled!==false);
+  document.getElementById("prof-notif-am").value=(prof?.notif_morning_hour??8);
+  document.getElementById("prof-notif-pm").value=(prof?.notif_evening_hour??20);
+  document.getElementById("prof-notif-msg").value=prof?.notif_custom_morning||"";
+  document.getElementById("lbl-notif-on").textContent=es?"Recibir notificaciones":"Receive notifications";
+  document.getElementById("lbl-notif-am").textContent=es?"Hora de la ma\u00F1ana":"Morning hour";
+  document.getElementById("lbl-notif-pm").textContent=es?"Hora de la noche":"Evening hour";
+  document.getElementById("lbl-notif-msg").textContent=es?"Tu mensaje de la ma\u00F1ana (opcional)":"Your morning message (optional)";
+  document.getElementById("prof-notif-msg").placeholder=es?"Ej: Hoy elijo vivir con intenci\u00F3n.":"E.g. Today I choose to live with intention.";
+  document.getElementById("hint-notif-msg").textContent=es?"Si lo dejas vac\u00EDo, usamos el mensaje del proceso.":"If left empty, we use the default process message.";
   document.getElementById("prof-theme").value=theme;
   paintAvatar(document.getElementById("prof-avatar"));
   paintBiotipo();
@@ -3253,16 +3276,29 @@ function closeProfile(){document.getElementById("profile-sheet").classList.remov
 async function saveProfile(){
   const name=document.getElementById("prof-name").value.trim();
   const week=Math.min(16,Math.max(1,parseInt(document.getElementById("prof-week").value)||1));
-  const notif=Math.min(23,Math.max(0,parseInt(document.getElementById("prof-notif").value)||9));
   const newLang=document.getElementById("prof-lang").value;
   const newTheme=document.getElementById("prof-theme").value;
+  // Notificaciones: switch + horas + mensaje personal
+  const notifOn=document.getElementById("prof-notif-on").checked;
+  const amHour=Math.min(23,Math.max(0,parseInt(document.getElementById("prof-notif-am").value)));
+  const pmHour=Math.min(23,Math.max(0,parseInt(document.getElementById("prof-notif-pm").value)));
+  const mHour=Number.isNaN(amHour)?8:amHour;
+  const eHour=Number.isNaN(pmHour)?20:pmHour;
+  const customMsg=document.getElementById("prof-notif-msg").value.trim()||null;
   const btn=document.getElementById("btn-save-prof");
   btn.disabled=true;btn.textContent=t("saving");
   try{
-    const{error}=await sb.from("profiles").update({full_name:name,current_week:week,notification_hour:notif,preferred_lang:newLang}).eq("id",user.id);
+    const{error}=await sb.from("profiles").update({
+      full_name:name,current_week:week,preferred_lang:newLang,
+      notif_enabled:notifOn,notif_morning_hour:mHour,notif_evening_hour:eHour,
+      notif_custom_morning:customMsg,
+      notification_hour:mHour   // se mantiene en sync por compatibilidad
+    }).eq("id",user.id);
     if(error){if(!chkAuthErr(error))toast(error.message,"err");return;}
-    prof.full_name=name;prof.current_week=week;prof.notification_hour=notif;prof.preferred_lang=newLang;
-    hwk=week;notifHour=notif;
+    prof.full_name=name;prof.current_week=week;prof.preferred_lang=newLang;
+    prof.notif_enabled=notifOn;prof.notif_morning_hour=mHour;prof.notif_evening_hour=eHour;
+    prof.notif_custom_morning=customMsg;prof.notification_hour=mHour;
+    hwk=week;notifHour=mHour;
     localStorage.setItem("maat-lang",newLang);
     localStorage.setItem("maat-theme",newTheme);
     if(newLang!==lang)setLang(newLang);

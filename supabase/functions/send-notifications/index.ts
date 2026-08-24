@@ -93,7 +93,7 @@ serve(async (req) => {
 
     // ---- Clientes candidatos para ESTA hora ----
     const { data: clients } = await sb.from("profiles")
-      .select("id, notif_morning_hour, notif_evening_hour")
+      .select("id, notif_morning_hour, notif_evening_hour, notif_custom_morning")
       .eq("role", "client").eq("active", true).eq("notif_enabled", true);
     const relevant = (clients || []).filter((c) =>
       (c.notif_morning_hour ?? 8) === coHour || (c.notif_evening_hour ?? 20) === coHour);
@@ -161,7 +161,7 @@ serve(async (req) => {
     // ---- Decision por usuario: arma la cola de envios (todavia no envia nada) ----
     const nowISO = new Date(now).toISOString();
     const decisionByUser = new Map<string, string>();
-    const payloadByType: Record<string, string> = {};
+    const payloadByUser = new Map<string, string>(); // payload por usuario (permite mensaje personal)
     const pending: Array<{ userId: string; type: string; sub: { id: string; endpoint: string; p256dh: string; auth_key: string } }> = [];
 
     for (const c of relevant) {
@@ -183,7 +183,10 @@ serve(async (req) => {
             decision = { type: "push_inactive", copy: copyOf("inactive") };
           }
         } else if (!tt.includes("push_morning") && !calToday.has(c.id)) {
-          decision = { type: "push_morning", copy: copyOf("morning") };
+          // Mensaje personal del cliente (si lo escribio) o el del proceso.
+          const base = copyOf("morning");
+          const custom = (c.notif_custom_morning || "").trim();
+          decision = { type: "push_morning", copy: custom ? { title: base.title, body: custom } : base };
         }
       }
 
@@ -209,15 +212,13 @@ serve(async (req) => {
       if (!decision) continue;
 
       decisionByUser.set(c.id, decision.type);
-      if (!payloadByType[decision.type]) {
-        payloadByType[decision.type] = JSON.stringify({
-          title: decision.copy.title,
-          body: decision.copy.body,
-          icon: "https://www.somosmaat.org/app/icon-192.png",
-          badge: "https://www.somosmaat.org/app/icon-192.png",
-          data: { view: VIEW_BY_TYPE[decision.type] || "home" },
-        });
-      }
+      payloadByUser.set(c.id, JSON.stringify({
+        title: decision.copy.title,
+        body: decision.copy.body,
+        icon: "https://www.somosmaat.org/app/icon-192.png",
+        badge: "https://www.somosmaat.org/app/icon-192.png",
+        data: { view: VIEW_BY_TYPE[decision.type] || "home" },
+      }));
       for (const sub of subs) pending.push({ userId: c.id, type: decision.type, sub });
     }
 
@@ -233,7 +234,7 @@ serve(async (req) => {
       const results = await Promise.allSettled(
         pending.map((p) => sendPush({
           endpoint: p.sub.endpoint, p256dh: p.sub.p256dh, auth_key: p.sub.auth_key,
-        }, payloadByType[p.type]))
+        }, payloadByUser.get(p.userId)!))
       );
       const okUsers = new Set<string>();
       results.forEach((r, i) => {
