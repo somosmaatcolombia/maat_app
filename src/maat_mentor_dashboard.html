@@ -771,10 +771,27 @@ async function loadGroupsAndSchedule(){
 
 // Carga bajo demanda: textos completos de las ultimas 10 calibraciones de UN cliente.
 // Solo se invoca al abrir el perfil. Cacheado para no repetir queries.
+// Detalle de una calibracion: ritual de cierre (campos nuevos) o el matutino
+// antiguo (Q1/Q2/Q3), segun lo que traiga la fila. El historico sigue legible.
+function calibDetail(c){
+  const cut=v=>san((v||"").substring(0,120));
+  const row=(lbl,val,col)=>val?`<div><strong${col?` style="color:${col};"`:""}>${lbl}:</strong> ${cut(val)}</div>`:"";
+  const nuevo=c.did_text||c.missing_text||c.gratitude_text||c.learning_text||c.tomorrow_priority;
+  if(nuevo){
+    const dn={si:"S\u00ED",parcial:"A medias",no:"No"}[c.priority_done]||"";
+    return row("Hizo",c.did_text)
+      +row("Falt\u00F3",c.missing_text)
+      +row("Agradeci\u00F3",c.gratitude_text,"var(--m)")
+      +row("Aprendi\u00F3",c.learning_text,"var(--c)")
+      +row("Prioridad ma\u00F1ana",c.tomorrow_priority,"var(--v)")
+      +(dn?`<div><strong>Cumpli\u00F3 lo de ayer:</strong> ${dn}</div>`:"");
+  }
+  return row("Q1",c.answer_q1)+row("Q2",c.answer_q2)+row("Q3",c.answer_q3);
+}
 async function loadClientFullCalibrations(clientId){
   if(_clientCalibsFull[clientId])return _clientCalibsFull[clientId];
   const{data,error}=await sb.from("calibrations")
-    .select("date,week,coherence,answer_q1,answer_q2,answer_q3,session_note,created_at")
+    .select("date,week,coherence,answer_q1,answer_q2,answer_q3,session_note,created_at,did_text,missing_text,gratitude_text,learning_text,tomorrow_priority,priority_done")
     .eq("user_id",clientId)
     .order("created_at",{ascending:false})
     .limit(10);
@@ -1039,11 +1056,7 @@ function renderProfile(){
             <strong>${san(c.date||"")} \u00B7 Sem ${c.week}</strong>
             <span style="color:${attHex(c.coherence)};font-weight:600;">Actitud: ${c.coherence}/10</span>
           </div>
-          <div style="color:var(--mu);font-size:12px;">
-            <div><strong>Q1:</strong> ${san((c.answer_q1||"").substring(0,120))}</div>
-            <div><strong>Q2:</strong> ${san((c.answer_q2||"").substring(0,120))}</div>
-            <div><strong>Q3:</strong> ${san((c.answer_q3||"").substring(0,120))}</div>
-          </div>
+          <div style="color:var(--mu);font-size:12px;">${calibDetail(c)}</div>
         </div>
       `).join(""):`<p style="color:var(--mu);padding:12px 0;">Sin calibraciones</p>`}
     </div>

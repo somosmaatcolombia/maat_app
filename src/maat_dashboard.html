@@ -129,6 +129,22 @@ label.field-label{display:block;font-size:14px;color:var(--mu);margin-bottom:6px
 .calib-step-dot.done{background:var(--m);}
 .calib-step-dot.active{background:var(--c);width:20px;border-radius:4px;}
 .calib-step-label{font-size:13px;color:var(--mu);margin-left:auto;}
+/* RITUAL DE CIERRE &mdash; termometro sin valor por defecto (la eleccion es del usuario) */
+.therm{display:flex;gap:5px;flex-wrap:wrap;}
+.therm button{flex:1;min-width:28px;aspect-ratio:1/1;border:1.5px solid var(--bd);background:var(--bg2);border-radius:9px;font-family:var(--font-title);font-size:15px;font-weight:600;color:var(--mu);cursor:pointer;transition:all .15s;touch-action:manipulation;}
+.therm button:hover{border-color:var(--c);}
+.therm button.sel{background:var(--c);border-color:var(--c);color:#fff;transform:scale(1.08);}
+.therm-anchors{display:flex;justify-content:space-between;font-size:11px;color:var(--mu);margin-top:7px;font-family:var(--font-title);letter-spacing:.5px;text-transform:uppercase;}
+.loop-q{display:flex;gap:8px;margin-top:10px;}
+.loop-q button{flex:1;padding:11px 6px;border:1.5px solid var(--bd);background:var(--bg2);border-radius:10px;font-family:var(--font-title);font-size:13px;font-weight:600;color:var(--mu);cursor:pointer;transition:all .15s;}
+.loop-q button.sel{color:#fff;}
+.loop-q button[data-v="si"].sel{background:var(--m);border-color:var(--m);}
+.loop-q button[data-v="parcial"].sel{background:var(--o);border-color:var(--o);}
+.loop-q button[data-v="no"].sel{background:var(--r);border-color:var(--r);}
+.opt-tag{font-size:11px;color:var(--mu2);font-weight:400;text-transform:none;letter-spacing:0;}
+.prio-card{background:linear-gradient(135deg,rgba(137,108,142,.14),rgba(137,108,142,.04));border:1px solid rgba(137,108,142,.34);border-radius:var(--radius);padding:16px 18px;margin-bottom:16px;}
+.prio-card .lbl{font-family:var(--font-title);font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--v);margin-bottom:5px;}
+.prio-card .txt{font-size:16px;line-height:1.5;color:var(--text);}
 /* COACH CHIPS */
 .coach-chips{display:flex;flex-wrap:wrap;gap:8px;padding:12px 0;}
 .coach-chip{padding:8px 14px;border:1px solid var(--bd);border-radius:20px;font-size:13px;color:var(--text);background:var(--bg2);cursor:pointer;transition:all .2s;touch-action:manipulation;}
@@ -593,7 +609,7 @@ const I18N={
     menu_book:"EL PROCESO",menu_pdf:"LIBRO PDF",menu_history:"HISTORIAL",menu_meditation:"MEDITACI\u00D3N",
     greeting:"Hola,",week_label:"Semana",of:" de 16",
     progress_pct:"Progreso",coherence_pct:"Coherencia",habits_pct:"H\u00E1bitos",attitude_avg:"Actitud",
-    phase:"Fase",cta_calib:"Calibra tu d\u00EDa",cta_calib_sub:"Solo 30 segundos \u00B7 elige tu actitud",
+    phase:"Fase",cta_calib:"Cierra tu d\u00EDa",cta_calib_sub:"Reflexiona y elige lo m\u00E1s importante de ma\u00F1ana",
     last_calib:"\u00DAltima calibraci\u00F3n:",no_calib:"Sin calibraciones a\u00FAn",
     saving:"GUARDANDO...",saved:"Guardado \u2713",error_fields:"Completa las 3 preguntas",
     add_habit:"Nombre del h\u00E1bito",freq_label:"Frecuencia semanal",
@@ -626,7 +642,7 @@ const I18N={
     menu_book:"THE PROCESS",menu_pdf:"BOOK PDF",menu_history:"HISTORY",menu_meditation:"MEDITATION",
     greeting:"Hello,",week_label:"Week",of:" of 16",
     progress_pct:"Progress",coherence_pct:"Coherence",habits_pct:"Habits",attitude_avg:"Attitude",
-    phase:"Phase",cta_calib:"Calibrate your day",cta_calib_sub:"Just 30 seconds \u00B7 choose your attitude",
+    phase:"Phase",cta_calib:"Close your day",cta_calib_sub:"Reflect and choose tomorrow\u2019s most important thing",
     last_calib:"Last calibration:",no_calib:"No calibrations yet",
     saving:"SAVING...",saved:"Saved \u2713",error_fields:"Complete all 3 questions",
     add_habit:"Habit name",freq_label:"Weekly frequency",
@@ -706,7 +722,13 @@ function toast(msg,type){const el=document.getElementById("toast");el.textConten
 function chkAuthErr(error){if(!error)return false;const msg=(error.message||"").toLowerCase();if(msg.includes("jwt")||msg.includes("expired")||msg.includes("not authenticated")){toast(t("session_expired"),"err");setTimeout(()=>doLogout(),2200);return true;}return false;}
 function fmtDate(){const d=new Date();const m=lang==="es"?["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"]:["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];return d.getDate()+" "+m[d.getMonth()];}
 function fmtDateISO(d){d=d||new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;}
-function calibradoHoy(){const td=fmtDate();const ti=fmtDateISO();return cals.some(c=>{const d=c.date||"";return d===td||d===ti;});}
+// Ya cerro el dia ritual en curso? (corte 4 AM). Acepta filas legacy que
+// guardaban la fecha como texto de display ("17 mar") o ISO.
+function calibradoHoy(){
+  if(todayCalib())return true;
+  const td=fmtDate();const ti=fmtDateISO();
+  return cals.some(c=>{const d=c.date||"";return d===td||d===ti;});
+}
 function getPhase(w){return w<=4?1:w<=8?2:w<=12?3:4;}
 function getPhaseColor(p){return[null,"var(--phase1)","var(--phase2)","var(--phase3)","var(--phase4)"][p];}
 function cohColor(v){return v>=70?"var(--m)":v>=40?"var(--o)":"var(--r)";}
@@ -1463,6 +1485,16 @@ function renderHome(){
       }).join('')}
       <p style="font-size:12px;color:var(--o);margin-top:10px;margin-bottom:0;text-align:right;">${lang==='es'?'Ver todos \u2192':'See all \u2192'}</p>
     </div>`:''}
+    ${(()=>{
+      // Ritual de manana: la prioridad que la persona eligio anoche.
+      const p=todayPriority();if(!p)return'';
+      const es=lang==='es';
+      return `<div class="prio-card" style="margin-top:16px;">
+        <div class="lbl">\u2726 ${es?'Lo m\u00e1s importante de hoy':'Today\u2019s most important thing'}</div>
+        <div class="txt">${san(p)}</div>
+        <div style="font-size:11px;color:var(--mu);margin-top:8px;">${es?'Lo elegiste anoche al cerrar tu d\u00eda':'You chose it last night'}</div>
+      </div>`;
+    })()}
     <div class="card" style="margin-top:16px;border-left:3px solid var(--v);">
       <div style="font-size:11px;color:var(--v);font-family:var(--font-title);font-weight:600;letter-spacing:1px;margin-bottom:6px;">\u2726 MI STATEMENT</div>
       <p style="font-size:15px;line-height:1.7;font-style:italic;white-space:pre-wrap;">${sh?.statement?san(sh.statement):(lang==='es'?'\u00BFQui\u00E9n eres cuando nadie te ve?':'Who are you when nobody sees you?')}</p>
@@ -1523,131 +1555,149 @@ function toggleHomeHip(){
 }
 
 /* ============ CALIBRACI\u00D3N ============ */
+/* \u2500\u2500 RITUAL DE CIERRE (noche) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+   Cierras el dia y eliges lo mas importante de manana. Esa prioridad se
+   guarda en la fila de HOY y manana se lee desde la fila de AYER, cerrando
+   el circulo. El dia "ritual" corta a las 4 AM: quien reflexiona a la 1 AM
+   esta cerrando el dia anterior, que es el que realmente vivio.          */
+const RITUAL_CUTOFF_HOUR=4;
+let _ritual={coh:null,done:null};
+
+function ritualDay(d){
+  const x=d?new Date(d):new Date();
+  if(x.getHours()<RITUAL_CUTOFF_HOUR)x.setDate(x.getDate()-1);
+  x.setHours(0,0,0,0);
+  return x;
+}
+function ritualKey(d){return fmtDateISO(ritualDay(d));}
+function calibRowFor(key){return cals.find(c=>c.created_at&&ritualKey(c.created_at)===key)||null;}
+function todayCalib(){return calibRowFor(ritualKey());}
+function yesterdayCalib(){
+  const y=ritualDay();y.setDate(y.getDate()-1);
+  return calibRowFor(fmtDateISO(y));
+}
+// La prioridad que la persona eligio anoche para hoy.
+function todayPriority(){
+  const y=yesterdayCalib();
+  return (y&&y.tomorrow_priority)?y.tomorrow_priority:"";
+}
+
 function renderCalib(){
-  _calibStep=0;_calibAnswers={};_calibMode='express';
-  renderCalibExpress();
-}
-
-// \u2500\u2500 CALIBRACI\u00D3N EXPRESS (30s) \u2014 reduce la fricci\u00F3n al m\u00EDnimo \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-function renderCalibExpress(){
   const el=document.getElementById("v-calib");
-  el.innerHTML=`
-    <h2 style="font-family:var(--font-title);font-size:22px;font-weight:600;margin-bottom:8px;">${t("calib_title")}</h2>
-    <p style="font-size:13px;color:var(--mu);line-height:1.6;margin-bottom:20px;">${lang==='es'?'En 30 segundos eliges conscientemente la actitud con la que vas a vivir tu d\u00EDa. Ese gesto, repetido, lo cambia todo.':'In 30 seconds you consciously choose the attitude you will live your day with. That gesture, repeated, changes everything.'}</p>
-    <div class="card">
-      <label class="field-label">${t("attitude_label")}</label>
-      <div class="slider-val" id="coh-val">5</div>
-      <div class="slider-wrap">
-        <input type="range" id="inp-coh" min="1" max="10" value="5" oninput="document.getElementById('coh-val').textContent=this.value">
-        <div class="slider-labels"><span>${t("attitude_low")}</span><span>${t("attitude_high")}</span></div>
-      </div>
-    </div>
-    <div class="card">
-      <label class="field-label">${lang==='es'?'\u00BFUna palabra o frase para tu d\u00EDa? (opcional)':'A word or phrase for your day? (optional)'}</label>
-      <input type="text" id="inp-express-note" maxlength="280" placeholder="${lang==='es'?'Ej: enfocado, en paz, con energ\u00EDa...':'E.g. focused, at peace, energized...'}" style="width:100%;padding:12px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--bg2);color:var(--text);font-family:var(--font-body);font-size:16px;outline:none;">
-    </div>
-    <button class="btn-action" id="btn-save-calib" onclick="saveCalibExpress()">${t("btn_save_calib")}</button>
-    <button class="btn-action secondary" style="margin-top:8px;" onclick="switchToDeepCalib()">\u270D\uFE0F ${lang==='es'?'Calibraci\u00F3n profunda (3 preguntas)':'Deep calibration (3 questions)'}</button>
-  `;
-}
+  const es=lang==='es';
+  _ritual={coh:null,done:null};
 
-function switchToDeepCalib(){
-  _calibMode='deep';_calibStep=0;
-  renderCalibStep();
-  document.querySelector('.main-content')?.scrollTo({top:0,behavior:'instant'});
-}
-
-async function saveCalibExpress(){
-  if(calibradoHoy()){toast(lang==="es"?"Ya calibraste hoy. \u00A1Vuelve ma\u00F1ana!":"Already calibrated today. Come back tomorrow!","err");return;}
-  const coh=parseInt(document.getElementById("inp-coh").value);
-  const note=(document.getElementById("inp-express-note")?.value||"").trim();
-  const btn=document.getElementById("btn-save-calib");
-  btn.disabled=true;btn.textContent=t("saving");
-  try{
-    const{data,error}=await sb.from("calibrations").insert({
-      user_id:user.id,date:fmtDate(),week:hwk,coherence:coh,
-      answer_q1:note,answer_q2:"",answer_q3:"",session_note:"express"
-    }).select().single();
-    if(error){if(!chkAuthErr(error))toast(error.message,"err");return;}
-    cals.unshift(data);
-    _calibStep=0;_calibAnswers={};
-    track("calib_done",{week:hwk,coherence:coh,mode:"express"});
-    showCalibClose(coh);
-  }finally{btn.disabled=false;btn.textContent=t("btn_save_calib");}
-}
-function renderCalibStep(){
-  const steps=[t("q1"),t("q2"),t("q3")];
-  const isLast=_calibStep===3;
-  const stepDots=`<div class="calib-steps">${[0,1,2,3].map(i=>`<div class="calib-step-dot ${i<_calibStep?'done':i===_calibStep?'active':''}"></div>`).join("")}<span class="calib-step-label">${isLast?t("attitude_label"):_calibStep+1+"/3"}</span></div>`;
-  const el=document.getElementById("v-calib");
-  if(isLast){
+  // Ya cerro hoy: le devolvemos lo que dejo (su inversion, visible).
+  const hoy=todayCalib();
+  if(hoy){
     el.innerHTML=`
-      <h2 style="font-family:var(--font-title);font-size:22px;font-weight:600;margin-bottom:8px;">${t("calib_title")}</h2>
-      ${stepDots}
+      <h2 style="font-family:var(--font-title);font-size:22px;font-weight:600;margin-bottom:8px;">${es?'Tu d\u00EDa ya est\u00E1 cerrado':'Your day is closed'}</h2>
+      <p style="font-size:13px;color:var(--mu);line-height:1.6;margin-bottom:20px;">${es?'Vuelve ma\u00F1ana en la noche para cerrar el siguiente.':'Come back tomorrow night to close the next one.'}</p>
+      ${hoy.tomorrow_priority?`<div class="prio-card"><div class="lbl">${es?'Lo m\u00E1s importante de ma\u00F1ana':'Tomorrow\u2019s most important thing'}</div><div class="txt">${san(hoy.tomorrow_priority)}</div></div>`:''}
       <div class="card">
-        <label class="field-label">${t("attitude_label")}</label>
-        <div class="slider-val" id="coh-val">5</div>
-        <div class="slider-wrap">
-          <input type="range" id="inp-coh" min="1" max="10" value="5" oninput="document.getElementById('coh-val').textContent=this.value">
-          <div class="slider-labels"><span>${t("attitude_low")}</span><span>${t("attitude_high")}</span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <span class="field-label" style="margin:0;">${es?'Coherencia de hoy':'Today\u2019s coherence'}</span>
+          <span style="font-family:var(--font-title);font-size:30px;font-weight:700;color:${attColor(hoy.coherence||0)};">${hoy.coherence||'\u2014'}</span>
         </div>
       </div>
-      <button class="btn-action" id="btn-save-calib" onclick="saveCalib()">${t("btn_save_calib")}</button>
-      <button class="btn-action secondary" style="margin-top:8px;" onclick="_calibStep=2;renderCalibStep()">\u2190 ${lang==='es'?'Anterior':'Back'}</button>
+      ${hoy.gratitude_text?`<div class="card"><div class="field-label">${es?'Lo que agradeciste':'What you were grateful for'}</div><p style="font-size:15px;line-height:1.6;">${san(hoy.gratitude_text)}</p></div>`:''}
+      ${hoy.learning_text?`<div class="card"><div class="field-label">${es?'Tu aprendizaje':'Your learning'}</div><p style="font-size:15px;line-height:1.6;">${san(hoy.learning_text)}</p></div>`:''}
     `;
-  } else {
-    const key=["q1","q2","q3"][_calibStep];
-    el.innerHTML=`
-      <h2 style="font-family:var(--font-title);font-size:22px;font-weight:600;margin-bottom:8px;">${t("calib_title")}</h2>
-      <p style="font-size:13px;color:var(--mu);line-height:1.6;margin-bottom:16px;">${lang==='es'?'La calibraci\u00F3n es el ritual m\u00E1s poderoso del m\u00E9todo MAAT. En solo tres preguntas y dos minutos, entrenas tu mente para elegir conscientemente la actitud con la que vas a vivir el d\u00EDa.':'The calibration is the most powerful ritual of the MAAT method. In just three questions and two minutes, you train your mind to consciously choose the attitude with which you will live the day.'}</p>
-      ${stepDots}
-      <div class="card"><label class="field-label">${steps[_calibStep]}</label><textarea id="inp-step" rows="4" placeholder="${lang==='es'?'Escribe tu respuesta...':'Write your answer...'}">${san(_calibAnswers[key]||"")}</textarea></div>
-      <button class="btn-action" onclick="nextCalibStep()">${_calibStep<2?(lang==='es'?'Siguiente':'Next')+' \u2192':lang==='es'?'Continuar':'Continue'} \u2192</button>
-      ${_calibStep>0?`<button class="btn-action secondary" style="margin-top:8px;" onclick="prevCalibStep()">\u2190 ${lang==='es'?'Anterior':'Back'}</button>`:`<button class="btn-action secondary" style="margin-top:8px;" onclick="renderCalibExpress()">\u26a1 ${lang==='es'?'Volver a calibraci\u00f3n express':'Back to express'}</button>`}
-    `;
-    setTimeout(()=>document.getElementById("inp-step")?.focus(),100);
+    return;
   }
-}
-function nextCalibStep(){
-  const keys=["q1","q2","q3"];
-  const inp=document.getElementById("inp-step");
-  const val=inp?.value.trim();
-  if(!val){inp?.classList.add("field-error");inp?.focus();toast(t("error_fields"),"err");return;}
-  inp?.classList.remove("field-error");
-  _calibAnswers[keys[_calibStep]]=val;
-  _calibStep++;
-  renderCalibStep();
-  document.getElementById("v-calib")?.scrollTo({top:0,behavior:'instant'});
-  document.querySelector('.main-content')?.scrollTo({top:0,behavior:'instant'});
-}
-function prevCalibStep(){
-  const keys=["q1","q2","q3"];
-  const val=document.getElementById("inp-step")?.value.trim();
-  if(val)_calibAnswers[keys[_calibStep]]=val;
-  _calibStep=Math.max(0,_calibStep-1);
-  renderCalibStep();
+
+  const prev=todayPriority();
+  el.innerHTML=`
+    <h2 style="font-family:var(--font-title);font-size:22px;font-weight:600;margin-bottom:8px;">${es?'Cierra tu d\u00EDa':'Close your day'}</h2>
+    <p style="font-size:13px;color:var(--mu);line-height:1.6;margin-bottom:20px;">${es?'Mira el d\u00EDa que viviste y elige lo m\u00E1s importante de ma\u00F1ana. Solo el term\u00F3metro y tu prioridad son obligatorios: escribe lo dem\u00E1s si hoy te nace.':'Look at the day you lived and choose tomorrow\u2019s most important thing. Only the thermometer and your priority are required \u2014 write the rest if it feels right today.'}</p>
+
+    ${prev?`
+    <div class="card" style="border-left:3px solid var(--v);">
+      <div class="field-label">${es?'Anoche elegiste':'Last night you chose'}</div>
+      <p style="font-size:16px;line-height:1.5;font-style:italic;margin-bottom:4px;">${san(prev)}</p>
+      <div class="field-label" style="margin-top:12px;">${es?'\u00BFLo hiciste?':'Did you do it?'}</div>
+      <div class="loop-q" id="loop-q">
+        <button type="button" data-v="si" onclick="setLoopAnswer('si')">${es?'S\u00ED':'Yes'}</button>
+        <button type="button" data-v="parcial" onclick="setLoopAnswer('parcial')">${es?'A medias':'Partly'}</button>
+        <button type="button" data-v="no" onclick="setLoopAnswer('no')">${es?'No':'No'}</button>
+      </div>
+    </div>`:''}
+
+    <div class="card">
+      <label class="field-label">${es?'\u00BFQu\u00E9 hiciste hoy?':'What did you do today?'} <span class="opt-tag">${es?'opcional':'optional'}</span></label>
+      <textarea id="r-did" rows="3" placeholder="${es?'Lo que s\u00ED pas\u00F3...':'What actually happened...'}"></textarea>
+    </div>
+    <div class="card">
+      <label class="field-label">${es?'\u00BFQu\u00E9 hizo falta?':'What was missing?'} <span class="opt-tag">${es?'opcional':'optional'}</span></label>
+      <textarea id="r-missing" rows="3" placeholder="${es?'Lo que quedo pendiente o te falto...':'What was left undone...'}"></textarea>
+    </div>
+    <div class="card">
+      <label class="field-label">${es?'\u00BFQu\u00E9 agradeces m\u00E1s de hoy?':'What are you most grateful for today?'} <span class="opt-tag">${es?'opcional':'optional'}</span></label>
+      <textarea id="r-gratitude" rows="3" placeholder="${es?'Una cosa, por peque\u00F1a que sea...':'One thing, however small...'}"></textarea>
+    </div>
+
+    <div class="card">
+      <label class="field-label">${es?'\u00BFC\u00F3mo se sinti\u00F3 tu coherencia hoy?':'How did your coherence feel today?'}</label>
+      <div class="therm" id="therm">${[1,2,3,4,5,6,7,8,9,10].map(i=>`<button type="button" data-v="${i}" onclick="setTherm(${i})">${i}</button>`).join("")}</div>
+      <div class="therm-anchors"><span>${es?'Lejos de m\u00ED':'Far from myself'}</span><span>${es?'En coherencia':'In coherence'}</span></div>
+    </div>
+
+    <div class="card">
+      <label class="field-label">${es?'\u00BFQu\u00E9 aprendiste?':'What did you learn?'} <span class="opt-tag">${es?'opcional':'optional'}</span></label>
+      <textarea id="r-learning" rows="3" placeholder="${es?'Algo que te llevas de hoy...':'Something you take from today...'}"></textarea>
+    </div>
+
+    <div class="card" style="border-left:3px solid var(--v);">
+      <label class="field-label">${es?'Lo m\u00E1s importante de ma\u00F1ana':'Tomorrow\u2019s most important thing'}</label>
+      <p style="font-size:12px;color:var(--mu);margin-bottom:8px;">${es?'Una sola cosa. Ma\u00F1ana la ver\u00E1s al despertar.':'Just one thing. You\u2019ll see it when you wake up.'}</p>
+      <input type="text" id="r-priority" maxlength="140" placeholder="${es?'Ej: terminar la propuesta antes del mediod\u00EDa':'E.g. finish the proposal before noon'}" style="width:100%;padding:12px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--bg2);color:var(--text);font-family:var(--font-body);font-size:16px;outline:none;">
+    </div>
+
+    <button class="btn-action" id="btn-save-calib" onclick="saveRitual()">${es?'CERRAR MI D\u00CDA':'CLOSE MY DAY'}</button>
+  `;
+  track("calib_start",{week:hwk});
 }
 
-async function saveCalib(){
-  const q1=_calibAnswers.q1||"";
-  const q2=_calibAnswers.q2||"";
-  const q3=_calibAnswers.q3||"";
-  if(!q1||!q2||!q3){toast(t("error_fields"),"err");return;}
-  if(calibradoHoy()){toast(lang==="es"?"Ya calibraste hoy. \u00A1Vuelve ma\u00F1ana!":"Already calibrated today. Come back tomorrow!","err");return;}
-  const coh=parseInt(document.getElementById("inp-coh").value);
+function setTherm(v){
+  _ritual.coh=v;
+  document.querySelectorAll("#therm button").forEach(b=>b.classList.toggle("sel",parseInt(b.dataset.v,10)===v));
+}
+function setLoopAnswer(v){
+  _ritual.done=v;
+  document.querySelectorAll("#loop-q button").forEach(b=>b.classList.toggle("sel",b.dataset.v===v));
+}
+
+async function saveRitual(){
+  const es=lang==='es';
+  if(todayCalib()){toast(es?'Ya cerraste tu d\u00EDa. \u00A1Vuelve ma\u00F1ana!':'You already closed your day. Come back tomorrow!',"err");return;}
+  if(_ritual.coh===null){
+    toast(es?'Elige c\u00F3mo se sinti\u00F3 tu coherencia hoy':'Choose how your coherence felt today',"err");
+    document.getElementById("therm")?.scrollIntoView({block:"center",behavior:"smooth"});
+    return;
+  }
+  const val=id=>{const e=document.getElementById(id);return e&&e.value.trim()?e.value.trim():null;};
+  const prio=val("r-priority");
+  if(!prio){
+    toast(es?'Elige lo m\u00E1s importante de ma\u00F1ana':'Choose tomorrow\u2019s most important thing',"err");
+    document.getElementById("r-priority")?.focus();
+    return;
+  }
   const btn=document.getElementById("btn-save-calib");
   btn.disabled=true;btn.textContent=t("saving");
   try{
     const{data,error}=await sb.from("calibrations").insert({
-      user_id:user.id,date:fmtDate(),week:hwk,coherence:coh,
-      answer_q1:q1,answer_q2:q2,answer_q3:q3,session_note:""
+      user_id:user.id,date:ritualKey(),week:hwk,coherence:_ritual.coh,
+      did_text:val("r-did"),missing_text:val("r-missing"),
+      gratitude_text:val("r-gratitude"),learning_text:val("r-learning"),
+      tomorrow_priority:prio,priority_done:_ritual.done,
+      answer_q1:"",answer_q2:"",answer_q3:"",session_note:"cierre"
     }).select().single();
     if(error){if(!chkAuthErr(error))toast(error.message,"err");return;}
     cals.unshift(data);
-    _calibStep=0;_calibAnswers={};
-    track("calib_done",{week:hwk,coherence:coh,mode:"deep"});
-    showCalibClose(coh);
-  }finally{btn.disabled=false;btn.textContent=t("btn_save_calib");}
+    track("calib_done",{week:hwk,coherence:_ritual.coh,mode:"cierre",priority_done:_ritual.done||"na"});
+    showCalibClose(_ritual.coh);
+    _ritual={coh:null,done:null};
+  }finally{btn.disabled=false;btn.textContent=es?'CERRAR MI D\u00CDA':'CLOSE MY DAY';}
 }
 
 /* ============ H\u00C1BITOS \u2014 FIX: _habViewWeek, state sync ============ */
@@ -2505,6 +2555,23 @@ async function uploadAudio(){
 }
 
 /* ============ HISTORIAL ============ */
+// Muestra el ritual de cierre (campos nuevos) o el matutino antiguo (Q1/Q2/Q3),
+// segun lo que traiga cada fila. Asi el historico viejo sigue legible.
+function histBody(c){
+  const es=lang==='es';
+  const row=(lbl,val,col)=>val?`<p><strong style="color:${col||'var(--text)'};">${lbl}:</strong> ${san(val)}</p>`:"";
+  const nuevo=c.did_text||c.missing_text||c.gratitude_text||c.learning_text||c.tomorrow_priority;
+  if(nuevo){
+    const dn={si:es?'S\u00ED':'Yes',parcial:es?'A medias':'Partly',no:'No'}[c.priority_done]||"";
+    return row(es?'Hice':'Did',c.did_text)
+      +row(es?'Falt\u00F3':'Missing',c.missing_text)
+      +row(es?'Agradec\u00ED':'Grateful for',c.gratitude_text,'var(--m)')
+      +row(es?'Aprend\u00ED':'Learned',c.learning_text,'var(--c)')
+      +row(es?'Prioridad de ma\u00F1ana':'Tomorrow\u2019s priority',c.tomorrow_priority,'var(--v)')
+      +(dn?`<p><strong>${es?'Cumpl\u00ED lo de ayer':'Did yesterday\u2019s'}:</strong> ${dn}</p>`:"");
+  }
+  return row("Q1",c.answer_q1)+row("Q2",c.answer_q2)+row("Q3",c.answer_q3);
+}
 function renderHistorial(){
   document.getElementById("v-historial").innerHTML=`
     <div class="sv-header"><button class="btn-back" onclick="gv('v-mas')">\u2039</button><h2>${t("historial_title")}</h2></div>
@@ -2515,11 +2582,7 @@ function renderHistorial(){
           <span class="hist-date">${san(c.date||"")} \u00B7 ${t("week_label")} ${c.week}</span>
           <span class="hist-coh" style="background:${attColor(c.coherence)}22;color:${attColor(c.coherence)}">${c.coherence}/10</span>
         </div>
-        <div class="hist-body">
-          <p><strong>Q1:</strong> ${san(c.answer_q1||"")}</p>
-          <p><strong>Q2:</strong> ${san(c.answer_q2||"")}</p>
-          <p><strong>Q3:</strong> ${san(c.answer_q3||"")}</p>
-        </div>
+        <div class="hist-body">${histBody(c)}</div>
       </div>
     `).join(""):`<div style="text-align:center;padding:32px 20px;">
       <img loading="lazy" decoding="async" src="${ILLO}waves.png" alt="" style="max-width:200px;width:55%;height:auto;display:block;margin:0 auto 14px;opacity:.95;" onerror="this.style.display='none'">
@@ -3852,9 +3915,15 @@ function exportProgress(){
   let csv="";
   // Calibrations
   csv+="=== "+(lang==='es'?"CALIBRACIONES":"CALIBRATIONS")+" ===\n";
-  csv+=(lang==='es'?"Fecha,Semana,Actitud,Pregunta 1,Pregunta 2,Pregunta 3":"Date,Week,Attitude,Question 1,Question 2,Question 3")+"\n";
+  csv+=(lang==='es'
+    ?"Fecha,Semana,Coherencia,Hice,Falto,Agradeci,Aprendi,Prioridad manana,Cumpli lo de ayer,Q1,Q2,Q3"
+    :"Date,Week,Coherence,Did,Missing,Grateful,Learned,Tomorrow priority,Did yesterdays,Q1,Q2,Q3")+"\n";
+  const q=v=>`"${(v||"").replace(/"/g,'""')}"`;
   cals.forEach(c=>{
-    csv+=`"${c.date||""}",${c.week||""},${c.coherence||""},"${(c.answer_q1||"").replace(/"/g,'""')}","${(c.answer_q2||"").replace(/"/g,'""')}","${(c.answer_q3||"").replace(/"/g,'""')}"\n`;
+    csv+=[`"${c.date||""}"`,c.week||"",c.coherence||"",
+      q(c.did_text),q(c.missing_text),q(c.gratitude_text),q(c.learning_text),
+      q(c.tomorrow_priority),q(c.priority_done),
+      q(c.answer_q1),q(c.answer_q2),q(c.answer_q3)].join(",")+"\n";
   });
   // Habits summary
   csv+="\n=== "+(lang==='es'?"H\u00C1BITOS POR SEMANA":"HABITS BY WEEK")+" ===\n";
