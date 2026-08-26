@@ -224,6 +224,14 @@ label.field-label{display:block;font-size:14px;color:var(--mu);margin-bottom:6px
 .chat-msg.assistant h3{font-size:16px;}
 .chat-msg.assistant h4{font-size:14px;}
 .chat-msg.assistant h3:first-child,.chat-msg.assistant h4:first-child{margin-top:0;}
+/* Calificacion del Coach: mide si sirve, en vez de suponerlo */
+.cf-rate{display:flex;gap:6px;align-items:center;margin-top:10px;padding-top:8px;border-top:1px solid var(--bd);opacity:.55;transition:opacity .2s;}
+.chat-msg.assistant:hover .cf-rate,.cf-rate.done{opacity:1;}
+.cf-rate button{background:none;border:1px solid var(--bd);border-radius:8px;padding:3px 9px;font-size:13px;cursor:pointer;color:var(--mu);line-height:1.4;transition:all .15s;}
+.cf-rate button:hover{border-color:var(--c);color:var(--text);}
+.cf-rate button.on{background:var(--m);border-color:var(--m);color:#0d1117;}
+.cf-rate button.on.down{background:var(--r);border-color:var(--r);color:#fff;}
+.cf-rate .ok{font-size:11.5px;color:var(--m);}
 .chat-msg.assistant ul,.chat-msg.assistant ol{margin:6px 0 10px;padding-left:22px;}
 .chat-msg.assistant li{margin-bottom:4px;}
 .chat-msg.assistant li:last-child{margin-bottom:0;}
@@ -2025,13 +2033,62 @@ function renderCoach(){
       <div class="coach-chips">${chips.map(c=>`<button class="coach-chip" onclick="useChip(this)">${c}</button>`).join("")}</div>`;
   } else {
     // Construir todo el HTML primero y un solo reflow al final
-    el.innerHTML=chatHistory.map(m=>{
+    el.innerHTML=chatHistory.map((m,i)=>{
       const body=m.role==='assistant'?mdRender(m.content):san(m.content);
-      return`<div class="chat-msg ${m.role}">${body}</div>`;
+      // Solo se califica al coach, y solo si hay una pregunta previa que dio contexto.
+      const rate=(m.role==='assistant'&&i>0)?cfRateHtml(i):"";
+      return`<div class="chat-msg ${m.role}">${body}${rate}</div>`;
     }).join("");
     el.scrollTop=el.scrollHeight;
   }
 }
+/* \u2500\u2500 Calificacion del Coach \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+   Cada respuesta se puede marcar util / no util. Guarda el par
+   (pregunta -> respuesta) con la fase, para saber DONDE falla el coach y
+   no solo QUE tan bien va en promedio. Un pulgar abajo es material directo
+   para corregir el prompt de esa fase.                                    */
+const _cfHechos=new Set();   // indices ya calificados en esta sesion
+
+function cfRateHtml(i){
+  if(_cfHechos.has(i))return `<div class="cf-rate done"><span class="ok">${lang==='es'?'Gracias por calificar':'Thanks for rating'}</span></div>`;
+  const es=lang==='es';
+  return `<div class="cf-rate" data-i="${i}">
+    <button type="button" onclick="cfRate(${i},'up',this)" title="${es?'Me sirvio':'Helpful'}">\u{1F44D}</button>
+    <button type="button" class="down" onclick="cfRate(${i},'down',this)" title="${es?'No me sirvio':'Not helpful'}">\u{1F44E}</button>
+  </div>`;
+}
+
+async function cfRate(i,rating,btn){
+  const box=btn.closest(".cf-rate"); if(!box||_cfHechos.has(i))return;
+  _cfHechos.add(i);
+  btn.classList.add("on");
+  const es=lang==='es';
+
+  const reply=chatHistory[i]?.content||"";
+  // La pregunta es el ultimo mensaje del usuario antes de esta respuesta.
+  let pregunta="";
+  for(let k=i-1;k>=0;k--){ if(chatHistory[k]?.role==="user"){pregunta=chatHistory[k].content;break;} }
+  const fase=!hwk?null:hwk<=4?1:hwk<=8?2:hwk<=12?3:4;
+
+  // Si dice que no sirvio, le damos la oportunidad de decir por que: ese
+  // texto es lo mas valioso para arreglar el prompt.
+  let comentario=null;
+  if(rating==="down"){
+    const r=prompt(es?"Que le falto a esta respuesta? (opcional, ayuda a mejorar el coach)":"What was missing? (optional)");
+    comentario=(r||"").trim()||null;
+  }
+
+  box.innerHTML=`<span class="ok">${es?'Gracias por calificar':'Thanks for rating'}</span>`;
+  box.classList.add("done");
+
+  const{error}=await sb.from("coach_feedback").insert({
+    user_id:user.id,rating,user_message:pregunta.slice(0,2000),
+    coach_reply:reply.slice(0,4000),week:hwk||null,phase:fase,comment:comentario
+  });
+  if(error){_w("coach_feedback:",error.message);}
+  track("coach_rate",{rating,phase:fase});
+}
+
 function useChip(btn){
   document.getElementById("chat-input").value=btn.textContent;
   sendMsg();
@@ -2114,6 +2171,15 @@ async function sendMsg(){
       msgEl.insertAdjacentHTML("beforeend",`<div class="chat-msg assistant">${mdRender(reply)}</div>`);
     }
     chatHistory.push({role:"assistant",content:reply});
+    // Calificacion en la burbuja recien terminada (sirve para ambos caminos:
+    // streaming y respuesta completa).
+    try{
+      const burbujas=msgEl.querySelectorAll(".chat-msg.assistant");
+      const ultima=burbujas[burbujas.length-1];
+      if(ultima&&!ultima.querySelector(".cf-rate")){
+        ultima.insertAdjacentHTML("beforeend",cfRateHtml(chatHistory.length-1));
+      }
+    }catch(e){_w("rate ui:",e);}
     if(chatHistory.length>100)chatHistory=chatHistory.slice(-100);
     try{localStorage.setItem("maat-chat-"+user?.id,JSON.stringify(chatHistory.slice(-20)));}catch(e){}
     saveChatServer();

@@ -2344,6 +2344,11 @@ async function loadAIPrompt(){
       </p>`}
     </div>
 
+    <div class="card" id="cf-quality">
+      <div class="card-title">Calidad del Coach (seg&uacute;n los clientes)</div>
+      <p style="font-size:12px;color:var(--mu);">Cargando...</p>
+    </div>
+
     <div class="card">
       <div class="card-title">Qu&eacute; m&aacute;s recibe el coach</div>
       <p style="font-size:13px;color:var(--mu);line-height:1.8;">
@@ -2354,6 +2359,46 @@ async function loadAIPrompt(){
       </p>
     </div>`;
   if(hayFases)selFase(_faseSel);
+  loadCoachQuality();
+}
+
+// Que tan bien esta funcionando el coach, segun los pulgares de los clientes.
+// Lo valioso no es el promedio: son las respuestas marcadas como no utiles.
+async function loadCoachQuality(){
+  const box=document.getElementById("cf-quality"); if(!box)return;
+  const{data,error}=await sb.rpc("get_coach_quality");
+  if(error){
+    box.innerHTML=`<div class="card-title">Calidad del Coach</div>
+      <p style="color:var(--o);font-size:13px;">A&uacute;n no existe la medici&oacute;n. Corre <code>sql/maat_coach_feedback.sql</code> en Supabase.</p>`;
+    return;
+  }
+  const d=data||{};
+  if(!d.total){
+    box.innerHTML=`<div class="card-title">Calidad del Coach</div>
+      <p style="font-size:13px;color:var(--mu);">Todav&iacute;a no hay calificaciones. Aparecer&aacute;n cuando los clientes usen los pulgares en el chat del Coach.</p>`;
+    return;
+  }
+  const fases=(d.por_fase||[]).map(f=>
+    `<tr><td>Fase ${f.fase}</td><td>${f.total}</td>
+     <td style="color:${f.pct_positivo>=70?'var(--m)':f.pct_positivo>=50?'var(--o)':'var(--r)'};font-weight:600;">${f.pct_positivo}%</td></tr>`).join("");
+  const malas=(d.ultimos_negativos||[]).slice(0,8).map(n=>`
+    <div style="border-left:3px solid var(--r);padding:10px 12px;margin-bottom:10px;background:rgba(215,107,110,.05);border-radius:0 8px 8px 0;">
+      <div style="font-size:11px;color:var(--mu);margin-bottom:5px;">Fase ${n.fase||"?"} &middot; semana ${n.semana||"?"}</div>
+      <div style="font-size:13px;margin-bottom:5px;"><b>Preguntaron:</b> ${san((n.pregunta||"").slice(0,160))}</div>
+      <div style="font-size:13px;color:var(--mu);"><b>Respondio:</b> ${san((n.respuesta||"").slice(0,220))}...</div>
+      ${n.comentario?`<div style="font-size:13px;color:var(--o);margin-top:6px;"><b>Le falto:</b> ${san(n.comentario)}</div>`:""}
+    </div>`).join("");
+
+  box.innerHTML=`
+    <div class="card-title">Calidad del Coach (seg&uacute;n los clientes)</div>
+    <div style="display:flex;gap:26px;align-items:baseline;margin:8px 0 16px;">
+      <div><span style="font-family:var(--font-title);font-size:34px;font-weight:700;color:${d.pct_positivo>=70?'var(--m)':d.pct_positivo>=50?'var(--o)':'var(--r)'};">${d.pct_positivo}%</span>
+        <span style="font-size:12px;color:var(--mu);"> &uacute;til</span></div>
+      <div style="font-size:13px;color:var(--mu);">${d.positivos} positivas &middot; ${d.negativos} negativas &middot; ${d.total} en total</div>
+    </div>
+    ${fases?`<table style="margin-bottom:18px;"><tr><th>Fase</th><th>Calificaciones</th><th>% &uacute;til</th></tr>${fases}</table>`:""}
+    ${malas?`<div style="font-size:13px;font-weight:600;margin-bottom:10px;">Respuestas marcadas como no &uacute;tiles &mdash; aqu&iacute; est&aacute; qu&eacute; corregir:</div>${malas}`
+           :`<p style="font-size:13px;color:var(--m);">Ninguna respuesta marcada como no &uacute;til todav&iacute;a.</p>`}`;
 }
 function selFase(n){
   _faseSel=n;
