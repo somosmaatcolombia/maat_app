@@ -11,3 +11,5 @@ maat_deploy.zip
 .secrets/
 maat-deploy/
 maat-deploy.zip
+mcp/node_modules/
+mcp/dist/
