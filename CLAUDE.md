@@ -33,23 +33,31 @@ MAAT es un sistema de mentoría que integra neurociencia aplicada, filosofía pr
 ```
 maat-project/
 ├── CLAUDE.md                              ← ESTE ARCHIVO
-├── docs/
-│   ├── ARQUITECTURA.md                    ← Documento madre de arquitectura
-│   └── TESTING_QA.md                      ← Checklist de QA + secrets + cron
-├── src/
-│   ├── maat_dashboard.html                ← App del Cliente (~2187 líneas)
-│   ├── maat_mentor_dashboard.html         ← Portal del Mentor (~308 líneas)
-│   └── sw.js                              ← Service Worker (push notifications)
-├── sql/
-│   ├── maat_setup_master.sql              ← SQL maestro completo (idempotente)
-│   ├── maat_fixes_urgentes.sql            ← Fixes para BD en producción
-│   └── crm_ajuste_requerido.sql           ← Instrucciones para proyecto CRM
-└── supabase/
-    └── functions/
-        ├── coach-maat/index.ts            ← Edge Function Coach IA (proxy Mistral)
-        ├── maat-summary/index.ts          ← Edge Function Resumen IA (Mistral)
-        └── send-notifications/index.ts    ← Edge Function push (cron)
+├── docs/                                  ← Arquitectura, QA, guias por feature
+├── scripts/
+│   └── check_js.sh                        ← Validador JS (sintaxis+no-undef+ASCII); corre local y en CI
+├── src/                                   ← UN .html por app (Regla 1)
+│   ├── maat_dashboard.html                ← App del Cliente (PWA, ~4100 lineas) → /app/
+│   ├── maat_mentor_dashboard.html         ← Portal del Mentor (~2400) → /mentor/
+│   ├── maat_landing.html                  ← Landing de activacion → /onboarding/
+│   ├── maat_feedback.html                 ← Cuestionario trazabilidad (ES/EN) → /feedback/
+│   ├── maat_feedback_dashboard.html       ← Dashboard feedback mentor → /feedback-panel/
+│   ├── maat_biotipo.html                  ← Quiz de biotipos → /biotipo/
+│   └── sw.js                              ← Service Worker (CACHE_NAME se versiona en el build)
+├── sql/                                   ← 28 archivos; ver sql/RUNBOOK.md para orden y estado
+└── supabase/functions/                    ← Deploy por supabase CLI, NUNCA por el Action
+    ├── coach-maat                         ← Coach IA (proxy Mistral)
+    ├── maat-summary                       ← Resumen IA de cliente
+    ├── send-notifications                 ← Motor de ritual push (cron horario)
+    ├── session-reminders                  ← Recordatorios + prep de sesion (cron 15min)
+    ├── community-activity                 ← Reacciones agrupadas ComuniMAAT (cron 3h)
+    ├── broadcast-session-notes / send-custom-push / send-biotipo-result / link-preview
+    └── _shared/webpush.ts                 ← Libreria push compartida
 ```
+
+> **Deploy web:** push a `main` que toque `src/`, `scripts/` o `build_deploy.sh` dispara
+> `.github/workflows/deploy.yml` (valida JS con check_js.sh → build minificado → FTP).
+> `/dashboard/` es una carpeta fisica de redirect que entierra la copia vieja de Elementor.
 
 ## 6 Reglas de arquitectura INQUEBRANTABLES
 
@@ -96,7 +104,19 @@ URL: https://pcclptmojjzqmfmzftot.supabase.co
 ANON KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjY2xwdG1vamp6cW1mbXpmdG90Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4OTg3MjAsImV4cCI6MjA4NzQ3NDcyMH0.VuFBEy19fgNN5pSp_r8p2ZVViniunKdVW7Hy3AmqJXE
 ```
 
-## Base de datos — Tablas MAAT (13)
+## Base de datos — Tablas MAAT
+
+> Las 13 tablas de abajo son el **nucleo original**. Features posteriores sumaron mas
+> (~27 en total): `community_posts/reactions` (ComuniMAAT), `mentor_groups/members/sessions`
+> (mentorias grupales), `meditations`, `events(+registrations)`, `usage_events`,
+> `client_feedback`, `client_referrals`, `notification_templates`, biotipos, etc.
+> El detalle vive en su SQL de origen — ver `sql/RUNBOOK.md`.
+>
+> `calibrations` fue extendida (Ago 2026) por el **ritual de cierre**: la reflexion es
+> NOCTURNA (did/missing/gratitude/learning + `tomorrow_priority` + `priority_done`,
+> corte 4 AM) y la manana es "Observacion matutina" (statement + autohipnosis +
+> prioridad elegida anoche). `answer_q1/q2/q3` quedan como historico del ritual viejo.
+> El boot de la app carga calibrations en modo LIGHT (sin textos; `ensureFullCals()`).
 
 > **IMPORTANTE:** Esta BD es compartida con un proyecto CRM (13 tablas adicionales: prospects, activities, pipeline_stages, email_templates, sent_emails, ad_accounts, campaigns, ad_sets, ads, daily_metrics, metric_breakdowns, ai_recommendations, alerts). NO tocar tablas CRM.
 
@@ -190,7 +210,9 @@ $$;
 ## Métricas clave
 
 - **Coherencia** = promedio de % cumplimiento por hábito (frequency-aware)
-- **Actitud** = campo coherence en calibrations (1-10, promedio últimas 7)
+- **Actitud** = campo coherence en calibrations (1-10, promedio últimas 7). OJO: desde el
+  26-ago-2026 el numero significa "como se sintio mi dia" (mirada al pasado); antes era
+  "actitud que elijo para hoy". No comparar promedios entre ambas eras.
 - **Hábitos %** = días cumplidos / días esperados × 100
 - **Streak** = días consecutivos con calibración
 - **Alertas mentor:** sin calibrar ≥3d, coherencia <30%, hábitos <30%

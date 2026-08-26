@@ -9,3 +9,5 @@ deploy.zip
 app_pluma.zip
 maat_deploy.zip
 .secrets/
+maat-deploy/
+maat-deploy.zip
