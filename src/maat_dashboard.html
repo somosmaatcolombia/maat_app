@@ -3465,6 +3465,8 @@ async function requestNotifPermission(){
 
 // Pool de mensajes c\u00E1lidos y variados (rotaci\u00F3n para evitar habituaci\u00F3n)
 /* Bancos de copy: la manana ancla la identidad, la noche cierra el dia. */
+let _notifTimer=null;
+function pickNotif(arr){return arr[Math.floor(Math.random()*arr.length)];}
 const NOTIF_MORNING={
   es:[
     {t:"Observaci\u00F3n matutina",b:"Lee tu statement y escucha tu autohipnosis antes de empezar."},
