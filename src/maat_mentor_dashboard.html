@@ -2303,15 +2303,78 @@ async function saveRole(){
 /* ============================================ */
 /* ADMIN: COACH IA CONFIG                       */
 /* ============================================ */
+// El coach se arma en 3 capas: BASE (quien es) + FASE (que necesita alguien
+// en esa etapa) + contexto real del cliente (lo inyecta la Edge Function).
+let _faseSel=1;
 async function loadAIPrompt(){
   if(myRole!=="admin")return;
-  const{data}=await sb.from("ai_config").select("system_prompt").eq("id",1).single();
-  document.getElementById("v-admin-prompt").innerHTML=`<div class="card">
-    <div class="card-title">System Prompt del Coach MAAT IA</div>
-    <p style="font-size:12px;color:var(--mu);margin-bottom:12px;">Modelo: claude-opus-4-6 \u00B7 Este prompt es enviado al coach en cada sesi\u00F3n del cliente.</p>
-    <textarea class="prompt-editor" id="ai-prompt-editor">${san(data?.system_prompt||"")}</textarea>
-    <button class="btn btn-c" style="margin-top:12px;" id="btn-save-prompt" onclick="saveAIPrompt()">GUARDAR PROMPT</button>
-  </div>`;
+  const[cfg,fases]=await Promise.all([
+    sb.from("ai_config").select("system_prompt").eq("id",1).single(),
+    sb.from("ai_phase_prompts").select("phase, nombre, prompt").order("phase")
+  ]);
+  window._fasePrompts=fases.data||[];
+  const hayFases=window._fasePrompts.length>0;
+  document.getElementById("v-admin-prompt").innerHTML=`
+    <div class="card">
+      <div class="card-title">Prompt BASE del Coach</div>
+      <p style="font-size:12px;color:var(--mu);margin-bottom:12px;">
+        Modelo: <b>mistral-medium-latest</b> &middot; Define qui&eacute;n es el coach: misi&oacute;n, tono y formato.
+        Se env&iacute;a siempre, en todas las fases.
+      </p>
+      <textarea class="prompt-editor" id="ai-prompt-editor">${san(cfg.data?.system_prompt||"")}</textarea>
+      <button class="btn btn-c" style="margin-top:12px;" id="btn-save-prompt" onclick="saveAIPrompt()">GUARDAR BASE</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Capa por FASE del proceso</div>
+      <p style="font-size:12px;color:var(--mu);margin-bottom:12px;">
+        Se suma al prompt base seg&uacute;n la semana en la que va cada cliente. Alguien en semana 2
+        necesita algo distinto que alguien en semana 15.
+      </p>
+      ${hayFases?`
+      <div class="search-bar" style="margin-bottom:14px;">
+        ${window._fasePrompts.map(f=>`<button class="btn ${f.phase===_faseSel?'btn-c':'btn-outline'}"
+          style="padding:7px 14px;font-size:12px;" onclick="selFase(${f.phase})">Fase ${f.phase}</button>`).join("")}
+      </div>
+      <div id="fase-nombre" style="font-size:13px;color:var(--c);margin-bottom:8px;font-weight:600;"></div>
+      <textarea class="prompt-editor" id="fase-editor"></textarea>
+      <button class="btn btn-c" style="margin-top:12px;" id="btn-save-fase" onclick="saveFasePrompt()">GUARDAR FASE</button>
+      `:`<p style="color:var(--o);font-size:13px;">
+        A&uacute;n no existen los prompts por fase. Corre <code>sql/maat_coach_fases.sql</code> en Supabase para crearlos.
+      </p>`}
+    </div>
+
+    <div class="card">
+      <div class="card-title">Qu&eacute; m&aacute;s recibe el coach</div>
+      <p style="font-size:13px;color:var(--mu);line-height:1.8;">
+        Adem&aacute;s de estos prompts, en cada conversaci&oacute;n la funci&oacute;n le inyecta autom&aacute;ticamente
+        el contexto real del cliente: su semana y fase, su biotipo, su statement, sus &uacute;ltimos 3 cierres
+        con sus propias palabras, su coherencia, sus h&aacute;bitos e intenci&oacute;n de la semana y sus creencias
+        registradas. Por eso no hace falta que se lo expliques en el prompt.
+      </p>
+    </div>`;
+  if(hayFases)selFase(_faseSel);
+}
+function selFase(n){
+  _faseSel=n;
+  const f=(window._fasePrompts||[]).find(x=>x.phase===n);
+  if(!f)return;
+  document.getElementById("fase-nombre").textContent=f.nombre;
+  document.getElementById("fase-editor").value=f.prompt||"";
+  document.querySelectorAll("#v-admin-prompt .search-bar .btn").forEach((b,i)=>{
+    b.className="btn "+((i+1)===n?"btn-c":"btn-outline");
+  });
+}
+async function saveFasePrompt(){
+  const prompt=document.getElementById("fase-editor").value;
+  const btn=document.getElementById("btn-save-fase");btn.disabled=true;btn.textContent="GUARDANDO...";
+  try{
+    const{error}=await sb.from("ai_phase_prompts")
+      .update({prompt,updated_at:new Date().toISOString()}).eq("phase",_faseSel);
+    if(error){if(!chkAuthErr(error))toast(error.message,"err");return;}
+    const f=(window._fasePrompts||[]).find(x=>x.phase===_faseSel); if(f)f.prompt=prompt;
+    toast("Fase "+_faseSel+" guardada \u2713","ok");
+  }finally{btn.disabled=false;btn.textContent="GUARDAR FASE";}
 }
 async function saveAIPrompt(){
   const prompt=document.getElementById("ai-prompt-editor").value;

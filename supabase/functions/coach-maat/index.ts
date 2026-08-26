@@ -71,9 +71,24 @@ serve(async (req) => {
       mistralMessages.push({ role: "system", content: config.system_prompt });
     }
 
-    // 4b. CONTEXTO DEL CLIENTE — sin esto el coach solo puede dar consejos
-    // genericos, que es justo lo que el prompt le prohibe. Se inyecta como un
-    // segundo mensaje de sistema para que pese sobre la conversacion.
+    // 4b. CAPA DE FASE + CONTEXTO DEL CLIENTE.
+    // El prompt base define quien es el coach; la capa de fase define QUE
+    // necesita alguien en esa etapa; el contexto define CON QUIEN habla.
+    // Sin esto el coach solo puede dar consejos genericos, justo lo que el
+    // prompt base le prohibe.
+    try {
+      const { data: prof } = await sbAdmin
+        .from("profiles").select("current_week").eq("id", user.id).maybeSingle();
+      const semana = prof?.current_week ?? null;
+      const faseN = !semana ? null : semana <= 4 ? 1 : semana <= 8 ? 2 : semana <= 12 ? 3 : 4;
+      if (faseN) {
+        const { data: fase } = await sbAdmin
+          .from("ai_phase_prompts").select("prompt").eq("phase", faseN).maybeSingle();
+        if (fase?.prompt) mistralMessages.push({ role: "system", content: fase.prompt });
+      }
+    } catch (e) {
+      console.error("capa de fase fallo (sigo sin ella):", e);
+    }
     try {
       const ctx = await buildClientContext(sbAdmin, user.id);
       if (ctx) mistralMessages.push({ role: "system", content: ctx });
