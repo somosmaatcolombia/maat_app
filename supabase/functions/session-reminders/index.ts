@@ -245,8 +245,8 @@ serve(async (req) => {
           const needCal = !calSet.has(uid);
           const needHab = !habSet.has(uid);
           let tasks: string;
-          if (needCal && needHab) tasks = " Antes: te falta calibrar hoy y marcar tus habitos.";
-          else if (needCal) tasks = " Antes: te falta tu calibracion de hoy.";
+          if (needCal && needHab) tasks = " Antes: te falta cerrar tu dia y marcar tus habitos.";
+          else if (needCal) tasks = " Antes: te falta cerrar tu dia de hoy.";
           else if (needHab) tasks = " Antes: te falta marcar tus habitos esta semana.";
           else tasks = " Vas al dia. Nos vemos.";
           const body = `${s.title ? s.title + ". " : ""}${whenTxt}${tasks}`;

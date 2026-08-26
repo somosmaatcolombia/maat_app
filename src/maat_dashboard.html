@@ -1485,11 +1485,15 @@ function renderHome(){
       }).join('')}
       <p style="font-size:12px;color:var(--o);margin-top:10px;margin-bottom:0;text-align:right;">${lang==='es'?'Ver todos \u2192':'See all \u2192'}</p>
     </div>`:''}
+    <div style="margin:26px 0 10px;display:flex;align-items:center;gap:10px;">
+      <span style="font-family:var(--font-title);font-size:15px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--v);">${lang==='es'?'\u{1F305} Observaci\u00f3n matutina':'\u{1F305} Morning observation'}</span>
+      <span style="flex:1;height:1px;background:var(--bd);"></span>
+    </div>
     ${(()=>{
       // Ritual de manana: la prioridad que la persona eligio anoche.
       const p=todayPriority();if(!p)return'';
       const es=lang==='es';
-      return `<div class="prio-card" style="margin-top:16px;">
+      return `<div class="prio-card" style="margin-top:0;">
         <div class="lbl">\u2726 ${es?'Lo m\u00e1s importante de hoy':'Today\u2019s most important thing'}</div>
         <div class="txt">${san(p)}</div>
         <div style="font-size:11px;color:var(--mu);margin-top:8px;">${es?'Lo elegiste anoche al cerrar tu d\u00eda':'You chose it last night'}</div>
@@ -3460,48 +3464,72 @@ async function requestNotifPermission(){
 }
 
 // Pool de mensajes c\u00E1lidos y variados (rotaci\u00F3n para evitar habituaci\u00F3n)
-const NOTIF_DAILY={
+/* Bancos de copy: la manana ancla la identidad, la noche cierra el dia. */
+const NOTIF_MORNING={
   es:[
-    {t:"Tu momento lleg\u00F3",b:"30 segundos para elegir conscientemente tu d\u00EDa."},
-    {t:"\u00BFC\u00F3mo quieres vivir hoy?",b:"Una calibraci\u00F3n r\u00E1pida y sigues con tu d\u00EDa."},
-    {t:"30 segundos contigo",b:"Tu calibraci\u00F3n te espera. Es m\u00E1s simple de lo que crees."},
-    {t:"Un instante de claridad",b:"Antes de seguir corriendo, \u00BFcalibramos tu d\u00EDa?"},
-    {t:"Tu d\u00EDa merece una intenci\u00F3n",b:"Elige tu actitud en 30 segundos."},
-    {t:"Pausa. Respira. Calibra.",b:"Solo toma un momento volver a ti."}
+    {t:"Observaci\u00F3n matutina",b:"Lee tu statement y escucha tu autohipnosis antes de empezar."},
+    {t:"\u00BFQui\u00E9n eliges ser hoy?",b:"Tu statement te espera. Un minuto para anclarlo."},
+    {t:"Antes de correr, ancla",b:"Statement, autohipnosis y lo m\u00E1s importante de hoy."},
+    {t:"Tu d\u00EDa ya tiene un foco",b:"Anoche elegiste lo m\u00E1s importante. Ve a verlo."},
+    {t:"Un minuto contigo",b:"Tu statement, tu voz, tu d\u00EDa."},
+    {t:"Empieza desde la identidad",b:"Lee qui\u00E9n eliges ser antes de que el d\u00EDa elija por ti."}
   ],
   en:[
-    {t:"Your moment is here",b:"30 seconds to consciously choose your day."},
-    {t:"How do you want to live today?",b:"A quick calibration and you're done."},
-    {t:"30 seconds with yourself",b:"Your calibration awaits. Simpler than you think."},
-    {t:"A moment of clarity",b:"Before you keep running, shall we calibrate?"},
-    {t:"Your day deserves an intention",b:"Choose your attitude in 30 seconds."},
-    {t:"Pause. Breathe. Calibrate.",b:"It only takes a moment to return to yourself."}
+    {t:"Morning observation",b:"Read your statement and listen to your self-hypnosis before you start."},
+    {t:"Who do you choose to be today?",b:"Your statement is waiting. One minute to anchor it."},
+    {t:"Anchor before you run",b:"Statement, self-hypnosis, and today's most important thing."},
+    {t:"Your day already has a focus",b:"Last night you chose what matters most. Go see it."},
+    {t:"One minute with yourself",b:"Your statement, your voice, your day."},
+    {t:"Start from identity",b:"Read who you choose to be before the day chooses for you."}
   ]
 };
-function pickNotif(arr){return arr[Math.floor(Math.random()*arr.length)];}
+const NOTIF_EVENING={
+  es:[
+    {t:"Cierra tu d\u00EDa",b:"Reflexiona lo que viviste y elige lo m\u00E1s importante de ma\u00F1ana."},
+    {t:"\u00BFC\u00F3mo se sinti\u00F3 tu d\u00EDa?",b:"Un momento honesto antes de dormir."},
+    {t:"Tu d\u00EDa merece un cierre",b:"Qu\u00E9 hiciste, qu\u00E9 hizo falta, qu\u00E9 agradeces."},
+    {t:"Ma\u00F1ana empieza esta noche",b:"Elige ahora lo m\u00E1s importante del d\u00EDa que viene."},
+    {t:"Un momento de verdad",b:"Cierra el d\u00EDa con honestidad y prepara el siguiente."},
+    {t:"Antes de dormir",b:"Coherencia, aprendizaje y una prioridad para ma\u00F1ana."}
+  ],
+  en:[
+    {t:"Close your day",b:"Reflect on what you lived and choose tomorrow's most important thing."},
+    {t:"How did your day feel?",b:"An honest moment before you sleep."},
+    {t:"Your day deserves a close",b:"What you did, what was missing, what you're grateful for."},
+    {t:"Tomorrow starts tonight",b:"Choose now what matters most for the day ahead."},
+    {t:"A moment of truth",b:"Close the day honestly and prepare the next one."},
+    {t:"Before you sleep",b:"Coherence, learning, and one priority for tomorrow."}
+  ]
+};
 
-let _notifTimer=null;
 function scheduleNotifications(){
   if(_notifTimer)clearInterval(_notifTimer);
   if(!("Notification" in window)||Notification.permission!=="granted")return;
-  // Revisa cada minuto si es la hora configurada
+  // Revisa cada minuto si es una de las horas configuradas
   _notifTimer=setInterval(()=>{
     const now=new Date();
-    if(now.getHours()!==notifHour||now.getMinutes()!==0)return;
-    // \u00BFYa calibr\u00F3 hoy? \u2014 compara ambos formatos (legacy "17 mar" + ISO)
-    if(!calibradoHoy()){
+    if(now.getMinutes()!==0)return;
+    const h=now.getHours();
+    const mh=(prof&&prof.notif_morning_hour!=null)?prof.notif_morning_hour:(notifHour||8);
+    const eh=(prof&&prof.notif_evening_hour!=null)?prof.notif_evening_hour:20;
+    const L=lang==="es"?"es":"en";
+
+    // Manana: observacion matutina (statement + autohipnosis + prioridad de hoy)
+    if(h===mh){
       try{
-        const m=pickNotif(NOTIF_DAILY[lang==="es"?"es":"en"]);
-        new Notification("MAAT \u2014 "+m.t,{
-          body:m.b,
-          icon:CONFIG.LOGO_URL,
-          tag:"maat-calib-daily",
-          requireInteraction:false
-        });
+        const m=pickNotif(NOTIF_MORNING[L]);
+        new Notification("MAAT \u2014 "+m.t,{body:m.b,icon:CONFIG.LOGO_URL,tag:"maat-morning",requireInteraction:false});
+      }catch(e){}
+    }
+    // Noche: cierre del dia (solo si aun no lo cerro)
+    if(h===eh&&!calibradoHoy()){
+      try{
+        const m=pickNotif(NOTIF_EVENING[L]);
+        new Notification("MAAT \u2014 "+m.t,{body:m.b,icon:CONFIG.LOGO_URL,tag:"maat-close-day",requireInteraction:false});
       }catch(e){}
     }
     // Recordatorio semanal los domingos a las 20:00
-    if(now.getDay()===0&&now.getHours()===20&&now.getMinutes()===0){
+    if(now.getDay()===0&&h===20){
       try{
         new Notification(lang==="es"?"MAAT \u2014 Cierra tu semana":"MAAT \u2014 Close your week",{
           body:lang==="es"

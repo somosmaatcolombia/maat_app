@@ -25,15 +25,17 @@ const CO_OFFSET_MS = 5 * 60 * 60 * 1000; // Colombia UTC-5
 
 // Copys por defecto si el mentor no ha definido la plantilla de esa ranura.
 const DEFAULTS: Record<string, { title: string; body: string }> = {
-  morning: { title: "Tu momento llegó", body: "30 segundos para elegir conscientemente tu día." },
-  evening: { title: "Cierra tu día", body: "Marca tus hábitos y toma un momento para reflexionar." },
+  morning: { title: "Observación matutina", body: "Lee tu statement, escucha tu autohipnosis y mira lo más importante de hoy." },
+  evening: { title: "Cierra tu día", body: "Reflexiona lo que viviste y elige lo más importante de mañana." },
   coherence: { title: "Vuelve a ti", body: "La coherencia no es perfección, es volver. Hoy es un buen día para volver." },
   weekly: { title: "Cierra tu semana", body: "Evalúa tu semana y elige cómo empiezas la próxima." },
   inactive: { title: "Hace días que no te veo", body: "Tu proceso te espera cuando estés listo. Un paso pequeño hoy." },
   community_prompt: { title: "Tu voz suma", body: "Comparte un aprendizaje de tu semana en ComuniMAAT." },
 };
+// La manana lleva al inicio (observacion matutina: statement + autohipnosis +
+// prioridad de hoy); la noche lleva al ritual de cierre.
 const VIEW_BY_TYPE: Record<string, string> = {
-  push_morning: "calib", push_evening: "habitos", push_coherence: "home", push_weekly: "progreso",
+  push_morning: "home", push_evening: "calib", push_coherence: "home", push_weekly: "progreso",
   push_inactive: "home", push_community_prompt: "comunimaat",
 };
 
@@ -150,6 +152,10 @@ serve(async (req) => {
     for (const r of calWR.data || []) noteActive(r.user_id, r.created_at);
     for (const r of habWR.data || []) noteActive(r.user_id, r.updated_at);
     const postedThisWeek = new Set((postWR.data || []).map((r) => r.user_id));
+    // Ya abrio la app hoy? Proxy de "ya hizo su observacion matutina".
+    const openedToday = new Set(
+      (openR.data || []).filter((r) => r.created_at >= startTodayISO).map((r) => r.user_id),
+    );
     // Dias desde la ultima actividad (null si no hay senal en 12 dias -> no molestar).
     const daysSinceActive = (uid: string): number | null => {
       const d = lastActiveDay.get(uid);
@@ -182,8 +188,9 @@ serve(async (req) => {
           if ((ds === 2 || ds === 5 || ds === 9) && !tt.includes("push_inactive")) {
             decision = { type: "push_inactive", copy: copyOf("inactive") };
           }
-        } else if (!tt.includes("push_morning") && !calToday.has(c.id)) {
-          // Mensaje personal del cliente (si lo escribio) o el del proceso.
+        } else if (!tt.includes("push_morning") && !openedToday.has(c.id)) {
+          // Observacion matutina: statement + autohipnosis + prioridad de hoy.
+          // Se omite si ya abrio la app (ya hizo su momento de la manana).
           const base = copyOf("morning");
           const custom = (c.notif_custom_morning || "").trim();
           decision = { type: "push_morning", copy: custom ? { title: base.title, body: custom } : base };
@@ -201,7 +208,8 @@ serve(async (req) => {
           const needed = 3 - touches;
           if (needed > 0 && needed >= daysLeftInclToday) {
             decision = { type: "push_coherence", copy: copyOf("coherence") };
-          } else if (!habToday.has(c.id)) {
+          } else if (!calToday.has(c.id)) {
+            // Aun no cerro el dia: ese es el ritual de la noche.
             decision = { type: "push_evening", copy: copyOf("evening") };
           } else if (isFriday && !postedThisWeek.has(c.id)) {
             // Viernes, ya con ritmo (habitos hechos): invitacion suave a compartir.
