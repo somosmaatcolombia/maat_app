@@ -23,10 +23,11 @@ Le da a **Claude** acceso a MAAT para que puedas pedirle cosas en lenguaje norma
 
 ## Instalación (una vez)
 
+> Ya está instalado y compilado. Solo repite esto si cambias el código fuente.
+> Usa la ruta **absoluta** — con `cd` relativo es fácil equivocarse.
+
 ```bash
-cd "Maat App/Maat_app/mcp"
-npm install
-npm run build
+cd "/Users/rubrojasl/Projects/Maat App/Maat_app/mcp" && npm install && npm run build
 ```
 
 ## Conectarlo a Claude Code
