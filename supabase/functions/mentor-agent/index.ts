@@ -26,6 +26,16 @@ const corsHeaders = {
 const CO = 5 * 60 * 60 * 1000; // Colombia UTC-5
 const MAX_STEPS = 6; // tope de vueltas del bucle de herramientas
 
+// MODELO: medido el 26-ago-2026 con una peticion identica CON herramientas.
+//   mistral-large-latest   50.3 s  <- inusable aqui
+//   mistral-medium-latest   0.8 s  <- elegido: rapido y llama bien las tools
+//   mistral-small-latest    0.6 s
+// El agente necesita la respuesta COMPLETA (no streaming) para leer tool_calls,
+// asi que la latencia total pesa toda. Con large, un chat de 3 pasos tardaba
+// mas de 2 minutos. (coach-maat usa streaming y ahi large arranca en 3.4 s,
+// por eso ese si puede seguir con large.)
+const MODEL = "mistral-medium-latest";
+
 /* ─────────────────────────── Utilidades ─────────────────────────── */
 
 const coDay = (d: string | Date) =>
@@ -483,7 +493,7 @@ serve(async (req) => {
       const resp = await fetch("https://api.mistral.ai/v1/chat/completions", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-        body: JSON.stringify({ model: "mistral-large-latest", messages, tools: TOOLS, tool_choice: "auto", temperature: 0.3 }),
+        body: JSON.stringify({ model: MODEL, messages, tools: TOOLS, tool_choice: "auto", temperature: 0.3 }),
       });
       if (!resp.ok) {
         const t = await resp.text();
