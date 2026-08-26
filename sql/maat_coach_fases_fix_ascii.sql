@@ -2,10 +2,15 @@
 -- MAAT - Reescribe los prompts de fase en ASCII PURO
 -- Ejecutar en Supabase Dashboard > SQL Editor (proyecto pcclptmojjzqmfmzftot).
 -- =====================================================
--- Al pegar el SQL original, los caracteres especiales se corrompieron
--- (mojibake: "—" quedo como "‚Äî" y "¿" como "¬ø"). Es el mismo problema de
--- encoding que ya documenta CLAUDE.md para Elementor: el pipeline lee UTF-8
--- como Mac Roman.
+-- Al pegar el SQL original, los caracteres especiales se corrompieron en la
+-- BD: el guion largo y el signo de interrogacion inicial quedaron como
+-- secuencias de simbolos sin sentido (mojibake). Es el mismo problema de
+-- encoding que ya documenta CLAUDE.md para Elementor: el pipeline lee los
+-- bytes UTF-8 como Mac Roman.
+--
+-- NOTA: este archivo es ASCII PURO a proposito, incluidos los comentarios.
+-- Verificar antes de pegarlo:
+--   python3 -c "print(all(ord(c)<128 for c in open('ESTE_ARCHIVO.sql').read()))"
 --
 -- Solucion: escribir las INSTRUCCIONES sin tildes ni signos especiales. Es
 -- exactamente lo que ya hace el prompt base, que incluye la linea:
