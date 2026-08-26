@@ -20,6 +20,7 @@ on:
     paths:
       - "src/**"
       - "build_deploy.sh"
+      - "scripts/**"
       - ".github/workflows/deploy.yml"
   workflow_dispatch:
 
@@ -38,6 +39,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+
+      - name: Verificar JS de las paginas (sintaxis + no-undef + encoding)
+        run: bash scripts/check_js.sh
 
       - name: Build (minifica y arma deploy/)
         run: bash build_deploy.sh
@@ -101,6 +105,16 @@ jobs:
           protocol: ftps
           local-dir: deploy/feedback/
           server-dir: feedback/
+
+      - name: Subir redirect /dashboard/ -> /app/ (entierra la copia Elementor)
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          local-dir: deploy/dashboard/
+          server-dir: somosmaat.org/dashboard/
 
       - name: Subir dashboard de feedback (/feedback-panel/)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5

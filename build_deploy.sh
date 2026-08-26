@@ -19,6 +19,11 @@ mkdir -p deploy/app deploy/mentor deploy/onboarding deploy/feedback deploy/feedb
 # App del cliente (PWA completa: index + service worker + manifest + iconos)
 cp src/maat_dashboard.html      deploy/app/index.html
 cp src/sw.js                    deploy/app/sw.js
+# Versionar la cache del SW por build: con el nombre fijo ("maat-v2") la PWA
+# instalada seguia sirviendo el HTML viejo aunque el server ya tuviera el nuevo.
+BUILD_TAG="maat-$(date +%Y%m%d%H%M)"
+sed -i.bak "s/const CACHE_NAME = \"maat-v2\"/const CACHE_NAME = \"$BUILD_TAG\"/" deploy/app/sw.js && rm -f deploy/app/sw.js.bak
+grep -q "$BUILD_TAG" deploy/app/sw.js || { echo "ERROR: no se pudo versionar CACHE_NAME"; exit 1; }
 cp src/manifest.json            deploy/app/manifest.json
 cp src/icon-192.png src/icon-512.png src/icon-maskable-512.png src/apple-touch-icon.png deploy/app/
 
@@ -38,6 +43,23 @@ cp src/maat_feedback_dashboard.html deploy/feedback-panel/index.html
 # Cuestionario de Biotipo (lead magnet + guarda en perfil). DEBE ir en el mismo
 # dominio que /app/ para compartir la sesion de Supabase (guardar en perfil).
 cp src/maat_biotipo.html        deploy/biotipo/index.html
+
+# /dashboard/ -> /app/ : la copia vieja embebida en Elementor quedo congelada
+# (el deploy FTP no la toca). Una carpeta FISICA gana sobre la pagina de
+# WordPress (el server sirve directorios antes de pasar la URL a WP), asi que
+# este redirect entierra la version congelada sin tocar WordPress.
+mkdir -p deploy/dashboard
+cat > deploy/dashboard/.htaccess <<'HTACCESS'
+RedirectMatch 301 ^/dashboard/?$ /app/
+HTACCESS
+cat > deploy/dashboard/index.html <<'HTML'
+<!doctype html><html lang="es"><head><meta charset="utf-8">
+<title>MAAT</title>
+<meta http-equiv="refresh" content="0;url=/app/">
+<link rel="canonical" href="https://somosmaat.org/app/">
+<script>location.replace("/app/");</script>
+</head><body><p>Nos mudamos: <a href="/app/">somosmaat.org/app</a></p></body></html>
+HTML
 
 # .htaccess por carpeta: evita que las caches (LiteSpeed / proxy / navegador)
 # sirvan HTML viejo tras un deploy. El HTML es pequenio: preferimos frescura.

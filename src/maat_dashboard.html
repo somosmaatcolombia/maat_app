@@ -573,6 +573,15 @@ const sb=supabase.createClient(CONFIG.SUPABASE_URL,CONFIG.SUPABASE_ANON_KEY);
 
 /* ============ STATE ============ */
 let user=null,prof=null,cals=[],bels=[],wkp={},ht={},sh=null,aiCfg={};
+// Boot LIGHT de calibraciones: los textos del ritual (hice/falto/agradeci/
+// aprendi + Q1-Q3 legacy) pesan; se cargan bajo demanda con ensureFullCals().
+const CALIB_LIGHT="id,user_id,date,week,coherence,created_at,tomorrow_priority,priority_done,morning_done_at";
+let _calsLight=false;
+async function ensureFullCals(){
+  if(!_calsLight||!user)return;
+  const{data,error}=await sb.from("calibrations").select("*").eq("user_id",user.id).order("created_at",{ascending:false}).limit(60);
+  if(!error&&data){cals=data;_calsLight=false;}
+}
 // Momentos del cuestionario de trazabilidad ya respondidos: ["inicio","intermedio","final"]
 let myFeedback=[];
 let hwk=1,notifHour=9;
@@ -1189,13 +1198,13 @@ async function loadDataCritical(){
     const results=await Promise.race([
       Promise.allSettled([
         sb.from("profiles").select("*").eq("id",uid).single(),
-        sb.from("calibrations").select("*").eq("user_id",uid).order("created_at",{ascending:false}).limit(60),
+        sb.from("calibrations").select(CALIB_LIGHT).eq("user_id",uid).order("created_at",{ascending:false}).limit(60),
         sb.from("week_progress").select("*").eq("user_id",uid),
         sb.from("habit_tracker").select("*").eq("user_id",uid),
       ]),timeout
     ]);
     if(results[0]?.status==="fulfilled"){const{data,error}=results[0].value;if(!error&&data){prof=data;hwk=prof.current_week||1;notifHour=prof.notification_hour||9;if(prof.preferred_lang&&prof.preferred_lang!==lang){lang=prof.preferred_lang;localStorage.setItem("maat-lang",lang);}}else if(error)chkAuthErr(error);}
-    if(results[1]?.status==="fulfilled"){const{data,error}=results[1].value;if(!error)cals=data||[];else chkAuthErr(error);}
+    if(results[1]?.status==="fulfilled"){const{data,error}=results[1].value;if(!error){cals=data||[];_calsLight=true;}else chkAuthErr(error);}
     if(results[2]?.status==="fulfilled"){const{data,error}=results[2].value;if(!error&&data){wkp={};data.forEach(r=>{wkp[r.week]=r.completed;});}else if(error)chkAuthErr(error);}
     if(results[3]?.status==="fulfilled"){const{data,error}=results[3].value;if(!error&&data){ht={};wkLearning={};data.forEach(r=>{ht[r.week]=r;if(r.learned)wkLearning[r.week]=r.learned;});}else if(error)chkAuthErr(error);}
   }catch(e){_w("loadDataCritical:",e.message);}
@@ -1593,6 +1602,12 @@ function renderCalib(){
 
   // Ya cerro hoy: le devolvemos lo que dejo (su inversion, visible).
   const hoy=todayCalib();
+  if(hoy&&_calsLight){
+    // La vista cerrada muestra gratitud/aprendizaje: completar y re-render.
+    ensureFullCals().then(renderCalib);
+    el.innerHTML=`<p class="text-mu" style="padding:20px 0;">...</p>`;
+    return;
+  }
   if(hoy){
     el.innerHTML=`
       <h2 style="font-family:var(--font-title);font-size:22px;font-weight:600;margin-bottom:8px;">${es?'Tu d\u00EDa ya est\u00E1 cerrado':'Your day is closed'}</h2>
@@ -2577,6 +2592,12 @@ function histBody(c){
   return row("Q1",c.answer_q1)+row("Q2",c.answer_q2)+row("Q3",c.answer_q3);
 }
 function renderHistorial(){
+  // El historial muestra los textos: si el boot fue light, completar primero.
+  if(_calsLight){
+    document.getElementById("v-historial").innerHTML=`<div class="sv-header"><button class="btn-back" onclick="gv('v-mas')">\u2039</button><h2>${t("historial_title")}</h2></div><p class="text-mu" style="padding:20px 0;">...</p>`;
+    ensureFullCals().then(renderHistorial);
+    return;
+  }
   document.getElementById("v-historial").innerHTML=`
     <div class="sv-header"><button class="btn-back" onclick="gv('v-mas')">\u2039</button><h2>${t("historial_title")}</h2></div>
     <p style="font-size:14px;color:var(--mu);margin:0 0 16px;line-height:1.6;">${lang==='es'?'Aqu\u00ED est\u00E1 el registro de todas tus calibraciones. Ver tu historial te permite identificar patrones, reconocer tu evoluci\u00F3n y entender en qu\u00E9 momentos tu actitud sube o baja. La conciencia de tu pasado alimenta tu presente.':'Here is the record of all your calibrations. Viewing your history lets you identify patterns, recognize your evolution, and understand when your attitude rises or falls. Awareness of your past fuels your present.'}</p>
@@ -3940,7 +3961,8 @@ async function loadChatServer(){
 }
 
 /* ============ EXPORT PROGRESS \u2014 CSV download ============ */
-function exportProgress(){
+async function exportProgress(){
+  await ensureFullCals(); // el CSV lleva los textos completos
   if(!cals.length&&!bels.length){toast(lang==='es'?'No hay datos para exportar':'No data to export','err');return;}
   let csv="";
   // Calibrations
