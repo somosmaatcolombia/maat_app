@@ -151,6 +151,33 @@ a{color:var(--c);text-decoration:none;}
 .session-form input:focus,.session-form select:focus,.session-form textarea:focus{border-color:var(--c);}
 .session-form textarea{min-height:80px;resize:vertical;}
 
+/* AGENTE &mdash; chat del mentor con voz */
+.ag-wrap{display:flex;flex-direction:column;height:calc(100vh - 190px);min-height:420px;}
+.ag-log{flex:1;overflow-y:auto;padding:4px 2px 12px;display:flex;flex-direction:column;gap:12px;}
+.ag-msg{max-width:86%;padding:12px 15px;border-radius:14px;font-size:14px;line-height:1.6;white-space:pre-wrap;word-break:break-word;}
+.ag-msg.user{align-self:flex-end;background:var(--c);color:#06212c;border-bottom-right-radius:4px;}
+.ag-msg.bot{align-self:flex-start;background:var(--bg2);border:1px solid var(--bd);border-bottom-left-radius:4px;}
+.ag-msg.err{align-self:flex-start;background:rgba(215,107,110,.12);border:1px solid rgba(215,107,110,.4);color:var(--r);}
+.ag-tools{font-family:monospace;font-size:10.5px;color:var(--mu);margin-top:7px;padding-top:7px;border-top:1px solid var(--bd);}
+.ag-empty{color:var(--mu);font-size:13.5px;text-align:center;padding:26px 12px;line-height:1.8;}
+.ag-empty b{color:var(--text);font-weight:600;}
+.ag-bar{display:flex;gap:8px;align-items:flex-end;padding-top:12px;border-top:1px solid var(--bd);}
+.ag-bar textarea{flex:1;resize:none;min-height:46px;max-height:130px;padding:12px 14px;border:1px solid var(--bd);border-radius:12px;background:var(--bg);color:var(--text);font-family:var(--font-body);font-size:14px;outline:none;}
+.ag-bar textarea:focus{border-color:var(--c);}
+.ag-btn{width:46px;height:46px;flex-shrink:0;border-radius:12px;border:1px solid var(--bd);background:var(--bg2);color:var(--text);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.ag-btn:hover{border-color:var(--c);}
+.ag-btn.send{background:var(--c);border-color:var(--c);color:#06212c;}
+.ag-btn:disabled{opacity:.45;cursor:not-allowed;}
+.ag-btn.rec{background:var(--r);border-color:var(--r);color:#fff;animation:agPulse 1.3s ease-in-out infinite;}
+@keyframes agPulse{0%,100%{opacity:1;}50%{opacity:.55;}}
+.ag-hint{font-size:11.5px;color:var(--mu);text-align:center;padding:6px 0 0;}
+.ag-confirm{align-self:flex-start;max-width:86%;background:rgba(235,160,85,.09);border:1px solid rgba(235,160,85,.45);border-radius:14px;padding:15px 17px;}
+.ag-confirm .t{font-family:var(--font-title);font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--o);margin-bottom:8px;}
+.ag-confirm .prev{background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:11px 13px;margin:9px 0;font-size:13.5px;}
+.ag-confirm .prev b{display:block;margin-bottom:3px;}
+.ag-confirm .meta{font-size:12px;color:var(--mu);margin-bottom:11px;}
+.ag-confirm .acts{display:flex;gap:8px;}
+
 /* Buscador con autocompletado (elegir cliente al agendar) */
 .tah{position:relative;}
 .tah-list{position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:40;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--radius-sm);max-height:210px;overflow-y:auto;box-shadow:0 10px 30px rgba(0,0,0,.45);display:none;}
@@ -291,6 +318,10 @@ dialog.m-dialog[open]{display:flex;align-items:flex-start;justify-content:center
         <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
         Mentorias Grupales
       </div>
+      <div class="nav-link" data-view="agente" onclick="goView('agente')">
+        <svg viewBox="0 0 24 24"><path d="M12 2a3 3 0 013 3v6a3 3 0 01-6 0V5a3 3 0 013-3z"/><path d="M19 10v1a7 7 0 01-14 0v-1"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+        Agente
+      </div>
       <div class="nav-link" data-view="notif" onclick="goView('notif')">
         <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
         Notificaciones
@@ -354,6 +385,7 @@ dialog.m-dialog[open]{display:flex;align-items:flex-start;justify-content:center
       <div id="v-alerts" class="view"></div>
       <div id="v-sessions" class="view"></div>
       <div id="v-grupos" class="view"></div>
+      <div id="v-agente" class="view"></div>
       <div id="v-notif" class="view"></div>
       <div id="v-cmmod" class="view"></div>
       <div id="v-mentor-config" class="view"></div>
@@ -852,13 +884,14 @@ function goView(viewId){
   const el=document.getElementById("v-"+viewId);if(el)el.classList.add("active");
   document.querySelectorAll(".nav-link").forEach(n=>{n.classList.toggle("active",n.dataset.view===viewId);});
   closeSidebar();
-  const titles={overview:"Resumen",clients:"Mis Clientes",profile:"Perfil del Cliente",alerts:"Alertas",sessions:"Notas de Sesi\u00F3n",grupos:"Mentorias Grupales",notif:"Notificaciones",cmmod:"Comuni-MAAT","mentor-config":"Mi Configuraci\u00F3n","admin-users":"Usuarios","admin-prompt":"Coach IA Config",graduados:"Graduados",meditaciones:"Meditaciones",eventos:"Eventos",traccion:"Traccion / Metricas"};
+  const titles={overview:"Resumen",clients:"Mis Clientes",profile:"Perfil del Cliente",alerts:"Alertas",sessions:"Notas de Sesi\u00F3n",grupos:"Mentorias Grupales",agente:"Agente",notif:"Notificaciones",cmmod:"Comuni-MAAT","mentor-config":"Mi Configuraci\u00F3n","admin-users":"Usuarios","admin-prompt":"Coach IA Config",graduados:"Graduados",meditaciones:"Meditaciones",eventos:"Eventos",traccion:"Traccion / Metricas"};
   document.getElementById("topbar-title").textContent=titles[viewId]||"MAAT";
   if(viewId==="overview")renderOverview();
   else if(viewId==="clients")renderClients();
   else if(viewId==="alerts")renderAlerts();
   else if(viewId==="sessions")renderSessions();
   else if(viewId==="grupos")renderGrupos();
+  else if(viewId==="agente")renderAgente();
   else if(viewId==="notif")renderNotif();
   else if(viewId==="cmmod")renderCmMod();
   else if(viewId==="mentor-config")renderMentorConfig();
@@ -1591,6 +1624,177 @@ function audienceLabel(t){
   if(t.audience==="group"){const g=_allGroups.find(x=>x.id===t.group_id);return g?("Grupo: "+g.name):"Grupo";}
   return "Todos los clientes";
 }
+/* ============================================ */
+/* AGENTE \u2014 chat del mentor (texto y voz)       */
+/* ============================================ */
+// Conversa con la Edge Function mentor-agent, que ejecuta herramientas contra
+// la BD con el JWT del mentor (RLS aplica). Las acciones sensibles (push) no se
+// ejecutan hasta que el mentor toca "Enviar" en la tarjeta de confirmacion.
+let _agLog=[];        // historial [{role,content}] que se manda al agente
+let _agBusy=false;
+let _agRec=null;      // reconocimiento de voz activo
+
+function renderAgente(){
+  document.getElementById("v-agente").innerHTML=`
+    <div class="ag-wrap">
+      <div class="ag-log" id="ag-log"></div>
+      <div class="ag-bar">
+        <textarea id="ag-input" rows="1" placeholder="Preguntale algo, o toca el microfono y dictale..."
+          onkeydown="agKey(event)" oninput="agGrow(this)"></textarea>
+        <button class="ag-btn" id="ag-mic" onclick="agVoz()" title="Dictar">&#127908;</button>
+        <button class="ag-btn send" id="ag-send" onclick="agEnviar()" title="Enviar">&#10148;</button>
+      </div>
+      <div class="ag-hint" id="ag-hint"></div>
+    </div>`;
+  agPintar();
+  agHint();
+}
+
+function agHint(msg){
+  const el=document.getElementById("ag-hint"); if(!el)return;
+  el.textContent=msg||"El agente ve tus datos reales. Las notificaciones necesitan tu confirmacion.";
+}
+
+function agGrow(t){t.style.height="auto";t.style.height=Math.min(130,t.scrollHeight)+"px";}
+function agKey(e){ if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();agEnviar();} }
+
+function agPintar(pending){
+  const log=document.getElementById("ag-log"); if(!log)return;
+  if(!_agLog.length){
+    log.innerHTML=`<div class="ag-empty">
+      Preguntale sobre tu mentoria. Por ejemplo:<br><br>
+      <b>&laquo;&iquest;Quien esta en riesgo?&raquo;</b><br>
+      <b>&laquo;Dame la ficha de Paola&raquo;</b><br>
+      <b>&laquo;Preparame el brief de la proxima sesion&raquo;</b><br>
+      <b>&laquo;&iquest;Como va la cohorte?&raquo;</b><br>
+      <b>&laquo;Agenda 1:1 con Sebas el jueves 7pm&raquo;</b>
+    </div>`;
+    return;
+  }
+  log.innerHTML=_agLog.map(m=>{
+    if(m.role==="user")return `<div class="ag-msg user">${san(m.content)}</div>`;
+    const tools=m.tools&&m.tools.length
+      ? `<div class="ag-tools">consulto: ${m.tools.map(t=>san(t.tool)).join(", ")}</div>` : "";
+    return `<div class="ag-msg ${m.error?'err':'bot'}">${san(m.content)}${tools}</div>`;
+  }).join("");
+
+  if(pending&&pending.tipo==="push"){
+    log.insertAdjacentHTML("beforeend",`
+      <div class="ag-confirm">
+        <div class="t">&#9888; Confirmar envio</div>
+        <div class="meta">Destino: ${san(pending.destino)} &middot; ${pending.alcance} cliente(s), ${pending.con_push} con notificaciones activas.</div>
+        <div class="prev"><b>${san(pending.titulo)}</b>${san(pending.mensaje)}</div>
+        <div class="meta">Un push no se puede deshacer.</div>
+        <div class="acts">
+          <button class="btn btn-c" onclick='agConfirmarPush(${JSON.stringify(pending).replace(/'/g,"&#39;")})'>Enviar ahora</button>
+          <button class="btn btn-outline" onclick="agPintar()">Cancelar</button>
+        </div>
+      </div>`);
+  }
+  log.scrollTop=log.scrollHeight;
+}
+
+async function agEnviar(txt){
+  if(_agBusy)return;
+  const input=document.getElementById("ag-input");
+  const mensaje=(txt||input.value||"").trim();
+  if(!mensaje)return;
+  input.value="";agGrow(input);
+  _agLog.push({role:"user",content:mensaje});
+  agPintar();
+
+  _agBusy=true;
+  document.getElementById("ag-send").disabled=true;
+  agHint("Pensando...");
+  try{
+    const{data:{session}}=await sb.auth.getSession();
+    const res=await fetch(`${CONFIG.SUPABASE_URL}/functions/v1/mentor-agent`,{
+      method:"POST",
+      headers:{"Content-Type":"application/json",Authorization:`Bearer ${session?.access_token||""}`},
+      body:JSON.stringify({messages:_agLog.filter(m=>!m.error).map(m=>({role:m.role,content:m.content}))})
+    });
+    const out=await res.json().catch(()=>({}));
+    if(!res.ok){
+      _agLog.push({role:"assistant",content:out.error||`El agente no respondio (HTTP ${res.status}).`,error:true});
+      agPintar();
+      return;
+    }
+    _agLog.push({role:"assistant",content:out.reply||"(sin respuesta)",tools:out.tool_trace||[]});
+    agPintar(out.pending_action);
+  }catch(e){
+    _agLog.push({role:"assistant",content:"No pude contactar al agente. Revisa tu conexion.",error:true});
+    agPintar();
+  }finally{
+    _agBusy=false;
+    const b=document.getElementById("ag-send"); if(b)b.disabled=false;
+    agHint();
+  }
+}
+
+// Envio real del push: solo se llama desde el boton de la tarjeta de confirmacion.
+async function agConfirmarPush(p){
+  if(_agBusy)return;
+  _agBusy=true;agHint("Enviando...");
+  try{
+    const{data:{session}}=await sb.auth.getSession();
+    const res=await fetch(`${CONFIG.SUPABASE_URL}/functions/v1/send-custom-push`,{
+      method:"POST",
+      headers:{"Content-Type":"application/json",Authorization:`Bearer ${session?.access_token||""}`},
+      body:JSON.stringify({title:p.titulo,body:p.mensaje,audience:p.audiencia,...(p.grupo_id?{group_id:p.grupo_id}:{})})
+    });
+    const out=await res.json().catch(()=>({}));
+    if(!res.ok){
+      _agLog.push({role:"assistant",content:`El envio fallo: ${out.error||res.status}`,error:true});
+    }else{
+      _agLog.push({role:"assistant",content:`Push enviado. Destinatarios: ${out.recipients??"?"} \u00B7 dispositivos: ${out.sent??"?"}.`});
+      toast("Push enviado \u2713","ok");
+    }
+  }catch(e){
+    _agLog.push({role:"assistant",content:"No pude enviar el push.",error:true});
+  }finally{
+    _agBusy=false;agPintar();agHint();
+  }
+}
+
+// Dictado por voz: usa el reconocimiento del navegador (nada se sube a un servidor).
+function agVoz(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  const mic=document.getElementById("ag-mic");
+  if(!SR){
+    agHint("Tu navegador no soporta dictado. Usa Chrome, o escribe el mensaje.");
+    return;
+  }
+  if(_agRec){ _agRec.stop(); return; }   // segundo toque = parar
+
+  const rec=new SR();
+  // El portal del mentor es solo en espaniol; el dictado usa es-CO.
+  rec.lang="es-CO";
+  rec.continuous=true;        // notas de voz largas
+  rec.interimResults=true;
+  let base=document.getElementById("ag-input").value;
+
+  rec.onstart=()=>{mic.classList.add("rec");agHint("Escuchando... toca el microfono para terminar.");};
+  rec.onresult=(e)=>{
+    let txt="";
+    for(let i=e.resultIndex;i<e.results.length;i++)txt+=e.results[i][0].transcript;
+    const input=document.getElementById("ag-input");
+    input.value=(base+" "+txt).trim();
+    agGrow(input);
+  };
+  rec.onerror=(e)=>{
+    mic.classList.remove("rec");_agRec=null;
+    agHint(e.error==="not-allowed"
+      ? "Permiso de microfono denegado. Habilitalo en el candado de la barra de direcciones."
+      : "No pude escuchar. Intenta de nuevo o escribe.");
+  };
+  rec.onend=()=>{
+    mic.classList.remove("rec");_agRec=null;
+    agHint("Listo. Revisa el texto y envialo.");
+  };
+  _agRec=rec;
+  try{ rec.start(); }catch(e){ mic.classList.remove("rec");_agRec=null;agHint("No pude iniciar el dictado."); }
+}
+
 function renderNotif(){
   const f=_notifForm;
   const groupOpts=_allGroups.filter(g=>g.active!==false).map(g=>`<option value="${g.id}" ${f.group_id===g.id?'selected':''}>${san(g.name)}</option>`).join("")||'<option value="">(sin grupos)</option>';
