@@ -15,8 +15,14 @@ MAAT es un sistema de mentoría que integra neurociencia aplicada, filosofía pr
 > - **MAAT** → `pcclptmojjzqmfmzftot` (app, BD, Edge Functions: coach-maat, maat-summary, send-notifications)
 > - **CRM** → `vbfesmgxegxsurnfazjs` (proyecto aparte, NO desplegar aquí funciones de MAAT)
 >
-> **ANTES de cada `supabase functions deploy`**, verificar el proyecto vinculado:
-> `supabase link --project-ref pcclptmojjzqmfmzftot` y confirmar que el output del deploy diga `pcclptmojjzqmfmzftot`.
+> **Esta regla ya no depende de que alguien la lea**: el hook `PreToolUse` de
+> `scripts/guard_supabase_ref.sh` intercepta todo `supabase functions deploy`,
+> `db push` y `secrets set`, y lo aborta si el proyecto vinculado (o el
+> `--project-ref` del comando) no es `pcclptmojjzqmfmzftot`.
+>
+> Si te bloquea: `supabase link --project-ref pcclptmojjzqmfmzftot` y reintenta.
+> El hook se registra en `.claude/settings.json`, que **no está versionado**
+> (`.gitignore` ignora `.claude/`): en una máquina nueva hay que volver a crearlo.
 
 ## Stack técnico
 
@@ -35,7 +41,8 @@ maat-project/
 ├── CLAUDE.md                              ← ESTE ARCHIVO
 ├── docs/                                  ← Arquitectura, QA, guias por feature
 ├── scripts/
-│   └── check_js.sh                        ← Validador JS (sintaxis+no-undef+ASCII); corre local y en CI
+│   ├── check_js.sh                        ← Validador JS (sintaxis+no-undef+ASCII); corre local y en CI
+│   └── guard_supabase_ref.sh              ← Hook PreToolUse: bloquea deploys al proyecto Supabase equivocado
 ├── src/                                   ← UN .html por app (Regla 1)
 │   ├── maat_dashboard.html                ← App del Cliente (PWA, ~4100 lineas) → /app/
 │   ├── maat_mentor_dashboard.html         ← Portal del Mentor (~2400) → /mentor/
