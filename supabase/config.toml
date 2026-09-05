@@ -382,3 +382,22 @@ s3_region = "env(S3_REGION)"
 s3_access_key = "env(S3_ACCESS_KEY)"
 # Configures AWS_SECRET_ACCESS_KEY for S3 bucket
 s3_secret_key = "env(S3_SECRET_KEY)"
+
+# ============================================================
+# Funciones SIN verificacion de JWT en el gateway.
+# CRITICO: estas se autentican por CRON_SECRET (crons) o son publicas.
+# Si se despliegan con verify_jwt=true (el default), el gateway rechaza
+# el CRON_SECRET con "401 Invalid JWT" y las notificaciones se apagan.
+# Dejar esto fijo evita que un redeploy las vuelva a romper.
+# ============================================================
+[functions.send-notifications]
+verify_jwt = false
+
+[functions.session-reminders]
+verify_jwt = false
+
+[functions.community-activity]
+verify_jwt = false
+
+[functions.send-biotipo-result]
+verify_jwt = false
