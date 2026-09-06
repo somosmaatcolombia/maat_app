@@ -29,8 +29,15 @@ for f in src/*.html; do
 import sys,re
 src,dst=sys.argv[1],sys.argv[2]
 s=open(src,encoding='utf-8').read()
-a=s.rindex('<script>')+len('<script>'); b=s.rindex('</script>')
+# El script principal puede ser clasico (<script>) o un modulo ES
+# (<script type="module">, que usa la pagina de chakras por Three.js).
+# Nos quedamos con el ultimo de los dos que aparezca.
+i,pat=max((s.rfind(p),p) for p in ('<script>','<script type="module">'))
+if i<0:
+    print(f"  SIN SCRIPT PRINCIPAL: {src}"); sys.exit(2)
+a=i+len(pat); b=s.index('</script>',a)
 open(dst,'w',encoding='utf-8').write(s[a:b])
+open(dst+'.mode','w').write('module' if 'module' in pat else 'classic')
 # 3a. ASCII puro
 if not all(ord(c)<128 for c in s):
     print(f"  ASCII FAIL: {src} contiene bytes no-ASCII"); sys.exit(2)
@@ -40,6 +47,13 @@ if bad:
     print(f"  ESCAPE FAIL: {src} tiene escapes de 5 digitos sin llaves: {bad[:3]}"); sys.exit(2)
 PYEOF
   [ $? -ne 0 ] && FAIL=1 && continue
+
+  # Un modulo ES necesita extension .mjs para node --check y sourceType:module
+  # para eslint; con los valores de un script clasico ambos fallan en el import.
+  SRCTYPE="sourceType:script"
+  if [ "$(cat "$js.mode" 2>/dev/null)" = "module" ]; then
+    mv "$js" "${js%.js}.mjs"; js="${js%.js}.mjs"; SRCTYPE="sourceType:module"
+  fi
 
   # OJO: nada de pipes aqui — un `cmd | sed` devuelve el exit de sed y
   # enmascara el fallo real (nos paso en la primera version del script).
@@ -51,7 +65,7 @@ PYEOF
   # no-undef: cada archivo es autocontenido (Regla 1), asi que todo
   # identificador usado debe definirse en el mismo script o ser global browser.
   if ! OUT=$(npx --yes eslint@8.57.0 --no-eslintrc --env browser,es2022 \
-        --parser-options ecmaVersion:2022 \
+        --parser-options ecmaVersion:2022,$SRCTYPE \
         --global "supabase" --global "AdobeDC" \
         --rule '{"no-undef":"error"}' "$js" 2>&1); then
     echo "$OUT" | sed "s|$TMP/|src/|"

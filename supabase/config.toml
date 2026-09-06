@@ -401,3 +401,6 @@ verify_jwt = false
 
 [functions.send-biotipo-result]
 verify_jwt = false
+
+[functions.chakra-lead]
+verify_jwt = false

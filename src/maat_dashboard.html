@@ -2707,7 +2707,17 @@ function renderMeditacion(){
       <p style="font-size:12px;color:var(--mu);margin:0 0 10px;">${lang==='es'?'Meditaciones guiadas para cada etapa de tu proceso.':'Guided meditations for every stage of your journey.'}</p>
       <button class="btn-action" style="width:100%;padding:12px;" onclick="nav('v-biblioteca')">${lang==='es'?'Explorar meditaciones \u2192':'Explore meditations \u2192'}</button>
     </div>`:''}
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--bd);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+        <span style="font-size:13px;font-weight:600;color:var(--text);">${lang==='es'?'Tu columna de luz':'Your column of light'}</span>
+        <span style="font-size:12px;color:var(--mu);" id="chk-total">\u2014</span>
+      </div>
+      <p style="font-size:12px;color:var(--mu);margin:0 0 10px;">${lang==='es'?'Siete centros, una sola l\u00EDnea vertical. Cada sesi\u00F3n completada enciende el centro donde la hiciste.':'Seven centers, a single vertical line. Every session you complete lights up the center where you did it.'}</p>
+      <div id="chk-bars" style="display:flex;gap:4px;align-items:flex-end;height:34px;margin-bottom:12px;"></div>
+      <button class="btn-action" style="width:100%;padding:12px;" onclick="window.open('/chakras/','_blank','noopener')">${lang==='es'?'Subir la columna \u2192':'Climb the column \u2192'}</button>
+    </div>
   `;
+  loadChakraLight();
   const MED_URL="https://somosmaat.org/wp-content/uploads/2026/02/Meditation_Maat.mp3";
   const a=Audio_.get('med',MED_URL);
   if(!a.src)a.src=MED_URL;
@@ -2719,6 +2729,30 @@ function renderMeditacion(){
     if(time){const m=Math.floor(a.currentTime/60);const s=Math.floor(a.currentTime%60);time.textContent=m+":"+(s<10?"0":"")+s;}
   });
   Audio_.onEnd('med',()=>{const btn=document.getElementById("med-play");if(btn)btn.textContent="\u25B6";});
+}
+/* Columna de luz: luz acumulada por centro en el Viaje a los 7 Chakras.
+   Lee la funcion agregada my_chakra_light() (7 filas, RLS del propio usuario).
+   Si la tabla todavia no existe o no hay sesiones, la barra queda apagada
+   y el modulo sigue siendo un enlace: nunca rompe la vista. */
+const CHK_COLORES=["#D76B6E","#EBA055","#E8C468","#7DCD93","#39A1C9","#5B6BA9","#896C8E"];
+const CHK_NOMBRES_ES=["Ra\u00EDz","Sacro","Plexo","Coraz\u00F3n","Garganta","Tercer ojo","Corona"];
+const CHK_NOMBRES_EN=["Root","Sacral","Plexus","Heart","Throat","Third eye","Crown"];
+async function loadChakraLight(){
+  const cont=document.getElementById("chk-bars");
+  if(!cont)return;
+  const luz=[0,0,0,0,0,0,0];
+  const {data,error}=await sb.rpc("my_chakra_light");
+  if(!error&&data){data.forEach(r=>{const i=Number(r.chakra)-1;if(i>=0&&i<7)luz[i]=Number(r.sesiones)||0;});}
+  const nom=lang==='es'?CHK_NOMBRES_ES:CHK_NOMBRES_EN;
+  const total=luz.reduce((a,b)=>a+b,0);
+  const tot=document.getElementById("chk-total");
+  if(tot)tot.textContent=total?`${total} ${lang==='es'?(total===1?'sesi\u00F3n':'sesiones'):(total===1?'session':'sessions')}`:(lang==='es'?'sin encender':'not lit yet');
+  cont.innerHTML=luz.map((n,i)=>{
+    const pct=Math.min(100,(n/5)*100);
+    return `<div title="${nom[i]}: ${n}" style="flex:1;height:100%;background:var(--bd);position:relative;">
+      <div style="position:absolute;left:0;right:0;bottom:0;height:${pct}%;background:${CHK_COLORES[i]};"></div>
+    </div>`;
+  }).join("");
 }
 function toggleMed(){
   Audio_.toggle('med',"https://somosmaat.org/wp-content/uploads/2026/02/Meditation_Maat.mp3",

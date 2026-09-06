@@ -14,7 +14,7 @@ MINIFY=1
 [ "$1" = "--no-minify" ] && MINIFY=0
 
 rm -rf deploy
-mkdir -p deploy/app deploy/mentor deploy/onboarding deploy/feedback deploy/feedback-panel deploy/biotipo
+mkdir -p deploy/app deploy/mentor deploy/onboarding deploy/feedback deploy/feedback-panel deploy/biotipo deploy/chakras
 
 # App del cliente (PWA completa: index + service worker + manifest + iconos)
 cp src/maat_dashboard.html      deploy/app/index.html
@@ -44,6 +44,12 @@ cp src/maat_feedback_dashboard.html deploy/feedback-panel/index.html
 # dominio que /app/ para compartir la sesion de Supabase (guardar en perfil).
 cp src/maat_biotipo.html        deploy/biotipo/index.html
 
+# Viaje a los 7 Chakras (lead magnet + sesiones del cliente). DEBE ir en el mismo
+# dominio que /app/ para compartir la sesion de Supabase: si quien entra ya es
+# cliente, se le salta la puerta de datos y se le carga su columna de luz.
+# Si algun dia lleva audio (assets/), copiar tambien esa carpeta.
+cp src/maat_chakras.html        deploy/chakras/index.html
+
 # /dashboard/ -> /app/ : la copia vieja embebida en Elementor quedo congelada
 # (el deploy FTP no la toca). Una carpeta FISICA gana sobre la pagina de
 # WordPress (el server sirve directorios antes de pasar la URL a WP), asi que
@@ -64,7 +70,7 @@ HTML
 # .htaccess por carpeta: evita que las caches (LiteSpeed / proxy / navegador)
 # sirvan HTML viejo tras un deploy. El HTML es pequenio: preferimos frescura.
 # NOTA: esto solo afecta a DESPUES de purgar la cache actual una vez.
-for d in app mentor onboarding feedback feedback-panel biotipo; do
+for d in app mentor onboarding feedback feedback-panel biotipo chakras; do
   cat > "deploy/$d/.htaccess" <<'HTACCESS'
 AddDefaultCharset utf-8
 <IfModule mod_headers.c>
@@ -92,6 +98,15 @@ if [ "$MINIFY" = "1" ] && command -v npx >/dev/null 2>&1; then
       --minify-js '{"output":{"ascii_only":true}}' \
       "$f" -o "$f.tmp" && mv "$f.tmp" "$f"
   done
+  # La pagina de chakras lleva un <script type="module">: terser necesita
+  # module:true para parsear el import. Con la config de arriba fallaria el
+  # parseo y, con set -e, se caeria el build entero.
+  npx --yes html-minifier-terser \
+    --collapse-whitespace --conservative-collapse --remove-comments \
+    --minify-css true \
+    --minify-js '{"module":true,"output":{"ascii_only":true}}' \
+    deploy/chakras/index.html -o deploy/chakras/index.html.tmp \
+    && mv deploy/chakras/index.html.tmp deploy/chakras/index.html
 else
   echo "Minificacion omitida (usa --no-minify o instala npx para activarla)."
 fi
