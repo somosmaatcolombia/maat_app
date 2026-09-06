@@ -96,6 +96,16 @@ jobs:
           local-dir: deploy/biotipo/
           server-dir: biotipo/
 
+      - name: Subir Viaje a los 7 Chakras (/chakras/)
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          local-dir: deploy/chakras/
+          server-dir: chakras/
+
       - name: Subir cuestionario de trazabilidad (/feedback/)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
