@@ -343,6 +343,9 @@ body.retiro .retiro-afirm{opacity:1}
   <div class="med__ring" id="medRing"><span class="med__phase" id="medPhase">inhala</span></div>
   <p class="med__afirm" id="medAfirm">&#x2014;</p>
   <div class="med__time" id="medTime">03:00</div>
+  <div class="med__pat" id="medPat"></div>
+  <p class="med__ritmo" id="medRitmo">&#x2014;</p>
+  <button class="btn" id="medSonido" hidden>Activar el sonido</button>
   <button class="btn med__exit" id="medExit">Salir de la meditaci&#xF3;n</button>
 </section>
 
@@ -805,6 +808,31 @@ const Sound = {
 
     this.ready = true;
   },
+
+  /* Capa de aire: ruido rosa filtrado. Al inhalar el filtro se abre y el
+     volumen sube; al exhalar se cierra. Es la respiracion hecha sonido, no
+     una metafora visual \u2014 se puede seguir con los ojos cerrados. */
+  initAire(){
+    if (this.aire || !this.ctx) return;
+    const ctx = this.ctx, n = Math.floor(ctx.sampleRate * 2);
+    const buf = ctx.createBuffer(1, n, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    let b0 = 0, b1 = 0, b2 = 0;
+    for (let i = 0; i < n; i++){                      // ruido rosa (Voss-McCartney simplificado)
+      const w = Math.random() * 2 - 1;
+      b0 = 0.99765 * b0 + w * 0.0990460;
+      b1 = 0.96300 * b1 + w * 0.2965164;
+      b2 = 0.57000 * b2 + w * 1.0526913;
+      d[i] = (b0 + b1 + b2 + w * 0.1848) * 0.14;
+    }
+    const src = ctx.createBufferSource(); src.buffer = buf; src.loop = true;
+    const filt = ctx.createBiquadFilter(); filt.type = 'lowpass';
+    filt.frequency.value = 320; filt.Q.value = 0.7;
+    const g = ctx.createGain(); g.gain.value = 0;
+    src.connect(filt); filt.connect(g); g.connect(this.master);
+    src.start();
+    this.aire = { src, filt, gain: g };
+  },
   setFreq(hz, seconds){
     if (!this.ready) return;
     const t = this.ctx.currentTime, d = seconds || 0.4;
@@ -911,10 +939,13 @@ function showPanel(ch, i){
   $('pMed').textContent = L('Meditar aqu\u00ED', 'Meditate here');
   $('pMed').style.background = ch.color;
   $('pMed').style.borderColor = ch.color;
+  // La resonancia con microfono vive solo en Vishuddha, que es el centro del
+  // sonido. En los otros seis pedia permiso de microfono sin ganarselo.
   const voz = $('pVoice');
-  voz.textContent = i === 4 ? L('Resonar con tu voz', 'Resonate with your voice') : L('Resonar', 'Resonate');
-  voz.style.borderColor = i === 4 ? ch.color : '';
-  voz.style.color = i === 4 ? ch.color : '';
+  voz.hidden = i !== 4;
+  voz.textContent = L('Resonar con tu voz', 'Resonate with your voice');
+  voz.style.borderColor = ch.color;
+  voz.style.color = ch.color;
   setOffset(1.2);
   $('pNext').textContent = i === 6 ? L('Volver a la base', 'Back to the base') : L('Subir', 'Climb');
   panel.hidden = false;
@@ -975,12 +1006,11 @@ function openMed(){
   medEnd = performance.now() + 180000;
   if (Sound.on){ Sound.init(); Sound.fade(0.2, 2); }
   if (current >= 0) Media.playVoz(current, () => { if (Sound.on) Sound.fade(0.18, 3); });
+  Breath.start();
   const tick = () => {
     const left = Math.max(0, medEnd - performance.now());
     const s = Math.ceil(left/1000);
     $('medTime').textContent = `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
-    const p = ((performance.now()/1000) % 10);
-    $('medPhase').textContent = p < 4 ? L('inhala', 'inhale') : p < 5.5 ? L('sost\u00E9n', 'hold') : L('exhala', 'exhale');
     if (left <= 0){
       closeMed();
       registrarSesion(current < 0 ? 0 : current, 'meditacion', { seconds:180 });
@@ -993,6 +1023,7 @@ function openMed(){
 }
 function closeMed(){
   med.hidden = true;
+  Breath.stop();
   Media.stopVoz();
   if (medRaf) cancelAnimationFrame(medRaf);
   if (Sound.on) Sound.fade(0.16, 1.5);
@@ -1646,6 +1677,7 @@ const I18N = {
   cView:       ['Ver la columna', 'See the column'],
   cScan:       ['Escaneo', 'Scan'],
   medExit:     ['Salir de la meditaci\u00F3n', 'Leave the meditation'],
+  medSonido:   ['Activar el sonido', 'Turn the sound on'],
   tSheetT:     ['Sobre las frecuencias', 'About the frequencies'],
   tSheetP1:    ['Los 396\u2013963 Hz que escuchas son la <b>escala Solfeggio</b>: la convenci\u00F3n m\u00E1s usada en meditaci\u00F3n para asociar un tono a cada centro. Es un marco simb\u00F3lico y tradicional, <b>no una medici\u00F3n f\u00EDsica verificada</b>. Te lo decimos porque en MAAT no vendemos tradici\u00F3n disfrazada de ciencia.',
                 'The 396\u2013963 Hz you hear are the <b>Solfeggio scale</b>: the most common convention in meditation for tying a tone to each center. It is a symbolic, traditional frame, <b>not a verified physical measurement</b>. We say so because MAAT does not sell tradition dressed up as science.'],
@@ -1710,6 +1742,7 @@ function aplicarIdioma(){
     if (el.dataset && el.dataset.l) el.setAttribute('aria-pressed', el.dataset.l === lang ? 'true' : 'false');
   });
   if (scanIdx < ITEMS.length) renderScan();
+  if (!med.hidden) Breath.pintarPatrones();
   if (current >= 0) showPanel(CHAKRAS[current], current);
   const known0 = store.get(LEAD_KEY);
   if (known0 && known0.name && $('hello') && !$('hello').hidden)
@@ -1720,6 +1753,120 @@ $('lang').addEventListener('click', ev => {
   lang = b.dataset.l;
   try { localStorage.setItem('maat-lang', lang); } catch(e){}
   aplicarIdioma();
+});
+
+/* ============================================================
+   5i \u00B7 RESPIRACION GUIADA \u2014 el sonido lleva el ritmo
+   La envolvente se programa contra el reloj del AudioContext, no con
+   setTimeout: un temporizador de JS se desfasa y el aire termina
+   respirando distinto que el aro. Aqui van siempre juntos.
+   ============================================================ */
+const PATRONES = [
+  { id:'calma',  ins:4, sost:2, exh:6, es:'Calma',      en:'Calm' },
+  { id:'coher',  ins:5, sost:0, exh:5, es:'Coherencia', en:'Coherence' },
+  { id:'suelta', ins:4, sost:0, exh:8, es:'Soltar',     en:'Release' }
+];
+const RITMO_KEY = 'maat-respiracion';
+let patron = PATRONES.find(p => p.id === localStorage.getItem(RITMO_KEY)) || PATRONES[0];
+
+const Breath = {
+  on:false, raf:null, timer:null, t0:0,
+  dur(){ return patron.ins + patron.sost + patron.exh; },
+  // La imagen usa el reloj del sistema: el del AudioContext se detiene si el
+  // navegador suspende el audio, y el aro se quedaria clavado a media inhalacion.
+  // El aire se reprograma cada ciclo desde ctx.currentTime, asi que si el audio
+  // se suspende y vuelve, se realinea solo en el ciclo siguiente.
+  reloj(){ return performance.now() / 1000; },
+
+  start(){
+    this.stop();
+    this.on = true;
+    if (Sound.on){ Sound.init(); Sound.initAire(); }
+    this.t0 = this.reloj() + 0.12;
+    if (Sound.on && Sound.aire) this.programar();
+    this.pintar();
+    this.pintarPatrones();
+  },
+
+  /* Programa la envolvente de un ciclo completo con precision de muestra. */
+  programar(){
+    if (!this.on || !Sound.aire || !Sound.ctx) return;
+    const t = Sound.ctx.currentTime + 0.12;
+    const g = Sound.aire.gain.gain, f = Sound.aire.filt.frequency;
+    const pico = 0.42, base = 0.012;
+    const tIns = t + patron.ins, tSos = tIns + patron.sost, tFin = t + this.dur();
+    g.cancelScheduledValues(t);
+    g.setValueAtTime(base, t);
+    g.linearRampToValueAtTime(pico, tIns);
+    if (patron.sost) g.setValueAtTime(pico, tSos);
+    g.linearRampToValueAtTime(base, tFin);
+    f.cancelScheduledValues(t);
+    f.setValueAtTime(300, t);
+    f.linearRampToValueAtTime(1900, tIns);          // se abre: entra aire
+    if (patron.sost) f.setValueAtTime(1900, tSos);
+    f.linearRampToValueAtTime(280, tFin);           // se cierra: sale
+    this.timer = setTimeout(() => this.programar(), this.dur() * 1000);
+  },
+
+  /* El aro y la cuenta salen del mismo reloj que el aire. */
+  pintar(){
+    if (!this.on) return;
+    this.raf = requestAnimationFrame(() => this.pintar());
+    const d = this.dur();
+    let p = (this.reloj() - this.t0) % d;
+    if (p < 0) p += d;
+    const suave = x => x < 0.5 ? 2*x*x : 1 - Math.pow(-2*x + 2, 2) / 2;
+    let escala, fase, resta;
+    if (p < patron.ins){
+      escala = 0.55 + suave(p / patron.ins) * 0.45;
+      fase = L('inhala', 'inhale'); resta = patron.ins - p;
+    } else if (p < patron.ins + patron.sost){
+      escala = 1; fase = L('sost\u00E9n', 'hold'); resta = patron.ins + patron.sost - p;
+    } else {
+      const q = (p - patron.ins - patron.sost) / patron.exh;
+      escala = 1 - suave(q) * 0.45;
+      fase = L('exhala', 'exhale'); resta = d - p;
+    }
+    $('medRing').style.transform = `scale(${escala.toFixed(3)})`;
+    $('medPhase').innerHTML = `${fase}<small>${Math.ceil(resta)}</small>`;
+  },
+
+  pintarPatrones(){
+    $('medPat').innerHTML = PATRONES.map(pt =>
+      `<button data-p="${pt.id}" aria-pressed="${pt.id === patron.id}">${L(pt.es, pt.en)}</button>`).join('');
+    $('medRitmo').textContent = patron.sost
+      ? L(`${patron.ins} inhalar \u00B7 ${patron.sost} sostener \u00B7 ${patron.exh} exhalar`,
+          `${patron.ins} in \u00B7 ${patron.sost} hold \u00B7 ${patron.exh} out`)
+      : L(`${patron.ins} inhalar \u00B7 ${patron.exh} exhalar`, `${patron.ins} in \u00B7 ${patron.exh} out`);
+    $('medSonido').hidden = Sound.on;
+  },
+
+  stop(){
+    this.on = false;
+    if (this.raf) cancelAnimationFrame(this.raf);
+    if (this.timer) clearTimeout(this.timer);
+    this.raf = this.timer = null;
+    if (Sound.aire){
+      const g = Sound.aire.gain.gain, t = Sound.ctx.currentTime;
+      g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.linearRampToValueAtTime(0, t + 0.8);
+    }
+  }
+};
+
+$('medPat').addEventListener('click', ev => {
+  const b = ev.target.closest('button[data-p]'); if (!b) return;
+  patron = PATRONES.find(pt => pt.id === b.dataset.p) || patron;
+  try { localStorage.setItem(RITMO_KEY, patron.id); } catch(e){}
+  Breath.start();                                   // rearranca el ciclo con el ritmo nuevo
+});
+$('medSonido').addEventListener('click', () => {
+  Sound.on = true;
+  $('cSound').textContent = `${L('Sonido', 'Sound')}: on`;
+  Sound.init();
+  if (Sound.ctx && Sound.ctx.state === 'suspended') Sound.ctx.resume();
+  Sound.initAire();
+  Sound.fade(0.16, 1.2);
+  Breath.start();
 });
 
 /* --- teclado --- */
