@@ -99,10 +99,11 @@ canvas#gl{position:fixed;inset:0;display:block;touch-action:none}
   gap:8px;flex-wrap:wrap;padding:0 16px}
 
 /* ---- intro ---- */
-.veil{position:fixed;inset:0;z-index:70;background:var(--ink);display:flex;align-items:center;
-  justify-content:center;padding:40px 24px;transition:opacity .8s}
+.veil{position:fixed;inset:0;z-index:70;background:var(--ink);display:flex;align-items:flex-start;
+  justify-content:center;padding:36px 22px;transition:opacity .8s;overflow-y:auto;
+  -webkit-overflow-scrolling:touch}
 .veil.out{opacity:0;pointer-events:none}
-.intro{max-width:660px;text-align:center}
+.intro{max-width:660px;text-align:center;margin:auto}   /* centra si cabe, scrollea si no */
 .intro .wordmark{font-size:22px;color:#fff;margin-bottom:26px;opacity:.8}
 .intro h1{font-family:'Saira Condensed',sans-serif;font-weight:900;font-size:clamp(46px,8.4vw,88px);
   line-height:.9;margin:0 0 18px;text-transform:uppercase}
@@ -137,7 +138,8 @@ canvas#gl{position:fixed;inset:0;display:block;touch-action:none}
 
 /* ---- meditaci&#xF3;n ---- */
 .med{position:fixed;inset:0;z-index:55;display:flex;flex-direction:column;align-items:center;
-  justify-content:center;background:rgba(22,19,28,.72);backdrop-filter:blur(3px);transition:opacity .6s}
+  justify-content:center;background:rgba(22,19,28,.72);backdrop-filter:blur(3px);transition:opacity .6s;
+  overflow-y:auto;padding:24px 16px}
 .med[hidden]{display:none}
 .med__ring{position:relative;width:230px;height:230px;border-radius:50%;display:flex;align-items:center;justify-content:center;
   border:2px solid currentColor;animation:breathe 10s ease-in-out infinite}
@@ -193,8 +195,10 @@ body.retiro .lang{display:none}
 .tag{padding:0 76px}
 
 /* ---- resonancia ---- */
-.voice{position:fixed;inset:0;z-index:56;display:flex;align-items:center;justify-content:center;
-  background:rgba(22,19,28,.78);backdrop-filter:blur(3px)}
+.voice{position:fixed;inset:0;z-index:56;display:flex;align-items:flex-start;justify-content:center;
+  background:rgba(22,19,28,.78);backdrop-filter:blur(3px);overflow-y:auto;padding:24px 16px;
+  -webkit-overflow-scrolling:touch}
+.voice__inner{margin:auto}
 .voice[hidden]{display:none}
 .voice__inner{width:min(560px,calc(100vw - 40px));text-align:center}
 .voice__target{font-family:'Saira Condensed',sans-serif;font-weight:800;font-size:15px;
@@ -251,6 +255,16 @@ body.retiro .retiro-afirm{opacity:1}
 .sheet h3{font-family:'Saira Condensed',sans-serif;font-weight:900;font-size:26px;margin:0 0 10px;text-transform:uppercase}
 .sheet p{font-size:13.5px;line-height:1.6;color:#3C3A41;margin:0 0 10px}
 
+@media (max-height:760px){
+  .intro .brand-logo{width:54px;height:54px;margin-bottom:4px}
+  .intro .wordmark{margin-bottom:16px}
+  .intro h1{font-size:clamp(34px,7.6vw,54px);margin-bottom:12px}
+  .intro p{font-size:14px;line-height:1.55}
+  .gate{margin-top:18px}
+  .field{margin-bottom:9px}
+  .note{margin-top:18px;font-size:11.5px}
+  .veil{padding:24px 18px}
+}
 @media (max-width:900px){
   .card{right:12px;left:12px;width:auto;max-width:none;top:auto;
     bottom:calc(var(--barra, 56px) + 22px);transform:none;
@@ -259,8 +273,16 @@ body.retiro .retiro-afirm{opacity:1}
   .panel{right:12px;left:12px;width:auto;max-width:none;top:auto;
     bottom:calc(var(--barra, 56px) + 26px);transform:none;
     box-shadow:10px 10px 0 rgba(0,0,0,.5);padding:18px 18px 14px;
-    max-height:max(150px, min(52vh, calc(100vh - var(--barra, 56px) - 90px)));
+    max-height:max(190px, min(64vh, calc(100vh - var(--barra, 56px) - 68px)));
     overflow-y:auto;-webkit-overflow-scrolling:touch}
+  /* el degradado avisa que el texto sigue: sin el, un panel con scroll
+     parece un panel con el texto cortado */
+  .card::after, .panel::after{content:'';position:sticky;display:block;bottom:-17px;height:30px;
+    margin:-30px -20px -17px;background:linear-gradient(rgba(255,255,255,0), #fff 78%);
+    pointer-events:none}
+  .controls{gap:5px;bottom:50px}
+  .btn{font-size:11.5px;padding:8px 10px 7px;letter-spacing:.06em}
+  .lockup{bottom:13px}
   .panel__title{margin-bottom:0}
   .meta div{padding:8px 0}
   .afirm{font-size:20px}
@@ -355,8 +377,9 @@ body.retiro .retiro-afirm{opacity:1}
       <button class="btn" id="vGive">Darme la nota</button>
       <button class="btn" id="vExit">Salir</button>
     </div>
-    <p class="voice__legal" id="tVozLegal">El micr&oacute;fono se analiza <b>dentro de tu navegador</b>. No se graba nada,
-    no se env&iacute;a audio a ning&uacute;n servidor.</p>
+    <p class="voice__legal" id="tVozLegal"><b>Usa aud&iacute;fonos.</b> Sin ellos el micr&oacute;fono escucha el tono
+    en vez de tu voz &mdash; por eso la nota se da en r&aacute;fagas, con el bot&oacute;n. El audio se analiza
+    dentro de tu navegador: no se graba nada.</p>
   </div>
 </section>
 
@@ -1128,14 +1151,19 @@ function detectPitch(buf, rate){
   for (let i = 1; i < N / 2; i++) if (Math.abs(buf[N - i]) < th){ r2 = N - i; break; }
   const b = buf.slice(r1, r2), n = b.length;
   if (n < 128) return -1;
-  const c = new Float32Array(n);
-  for (let i = 0; i < n; i++){ let sum = 0; for (let j = 0; j < n - i; j++) sum += b[j] * b[j + i]; c[i] = sum; }
-  let d = 0; while (d < n - 1 && c[d] > c[d + 1]) d++;
+  // Solo interesan desfases entre 60 Hz y 1200 Hz. Calcular la correlacion
+  // completa es tirar la mitad del trabajo a la basura: esto es O(n * maxLag).
+  const minLag = Math.max(2, Math.floor(rate / 1200));
+  const maxLag = Math.min(n - 1, Math.ceil(rate / 60));
+  const c = new Float32Array(maxLag + 1);
+  for (let i = 0; i <= maxLag; i++){ let sum = 0; for (let j = 0; j < n - i; j++) sum += b[j] * b[j + i]; c[i] = sum; }
+  let d = 0; while (d < maxLag && c[d] > c[d + 1]) d++;
+  d = Math.max(d, minLag);
   let max = -1, pos = -1;
-  for (let i = d; i < n; i++) if (c[i] > max){ max = c[i]; pos = i; }
+  for (let i = d; i <= maxLag; i++) if (c[i] > max){ max = c[i]; pos = i; }
   if (pos <= 0) return -1;
   let T = pos;
-  const x1 = c[T - 1], x2 = c[T], x3 = c[T + 1];
+  const x1 = c[T - 1], x2 = c[T], x3 = c[T + 1] !== undefined ? c[T + 1] : c[T];
   const a = (x1 + x3 - 2 * x2) / 2, bb = (x3 - x1) / 2;
   if (a) T = T - bb / (2 * a);
   const f = rate / T;
@@ -1144,11 +1172,12 @@ function detectPitch(buf, rate){
 
 const Voice = {
   on:false, stream:null, analyser:null, buf:null, raf:null, last:0,
-  hold:0, target:0, ch:null, won:false, smooth:0,
+  hold:0, target:0, ch:null, won:false, smooth:0, hist:[], sordo:0,
 
   async open(){
     const ch = CHAKRAS[current < 0 ? 4 : current];
     this.ch = ch; this.hold = 0; this.won = false; this.smooth = 0; this.last = 0;
+    this.hist = []; this.sordo = 0;
     const el = $('voice');
     el.hidden = false; el.style.color = ch.color;
     panel.hidden = true; setOffset(0);
@@ -1164,7 +1193,10 @@ const Voice = {
       `<b>${this.target.toFixed(1)} Hz</b> = ${noteName(this.target)}`;
 
     Sound.init();
-    if (Sound.on) Sound.setFreq(this.target, 1.2);          // el drone te da la nota de referencia
+    // El drone NO puede sonar mientras el microfono escucha: sin audifonos,
+    // el microfono oye la referencia y afina contra ella, no contra tu voz.
+    // La nota se da a peticion, en rafagas, con la deteccion en pausa.
+    if (Sound.on){ Sound.setFreq(this.target, 1.0); Sound.fade(0, 0.8); }
 
     try {
       this.stream = await navigator.mediaDevices.getUserMedia({
@@ -1193,11 +1225,22 @@ const Voice = {
   loop(now){
     if (!this.on) return;
     this.raf = requestAnimationFrame(t => this.loop(t));
+    // El analisis cuesta ~2.5 ms en escritorio y ~10 ms en telefono. A 60 fps
+    // se comia el frame y la pieza iba a tirones. A 12 por segundo sobra para
+    // un zumbido sostenido, y la aguja sigue suave por la transicion CSS.
+    if (now - (this.last || 0) < 80) return;
     const dt = Math.min(1, (now - (this.last || now)) / 1000);   // reloj real, no frames
     this.last = now;
+    if (now < this.sordo){ $('vState').textContent = L('Escucha la nota', 'Listen to the note'); return; }
 
     this.analyser.getFloatTimeDomainData(this.buf);
-    const f = detectPitch(this.buf, Sound.ctx.sampleRate);
+    let f = detectPitch(this.buf, Sound.ctx.sampleRate);
+    // Mediana de las tres ultimas: mata el salto de octava ocasional de la
+    // autocorrelacion, que hacia parpadear la aguja de un extremo al otro.
+    if (f > 0){
+      this.hist.push(f); if (this.hist.length > 3) this.hist.shift();
+      if (this.hist.length === 3) f = [...this.hist].sort((a, b) => a - b)[1];
+    } else this.hist.length = 0;
     const needle = $('vNeedle');
 
     // ganada la resonancia, la aguja sigue viva pero el mensaje de logro se queda
@@ -1209,7 +1252,7 @@ const Voice = {
         this.hold = Math.max(0, this.hold - dt * 0.6);
       }
     } else {
-      this.smooth = this.smooth ? this.smooth * 0.7 + f * 0.3 : f;   // la voz tiembla; el medidor no
+      this.smooth = this.smooth ? this.smooth * 0.55 + f * 0.45 : f;   // la voz tiembla; el medidor no
       const t = octaveNear(this.target, this.smooth);
       const c = Math.max(-60, Math.min(60, centsOf(this.smooth, t)));
       const tuned = Math.abs(c) <= 25;
@@ -1246,6 +1289,7 @@ const Voice = {
 
   close(){
     this.on = false;
+    this.sordo = 0;
     if (this.raf) cancelAnimationFrame(this.raf);
     if (this.stream) this.stream.getTracks().forEach(t => t.stop());
     this.stream = null; this.analyser = null;
@@ -1272,9 +1316,16 @@ async function saveResonance(ch, hz){
 $('pVoice').addEventListener('click', () => Voice.open());
 $('vExit').addEventListener('click', () => Voice.close());
 $('vGive').addEventListener('click', () => {
-  if (!Sound.on){ Sound.on = true; $('cSound').textContent = 'Sonido: on'; Sound.init();
-    if (Sound.ctx.state === 'suspended') Sound.ctx.resume(); Sound.fade(0.16, 0.8); }
-  Sound.setFreq(Voice.target, 0.8);
+  if (!Sound.on){ Sound.on = true; $('cSound').textContent = `${L('Sonido', 'Sound')}: on`; }
+  Sound.init();
+  if (Sound.ctx && Sound.ctx.state === 'suspended') Sound.ctx.resume();
+  Sound.setFreq(Voice.target, 0.5);
+  Sound.fade(0.2, 0.4);
+  // rafaga de 2.5 s con la deteccion en pausa: si no, el microfono se
+  // afinaria contra el altavoz en vez de contra la persona
+  Voice.sordo = performance.now() + 3000;
+  Voice.hist = [];
+  setTimeout(() => Sound.fade(0, 0.6), 2500);
 });
 
 /* ============================================================
@@ -1604,8 +1655,8 @@ const I18N = {
   tCentro:     ['en el centro', 'dead center'],
   vGive:       ['Darme la nota', 'Give me the note'],
   vExit:       ['Salir', 'Leave'],
-  tVozLegal:   ['El micr\u00F3fono se analiza <b>dentro de tu navegador</b>. No se graba nada, no se env\u00EDa audio a ning\u00FAn servidor.',
-                'The microphone is analyzed <b>inside your browser</b>. Nothing is recorded, no audio is sent to any server.'],
+  tVozLegal:   ['<b>Usa aud\u00EDfonos.</b> Sin ellos el micr\u00F3fono escucha el tono en vez de tu voz \u2014 por eso la nota se da en r\u00E1fagas, con el bot\u00F3n. El audio se analiza dentro de tu navegador: no se graba nada.',
+                '<b>Use headphones.</b> Without them the microphone hears the tone instead of your voice \u2014 that is why the note comes in short bursts, from the button. The audio is analyzed inside your browser: nothing is recorded.'],
   scanSkip:    ['saltar el escaneo', 'skip the scan'],
   tScanFoot:   ['Responde por c\u00F3mo has estado este mes, no por c\u00F3mo quieres estar.',
                 'Answer for how you have actually been this month, not for how you want to be.'],
