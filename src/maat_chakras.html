@@ -37,6 +37,14 @@ canvas#gl{position:fixed;inset:0;display:block;touch-action:none}
 .lockup .wordmark{font-size:19px;color:#fff}
 .lockup .brand-logo{width:22px;height:22px}
 
+/* ---- pista de uso: aparece una vez y se va sola ---- */
+.pista{position:fixed;left:50%;top:78px;transform:translateX(-50%);z-index:44;pointer-events:none;
+  font-family:'Sora',sans-serif;font-size:12.5px;letter-spacing:.03em;color:#C9C3D2;
+  background:rgba(22,19,28,.72);backdrop-filter:blur(3px);padding:9px 15px;text-align:center;
+  max-width:calc(100vw - 40px);transition:opacity .6s}
+.pista[hidden]{display:none}
+.pista.se-va{opacity:0}
+
 /* ---- botones ---- */
 .btn{font-family:'Saira Condensed',sans-serif;font-weight:700;letter-spacing:.09em;
   text-transform:uppercase;font-size:14px;line-height:1;padding:15px 18px 14px;min-height:44px;cursor:pointer;
@@ -333,6 +341,7 @@ body.retiro .retiro-afirm{opacity:1}
 <div class="lockup"><span class="brand-logo"></span><span class="wordmark">maat</span></div>
 
 <nav class="rail" id="rail" aria-label="Los siete centros"></nav>
+<div class="pista" id="pista" hidden>Desliza para subir &middot; toca una flor para entrar</div>
 
 <aside class="panel" id="panel" hidden>
   <div class="panel__bar" id="pBar"></div>
@@ -355,7 +364,7 @@ body.retiro .retiro-afirm{opacity:1}
     <span class="luz__barra"><i id="pLuzBar"></i></span></p>
   <div class="panel__foot">
     <button class="btn" id="pVoice">Usar la voz</button>
-    <button class="btn" id="pNext">Subir</button>
+    <button class="btn" id="pNext">Siguiente chakra</button>
     <button class="hz" id="pHz">396 Hz &#xB7; sobre esto</button>
   </div>
 </aside>
@@ -766,8 +775,17 @@ const nodes = CHAKRAS.map((ch, i) => {
   const m = buildMandala(ch);
   m.position.z = 0.3;
   holder.add(m);
+  /* Disco invisible para el clic: acertarle a un petalo es dificil y entre
+     petalo y petalo hay huecos. Esto hace que toda la flor sea tocable. */
+  const hit = new THREE.Mesh(
+    new THREE.CircleGeometry(1.9, 24),
+    new THREE.MeshBasicMaterial({ visible:false, depthWrite:false })
+  );
+  hit.position.z = 0.45;
+  holder.add(hit);
+  holder.userData.idx = i;
   scene.add(holder);
-  return { holder, mandala:m, ch, i };
+  return { holder, mandala:m, hit, ch, i };
 });
 
 /* Cada mandala guarda el color original de sus materiales para poder apagarse:
@@ -921,6 +939,7 @@ let journeyTimer = null;
 
 function goTo(i, opts){
   const o = opts || {};
+  libre = false; clearTimeout(imanTimer);
   if (!o.keepJourney) stopJourney();
   current = i;
   if (i < 0){
@@ -942,20 +961,99 @@ function goTo(i, opts){
   paintRail();
 }
 
-/* --- interacci\u00F3n de \u00F3rbita --- */
-let dragging = false, lastX = 0, lastY = 0;
-canvas.addEventListener('pointerdown', e => { dragging = true; lastX = e.clientX; lastY = e.clientY; canvas.setPointerCapture(e.pointerId); });
-canvas.addEventListener('pointerup',   e => { dragging = false; });
+/* ============================================================
+   4b \u00B7 GESTOS \u2014 recorrer la columna, pellizcar para acercar, tocar una flor
+   Antes el arrastre solo orbitaba y en telefono no habia forma de subir ni
+   de acercarse. Ahora el eje vertical VIAJA por la columna y al soltar un
+   iman te deja en el centro mas cercano, para no quedar entre dos flores.
+   ============================================================ */
+const Y_MIN = yOf(0) - 2.5, Y_MAX = yOf(6) + 2.5;
+const raycaster = new THREE.Raycaster();
+const puntero2 = new THREE.Vector2();
+const punteros = new Map();
+let arrastrando = false, lastX = 0, lastY = 0, pellizco = 0;
+let movido = 0, tDown = 0, libre = false, imanTimer = null;
+
+function chakraEn(cx, cy){
+  puntero2.x = (cx / innerWidth) * 2 - 1;
+  puntero2.y = -(cy / innerHeight) * 2 + 1;
+  raycaster.setFromCamera(puntero2, camera);
+  const hits = raycaster.intersectObjects(nodes.map(n => n.hit), false);
+  if (!hits.length) return -1;
+  let o = hits[0].object;
+  while (o && o.userData.idx === undefined) o = o.parent;
+  return o ? o.userData.idx : -1;
+}
+
+function moverColumna(delta){
+  flightT = 1;                                   // cancela el vuelo en curso
+  view.y = Math.max(Y_MIN, Math.min(Y_MAX, view.y + delta));
+  to.y = from.y = view.y;
+  if (!libre){ libre = true; hidePanel(); stopJourney(); }
+  clearTimeout(imanTimer);
+  imanTimer = setTimeout(iman, 420);
+}
+/* El iman: al soltar, aterriza en el centro mas cercano. Sin esto uno queda
+   flotando entre dos flores y la pieza pierde el sentido de "parada". */
+function iman(){
+  let mejor = 0, d = 1e9;
+  for (let i = 0; i < 7; i++){ const dd = Math.abs(yOf(i) - view.y); if (dd < d){ d = dd; mejor = i; } }
+  libre = false;
+  goTo(mejor);
+}
+function zoom(factor){
+  flightT = 1;
+  view.dist = Math.max(3.2, Math.min(36, view.dist * factor));
+  to.dist = from.dist = view.dist;
+}
+
+canvas.addEventListener('pointerdown', e => {
+  punteros.set(e.pointerId, { x:e.clientX, y:e.clientY });
+  if (punteros.size === 1){
+    arrastrando = true; lastX = e.clientX; lastY = e.clientY;
+    movido = 0; tDown = performance.now();
+  } else if (punteros.size === 2){
+    arrastrando = false;
+    const [a, b] = [...punteros.values()];
+    pellizco = Math.hypot(a.x - b.x, a.y - b.y);
+  }
+});
 canvas.addEventListener('pointermove', e => {
-  if (!dragging) return;
-  view.yaw   -= (e.clientX - lastX) * 0.005;
-  view.pitch  = Math.max(-0.55, Math.min(0.55, view.pitch + (e.clientY - lastY) * 0.0025));
+  if (punteros.has(e.pointerId)) punteros.set(e.pointerId, { x:e.clientX, y:e.clientY });
+  if (punteros.size === 2){                       // pellizco = acercar y alejar
+    const [a, b] = [...punteros.values()];
+    const d = Math.hypot(a.x - b.x, a.y - b.y);
+    if (pellizco > 0 && d > 0) zoom(pellizco / d);
+    pellizco = d;
+    return;
+  }
+  if (!arrastrando){                              // el cursor avisa que la flor se toca
+    canvas.style.cursor = chakraEn(e.clientX, e.clientY) >= 0 ? 'pointer' : 'grab';
+    return;
+  }
+  const dx = e.clientX - lastX, dy = e.clientY - lastY;
+  movido += Math.abs(dx) + Math.abs(dy);
+  view.yaw -= dx * 0.005;                                        // horizontal: girar alrededor
+  if (Math.abs(dy) > 0.4) moverColumna(dy * 0.032 * (view.dist / 10));    // vertical: recorrer
   lastX = e.clientX; lastY = e.clientY;
 });
+function soltar(e){
+  const eraUno = punteros.size === 1;
+  punteros.delete(e.pointerId);
+  if (punteros.size < 2) pellizco = 0;
+  if (!punteros.size) arrastrando = false;
+  // un toque limpio sobre una flor la elige; un arrastre no
+  if (eraUno && movido < 10 && performance.now() - tDown < 500){
+    const i = chakraEn(e.clientX, e.clientY);
+    if (i >= 0){ clearTimeout(imanTimer); libre = false; goTo(i); ocultarPista(); }
+  }
+}
+canvas.addEventListener('pointerup', soltar);
+canvas.addEventListener('pointercancel', e => { punteros.delete(e.pointerId); arrastrando = false; pellizco = 0; });
 canvas.addEventListener('wheel', e => {
   e.preventDefault();
-  const d = Math.max(3.4, Math.min(34, view.dist + e.deltaY * 0.012));
-  view.dist = d; to.dist = d; from.dist = d;
+  if (e.ctrlKey || e.metaKey) zoom(1 + e.deltaY * 0.0022);   // pellizco de trackpad
+  else moverColumna(-e.deltaY * 0.009 * (view.dist / 10));   // rueda: recorrer
 }, { passive:false });
 
 /* ============================================================
@@ -995,7 +1093,9 @@ function showPanel(ch, i){
   $('pLeer').hidden = anchoSuficiente;
   $('pLeer').textContent = L('Leer m\u00E1s', 'Read more');
   setOffset(1.2);
-  $('pNext').textContent = i === 6 ? L('Volver a la base', 'Back to the base') : L('Subir', 'Climb');
+  $('pNext').textContent = i === 6
+    ? L('Volver a la base', 'Back to the base')
+    : L('Siguiente chakra', 'Next chakra');
   panel.hidden = false;
 }
 function hidePanel(){ panel.hidden = true; if ($('scan').hidden && $('res').hidden) setOffset(0); }
@@ -1029,6 +1129,22 @@ $('cMed').addEventListener('click', () => {
   } else openMed();
 });
 $('cView').addEventListener('click', () => { cerrarMenu(); goTo(-1); });
+
+/* La pista se muestra una sola vez, la primera vez que se ve la columna. */
+let pistaHecha = false;
+function mostrarPista(){
+  if (pistaHecha || store.get('maat-pista')) return;
+  pistaHecha = true;
+  $('pista').hidden = false;
+  setTimeout(ocultarPista, 7000);
+}
+function ocultarPista(){
+  const el = $('pista');
+  if (!el || el.hidden) return;
+  el.classList.add('se-va');
+  setTimeout(() => { el.hidden = true; el.classList.remove('se-va'); }, 700);
+  store.set('maat-pista', 1);
+}
 $('cSound').addEventListener('click', e => {
   cerrarMenu();
   const on = Sound.toggle();
@@ -1205,7 +1321,7 @@ function finishScan(){
   pintarLuz();
   store.set(SCAN_KEY, { scores: sc, focus: low, at: Date.now() });
   saveScan(sc, low);
-  $('resGo').onclick = () => { $('res').hidden = true; setOffset(1.2); goTo(low); };
+  $('resGo').onclick = () => { $('res').hidden = true; setOffset(1.2); goTo(low); setTimeout(mostrarPista, 2400); };
 }
 $('resAll').addEventListener('click', () => { $('res').hidden = true; setOffset(0); goTo(-1); });
 $('resProfundo').addEventListener('click', () => { $('res').hidden = true; startScan(true); });
@@ -1762,6 +1878,8 @@ const I18N = {
   bvEscaneo:   ['Ver cu\u00E1l est\u00E1 apagado', 'See which one is dim'],
   bvExplorar:  ['Explorar por mi cuenta', 'Explore on my own'],
   bvSaltar:    ['Saltar', 'Skip'],
+  pista:       ['Desliza para subir \u00B7 toca una flor para entrar',
+                'Swipe to climb \u00B7 tap a flower to enter'],
   tNota:       ['<b>Usa aud\u00EDfonos si puedes.</b> El sonido se genera con osciladores, no son archivos grabados \u2014 por eso la frecuencia es exacta y se desliza contigo mientras subes.',
                 '<b>Use headphones.</b> The sound is generated with oscillators, not recorded files \u2014 that is why the frequency is exact and slides with you as you climb.']
 };
@@ -2205,6 +2323,7 @@ $('bvExplorar').addEventListener('click', () => {
   cerrarBienvenida();
   const prev = store.get(SCAN_KEY);
   goTo(prev && typeof prev.focus === 'number' ? prev.focus : 0);
+  setTimeout(mostrarPista, 2400);
 });
 
 /* ============================================================
