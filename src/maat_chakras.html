@@ -39,7 +39,7 @@ canvas#gl{position:fixed;inset:0;display:block;touch-action:none}
 
 /* ---- botones ---- */
 .btn{font-family:'Saira Condensed',sans-serif;font-weight:700;letter-spacing:.09em;
-  text-transform:uppercase;font-size:14px;line-height:1;padding:11px 16px 10px;cursor:pointer;
+  text-transform:uppercase;font-size:14px;line-height:1;padding:15px 18px 14px;min-height:44px;cursor:pointer;
   background:transparent;color:#EFEAF2;border:1.5px solid rgba(239,234,242,.32);transition:.18s}
 .btn:hover{border-color:#EFEAF2;background:rgba(239,234,242,.08)}
 .btn--solid{background:var(--orange);border-color:var(--orange);color:#231C13}
@@ -79,17 +79,20 @@ canvas#gl{position:fixed;inset:0;display:block;touch-action:none}
 .panel .btn{color:var(--dark);border-color:rgba(51,51,51,.28)}
 .panel .btn:hover{border-color:var(--dark);background:rgba(51,51,51,.05)}
 .panel .btn--solid{color:#231C13}
-.hz{margin-left:auto;font-size:11px;color:var(--gray);cursor:pointer;text-decoration:underline;
-  text-underline-offset:3px;background:none;border:0;font-family:'Sora',sans-serif;padding:0}
+.hz{margin-left:auto;font-size:11.5px;color:var(--gray);cursor:pointer;text-decoration:underline;
+  text-underline-offset:3px;background:none;border:0;font-family:'Sora',sans-serif;padding:11px 0;min-height:44px}
 
 /* ---- rail de 7 centros ---- */
-.rail{position:fixed;right:20px;top:50%;transform:translateY(-50%);z-index:46;
-  display:flex;flex-direction:column-reverse;gap:15px;align-items:center}
-.rail button{width:15px;height:15px;padding:0;border:0;cursor:pointer;background:transparent;position:relative}
-.rail i{display:block;width:9px;height:9px;margin:3px;border-radius:50%;opacity:.42;transition:.2s}
+/* Los puntos se ven igual, pero el area tocable es de 44 px: antes eran
+   15 y fallar el pulgar en la navegacion principal era la norma. */
+.rail{position:fixed;right:2px;top:50%;transform:translateY(-50%);z-index:46;
+  display:flex;flex-direction:column-reverse;gap:0;align-items:center}
+.rail button{width:44px;height:44px;padding:0;border:0;cursor:pointer;background:transparent;
+  position:relative;display:grid;place-items:center}
+.rail i{display:block;width:9px;height:9px;border-radius:50%;opacity:.42;transition:.2s}
 .rail button:hover i{opacity:.85;transform:scale(1.25)}
 .rail button[aria-current="true"] i{opacity:1;transform:scale(1.55);box-shadow:0 0 0 4px rgba(255,255,255,.1)}
-.rail span{position:absolute;right:22px;top:50%;transform:translateY(-50%);white-space:nowrap;
+.rail span{position:absolute;right:40px;top:50%;transform:translateY(-50%);white-space:nowrap;
   font-family:'Saira Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.08em;
   text-transform:uppercase;opacity:0;transition:.18s;pointer-events:none}
 .rail button:hover span{opacity:.9}
@@ -97,6 +100,12 @@ canvas#gl{position:fixed;inset:0;display:block;touch-action:none}
 /* ---- controles ---- */
 .controls{position:fixed;left:0;right:0;bottom:56px;z-index:45;display:flex;justify-content:center;
   gap:8px;flex-wrap:wrap;padding:0 16px}
+
+/* ---- menu: todo lo secundario deja de competir con lo principal ---- */
+.menu{position:fixed;left:0;right:0;bottom:118px;z-index:46;display:flex;flex-direction:column;
+  align-items:center;gap:7px;padding:0 16px}
+.menu[hidden]{display:none}
+.menu .btn{background:rgba(22,19,28,.9);backdrop-filter:blur(4px);min-width:220px}
 
 /* ---- intro ---- */
 .veil{position:fixed;inset:0;z-index:70;background:var(--ink);display:flex;align-items:flex-start;
@@ -162,8 +171,9 @@ canvas#gl{position:fixed;inset:0;display:block;touch-action:none}
 .scan__head{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
 .scan__step{font-family:'Saira Condensed',sans-serif;font-weight:700;font-size:12px;
   letter-spacing:.18em;color:var(--gray);text-transform:uppercase}
-.scan__skip{background:none;border:0;padding:0;cursor:pointer;font-family:'Sora',sans-serif;
-  font-size:11.5px;color:var(--gray);text-decoration:underline;text-underline-offset:3px}
+.scan__skip{background:none;border:0;padding:10px 2px;min-height:44px;cursor:pointer;
+  font-family:'Sora',sans-serif;font-size:12.5px;color:var(--gray);text-decoration:underline;
+  text-underline-offset:3px}
 .scan__prog{height:5px;background:#EDEAF0;margin-bottom:20px;overflow:hidden}
 .scan__prog i{display:block;height:100%;width:0;background:var(--stripe);
   background-size:412px 100%;transition:width .35s cubic-bezier(.2,.7,.3,1)}
@@ -183,50 +193,53 @@ canvas#gl{position:fixed;inset:0;display:block;touch-action:none}
 .res__pct{font-family:'Saira Condensed',sans-serif;font-weight:700;font-size:12px;color:var(--gray);
   width:32px;text-align:right;flex:0 0 auto}
 .res__row.low b{color:var(--dark)}
+.linkbtn{background:none;border:0;padding:8px 0;min-height:44px;cursor:pointer;font-family:'Sora',sans-serif;
+  font-size:12.5px;color:var(--gray);text-decoration:underline;text-underline-offset:3px}
+.linkbtn:hover{color:var(--dark)}
 
 /* ---- selector de idioma ---- */
 .lang{position:fixed;top:14px;right:16px;z-index:75;display:flex;align-items:center;gap:2px}
 .lang button{font-family:'Saira Condensed',sans-serif;font-weight:700;font-size:12.5px;letter-spacing:.12em;
-  background:transparent;border:0;color:#6B6577;cursor:pointer;padding:5px 7px}
+  background:transparent;border:0;color:#6B6577;cursor:pointer;padding:0 12px;min-width:44px;min-height:44px}
 .lang button[aria-pressed="true"]{color:#EFEAF2}
 .lang button:hover{color:#EFEAF2}
 .lang i{width:1px;height:12px;background:#403949;display:block}
 body.retiro .lang{display:none}
-.tag{padding:0 76px}
+.tag{padding:0 88px}
 
-/* ---- resonancia ---- */
-.voice{position:fixed;inset:0;z-index:56;display:flex;align-items:flex-start;justify-content:center;
-  background:rgba(22,19,28,.78);backdrop-filter:blur(3px);overflow-y:auto;padding:24px 16px;
-  -webkit-overflow-scrolling:touch}
-.voice__inner{margin:auto}
-.voice[hidden]{display:none}
-.voice__inner{width:min(560px,calc(100vw - 40px));text-align:center}
-.voice__target{font-family:'Saira Condensed',sans-serif;font-weight:800;font-size:15px;
-  letter-spacing:.16em;text-transform:uppercase;color:#9C94A8;margin-bottom:6px}
-.voice__target b{color:#fff;font-weight:800}
-.voice__note{font-family:'Saira Condensed',sans-serif;font-weight:900;font-size:clamp(48px,9vw,86px);
-  line-height:.95;color:#fff;margin:0 0 4px}
-.voice__meter{position:relative;height:56px;margin:16px 0 8px;border-top:1px solid rgba(239,234,242,.16);
-  border-bottom:1px solid rgba(239,234,242,.16)}
-.voice__zone{position:absolute;left:37.5%;width:25%;top:0;bottom:0;background:currentColor;opacity:.16}
-.voice__center{position:absolute;left:50%;top:0;bottom:0;width:2px;background:currentColor;opacity:.75}
-.voice__needle{position:absolute;top:6px;bottom:6px;width:5px;left:50%;background:#fff;
-  transform:translateX(-50%);transition:left .09s linear, background .2s}
-.voice__needle.on{background:currentColor;box-shadow:0 0 0 6px rgba(255,255,255,.09)}
-.voice__ticks{display:flex;justify-content:space-between;font-family:'Saira Condensed',sans-serif;
-  font-weight:700;font-size:11px;letter-spacing:.14em;color:#6B6577;margin-bottom:18px}
-.voice__state{font-family:'Saira Condensed',sans-serif;font-weight:800;font-size:22px;
-  letter-spacing:.1em;text-transform:uppercase;color:#EFEAF2;min-height:28px;margin-bottom:14px}
-.voice__hold{height:6px;background:rgba(239,234,242,.12);margin:0 auto 22px;max-width:340px}
-.voice__hold i{display:block;height:100%;width:0;background:currentColor;transition:width .12s linear}
-.voice__actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
-.voice__legal{font-size:11.5px;line-height:1.55;color:#7C7588;margin:20px auto 0;max-width:420px}
-.voice__win{font-family:'Saira Condensed',sans-serif;font-weight:900;font-size:clamp(30px,5vw,44px);
-  color:#fff;margin:0 0 10px;text-transform:uppercase;letter-spacing:.02em}
+/* ---- primera respiracion ---- */
+.bienve{position:fixed;inset:0;z-index:57;display:flex;align-items:flex-start;justify-content:center;
+  background:rgba(22,19,28,.72);backdrop-filter:blur(2px);overflow-y:auto;padding:26px 18px}
+.bienve[hidden]{display:none}
+.bienve__inner{margin:auto;text-align:center;max-width:460px}
+.bienve__aro{position:relative;width:210px;height:210px;border-radius:50%;margin:0 auto 26px;
+  display:flex;align-items:center;justify-content:center;border:2px solid #EFEAF2;
+  transform:scale(.55);will-change:transform}
+.bienve__aro::after{content:'';position:absolute;inset:0;border-radius:50%;background:#EFEAF2;opacity:.09}
+.bienve__fase{font-family:'Saira Condensed',sans-serif;font-weight:800;font-size:21px;letter-spacing:.16em;
+  text-transform:uppercase;color:#fff;text-align:center;line-height:1.1}
+.bienve__fase small{display:block;font-size:30px;letter-spacing:0;opacity:.5;margin-top:2px;
+  font-variant-numeric:tabular-nums}
+.bienve__txt{font-size:15.5px;line-height:1.6;color:#D8D3DE;margin:0 auto 22px;max-width:360px}
+.bienve__acciones{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:14px}
+.bienve__acciones[hidden]{display:none}
 
-/* ---- modo retiro: proyecci&#xF3;n, sin interfaz ---- */
+/* ---- la puerta: se paga por el artefacto, no por la entrada ---- */
+.puerta{position:fixed;inset:0;z-index:78;display:flex;align-items:flex-start;justify-content:center;
+  background:rgba(22,19,28,.88);backdrop-filter:blur(4px);overflow-y:auto;padding:24px 16px}
+.puerta[hidden]{display:none}
+.puerta .card{position:relative;right:auto;left:auto;top:auto;bottom:auto;transform:none;margin:auto;
+  width:min(440px,100%);max-width:100%;max-height:none}
+.puerta .panel__title{font-size:38px}
+.puerta p{font-size:14px;line-height:1.6;color:#3C3A41;margin:0 0 18px}
+.puerta .btn{width:100%;margin-top:8px;padding:13px 16px 12px;font-size:14px}
+.puerta .btn--ghost{color:var(--gray)}
+.puerta .btn--ghost:hover{background:transparent;color:var(--dark)}
+
+/* ---- modo retiro: proyeccion, sin interfaz ---- */
 body.retiro .panel, body.retiro .rail, body.retiro .controls, body.retiro .tag,
-body.retiro .scan, body.retiro .res, body.retiro .seal, body.retiro .voice{display:none!important}
+body.retiro .menu, body.retiro .scan, body.retiro .res, body.retiro .seal,
+body.retiro .voz, body.retiro .bienve, body.retiro .puerta{display:none!important}
 .retiro-afirm{position:fixed;left:0;right:0;bottom:14vh;z-index:44;text-align:center;padding:0 8vw;
   font-family:'Saira Condensed',sans-serif;font-weight:800;font-size:clamp(30px,4.6vw,64px);
   line-height:1.06;color:#fff;opacity:0;transition:opacity 1.6s ease;pointer-events:none;
@@ -235,6 +248,19 @@ body.retiro .retiro-afirm{opacity:1}
 .retiro-afirm small{display:block;font-family:'Sora',sans-serif;font-weight:400;
   font-size:clamp(13px,1.5vw,19px);letter-spacing:.2em;text-transform:uppercase;
   color:#B7B0C0;margin-bottom:14px}
+
+/* ---- voz ---- */
+.voz{position:fixed;inset:0;z-index:56;display:flex;align-items:flex-start;justify-content:center;
+  background:rgba(22,19,28,.8);backdrop-filter:blur(3px);overflow-y:auto;padding:26px 18px;
+  -webkit-overflow-scrolling:touch}
+.voz[hidden]{display:none}
+.voz__inner{margin:auto;text-align:center;max-width:460px}
+.voz__aro{width:200px;height:200px;border-radius:50%;margin:0 auto 30px;background:currentColor;
+  transform:scale(.5);opacity:.35;will-change:transform,opacity}
+.voz__estado{font-family:'Saira Condensed',sans-serif;font-weight:800;font-size:clamp(22px,4.4vw,30px);
+  letter-spacing:.06em;text-transform:uppercase;color:#fff;margin:0 0 12px;min-height:34px}
+.voz__pista{font-size:14px;line-height:1.6;color:#B7B0C0;margin:0 auto 24px;max-width:340px}
+.voz__legal{font-size:11.5px;line-height:1.55;color:#7C7588;margin:22px auto 0;max-width:340px}
 
 /* ---- sello ---- */
 .seal{position:fixed;inset:0;z-index:58;display:flex;align-items:center;justify-content:center;
@@ -277,8 +303,8 @@ body.retiro .retiro-afirm{opacity:1}
     overflow-y:auto;-webkit-overflow-scrolling:touch}
   /* el degradado avisa que el texto sigue: sin el, un panel con scroll
      parece un panel con el texto cortado */
-  .card::after, .panel::after{content:'';position:sticky;display:block;bottom:-17px;height:30px;
-    margin:-30px -20px -17px;background:linear-gradient(rgba(255,255,255,0), #fff 78%);
+  .card::after, .panel::after{content:'';position:sticky;display:block;bottom:0;height:28px;
+    margin:-28px -20px 0;background:linear-gradient(rgba(255,255,255,0), #fff 78%);
     pointer-events:none}
   .controls{gap:5px;bottom:50px}
   .btn{font-size:11.5px;padding:8px 10px 7px;letter-spacing:.06em}
@@ -313,36 +339,44 @@ body.retiro .retiro-afirm{opacity:1}
   <div class="panel__eyebrow" id="pEyebrow">centro 1 de 7</div>
   <h2 class="panel__title" id="pTitle">Ra&#xED;z</h2>
   <div class="panel__sans" id="pSans">Muladhara</div>
+  <p class="afirm" id="pAfirm">&#x2014;</p>
+  <div id="pMas" hidden>
   <dl class="meta">
     <div><dt id="tLoc">Ubicaci&#xF3;n</dt><dd id="pLoc">&#x2014;</dd></div>
     <div><dt id="tElem">Elemento</dt><dd id="pElem">&#x2014;</dd></div>
     <div><dt id="tPet">P&#xE9;talos</dt><dd id="pPet">&#x2014;</dd></div>
   </dl>
-  <p class="afirm" id="pAfirm">&#x2014;</p>
   <p id="pText">&#x2014;</p>
   <p class="flag"><b id="tBloq">Se&#xF1;al de bloqueo:</b> <span id="pBlock">&#x2014;</span></p>
   <p class="flag"><b id="tPract">Pr&#xE1;ctica:</b> <span id="pPract">&#x2014;</span></p>
+  </div>
+  <button class="linkbtn" id="pLeer">Leer m&aacute;s</button>
   <p class="luz" id="pLuz" hidden><b id="pLuzN">0</b> <span id="pLuzT">sesiones aqu&#xED;</span>
     <span class="luz__barra"><i id="pLuzBar"></i></span></p>
   <div class="panel__foot">
-    <button class="btn btn--solid" id="pMed">Meditar aqu&#xED;</button>
-    <button class="btn" id="pVoice">Resonar</button>
+    <button class="btn" id="pVoice">Usar la voz</button>
     <button class="btn" id="pNext">Subir</button>
     <button class="hz" id="pHz">396 Hz &#xB7; sobre esto</button>
   </div>
 </aside>
 
 <div class="controls" id="controls">
+  <button class="btn btn--solid" id="cMed">Meditar aqu&iacute;</button>
+  <button class="btn" id="cMenu" aria-expanded="false">M&aacute;s</button>
+</div>
+
+<div class="menu" id="menu" hidden>
   <button class="btn" id="cView">Ver la columna</button>
-  <button class="btn btn--solid" id="cJourney">Viaje completo</button>
-  <button class="btn" id="cSound">Sonido: on</button>
+  <button class="btn" id="cJourney">Viaje completo</button>
   <button class="btn" id="cScan">Escaneo</button>
+  <button class="btn" id="cSound">Sonido: on</button>
 </div>
 
 <section class="med" id="med" hidden>
   <div class="med__ring" id="medRing"><span class="med__phase" id="medPhase">inhala</span></div>
   <p class="med__afirm" id="medAfirm">&#x2014;</p>
   <div class="med__time" id="medTime">03:00</div>
+  <div class="med__pat" id="medDur"></div>
   <div class="med__pat" id="medPat"></div>
   <p class="med__ritmo" id="medRitmo">&#x2014;</p>
   <button class="btn" id="medSonido" hidden>Activar el sonido</button>
@@ -360,29 +394,58 @@ body.retiro .retiro-afirm{opacity:1}
     <div class="seal__actions">
       <button class="btn btn--solid" id="sealDl">Descargar</button>
       <button class="btn" id="sealShare" hidden>Compartir</button>
+      <button class="btn" id="sealMail">Env&iacute;amelo por correo</button>
       <button class="btn btn--ghost" id="sealClose">Seguir</button>
     </div>
   </div>
 </section>
 
-<section class="voice" id="voice" hidden>
-  <div class="voice__inner">
-    <div class="voice__target" id="vTarget">&mdash;</div>
-    <div class="voice__note" id="vNote">&mdash;</div>
-    <div class="voice__meter">
-      <span class="voice__zone"></span><span class="voice__center"></span>
-      <i class="voice__needle" id="vNeedle"></i>
+<section class="voz" id="voz" hidden>
+  <div class="voz__inner">
+    <div class="voz__aro" id="vzAro"></div>
+    <p class="voz__estado" id="vzEstado">&mdash;</p>
+    <p class="voz__pista" id="tVozPista">Inhala, y al exhalar deja salir una vocal larga.
+    No hay nota correcta: mira d&oacute;nde vibra.</p>
+    <button class="btn" id="vzSalir">Listo</button>
+    <p class="voz__legal" id="tVozLegal">El micr&oacute;fono se analiza dentro de tu navegador.
+    No se graba nada.</p>
+  </div>
+</section>
+
+<section class="bienve" id="bienve" hidden>
+  <div class="bienve__inner">
+    <div class="bienve__aro" id="bvAro"><span class="bienve__fase" id="bvFase">inhala</span></div>
+    <p class="bienve__txt" id="tBvTxt">Antes de cualquier cosa, una respiraci&oacute;n.<br>No tienes que hacer nada m&aacute;s.</p>
+    <div class="bienve__acciones" id="bvAcciones" hidden>
+      <button class="btn btn--solid" id="bvEscaneo">Ver cu&aacute;l est&aacute; apagado</button>
+      <button class="btn" id="bvExplorar">Explorar por mi cuenta</button>
     </div>
-    <div class="voice__ticks"><span>&minus;50 cents</span><span id="tCentro">en el centro</span><span>+50 cents</span></div>
-    <div class="voice__state" id="vState">Zumba una vocal larga</div>
-    <div class="voice__hold"><i id="vHold"></i></div>
-    <div class="voice__actions">
-      <button class="btn" id="vGive">Darme la nota</button>
-      <button class="btn" id="vExit">Salir</button>
-    </div>
-    <p class="voice__legal" id="tVozLegal"><b>Usa aud&iacute;fonos.</b> Sin ellos el micr&oacute;fono escucha el tono
-    en vez de tu voz &mdash; por eso la nota se da en r&aacute;fagas, con el bot&oacute;n. El audio se analiza
-    dentro de tu navegador: no se graba nada.</p>
+    <button class="btn btn--ghost" id="bvSaltar">Saltar</button>
+  </div>
+</section>
+
+<section class="puerta" id="puerta" hidden>
+  <div class="card">
+    <div class="panel__bar" id="puBar"></div>
+    <div class="panel__eyebrow" id="puEyebrow">tu columna</div>
+    <h2 class="panel__title" id="puTitulo">Te lo mandamos</h2>
+    <p id="puTexto">&mdash;</p>
+    <form id="puForm" novalidate>
+      <div class="gate__row">
+        <label class="field"><span id="tNombre">Nombre</span>
+          <input id="fName" type="text" autocomplete="name" placeholder="Tu nombre"></label>
+        <label class="field"><span id="tCorreo">Correo</span>
+          <input id="fMail" type="email" autocomplete="email" placeholder="tu@correo.com"></label>
+      </div>
+      <label class="field"><span id="tWhats">WhatsApp <i>&mdash; opcional</i></span>
+        <input id="fPhone" type="tel" autocomplete="tel" placeholder="+57 300 000 0000"></label>
+      <label class="check"><input type="checkbox" id="fOk">
+        <span id="tConsent">Quiero recibir el trabajo de MAAT. Puedo salirme cuando quiera.</span></label>
+      <div class="gate__msg" id="gateMsg"></div>
+      <button class="btn btn--solid" id="gateGo" type="submit">Env&iacute;amelo</button>
+      <button class="btn btn--ghost" id="puNo" type="button">Ahora no</button>
+      <p class="gate__legal" id="tLegal">Tus datos entran al sistema de MAAT. Sin spam y sin reventa a terceros.</p>
+    </form>
   </div>
 </section>
 
@@ -411,10 +474,12 @@ body.retiro .retiro-afirm{opacity:1}
     <div class="panel__sans" id="resSans">&mdash;</div>
     <p id="resText">&mdash;</p>
     <div class="res__list" id="resList"></div>
+    <p style="margin:12px 0 0"><button class="linkbtn" id="resProfundo">Hacer el escaneo profundo</button></p>
     <p class="scan__foot" id="tResFoot" style="margin-top:14px">Esto no es un diagn&oacute;stico cl&iacute;nico: es un espejo de lo
     que respondiste hace un minuto. Sirve para saber por d&oacute;nde empezar, no para etiquetarte.</p>
     <div class="panel__foot">
       <button class="btn btn--solid" id="resGo">Empezar ah&iacute;</button>
+      <button class="btn" id="resSello">Guardar mi columna</button>
       <button class="btn" id="resAll">Ver la columna</button>
     </div>
   </div>
@@ -436,34 +501,13 @@ body.retiro .retiro-afirm{opacity:1}
     <span class="brand-logo"></span>
     <div class="wordmark">maat</div>
     <h1 id="tH1">La columna<br><em>de luz</em></h1>
-    <p id="tIntroP">Siete centros, una sola l&iacute;nea vertical. Vas a subir de uno en uno: cada parada tiene un color,
-    una frecuencia real que se genera en vivo en tu navegador, y una pregunta inc&oacute;moda.</p>
-
-    <p class="hello" id="hello" hidden></p>
-
-    <form class="gate" id="gate" novalidate>
-      <div class="gate__row">
-        <label class="field"><span id="tNombre">Nombre</span>
-          <input id="fName" type="text" autocomplete="name" placeholder="Tu nombre"></label>
-        <label class="field"><span id="tCorreo">Correo</span>
-          <input id="fMail" type="email" autocomplete="email" placeholder="tu@correo.com"></label>
-      </div>
-      <label class="field"><span id="tWhats">WhatsApp <i>&mdash; opcional</i></span>
-        <input id="fPhone" type="tel" autocomplete="tel" placeholder="+57 300 000 0000"></label>
-      <label class="check"><input type="checkbox" id="fOk">
-        <span id="tConsent">Quiero recibir el trabajo de MAAT. Puedo salirme cuando quiera.</span></label>
-      <div class="gate__msg" id="gateMsg"></div>
-      <button class="btn btn--solid" id="gateGo" type="submit">Entrar al viaje</button>
-      <p class="gate__legal" id="tLegal">Tus datos entran al sistema de MAAT. Sin spam y sin reventa a terceros.</p>
-    </form>
-
-    <div class="cta" id="entryCta" hidden>
-      <button class="btn btn--solid" id="startSound">Iniciar el ascenso</button>
-      <button class="btn btn--ghost" id="startSilent">Entrar en silencio</button>
+    <p id="tIntroP">Siete centros, una sola l&iacute;nea vertical. Vas a subir de uno en uno: cada parada
+    tiene un color, una frecuencia real que se genera en vivo en tu navegador, y una pregunta inc&oacute;moda.</p>
+    <div class="cta">
+      <button class="btn btn--solid" id="entrar">Empezar</button>
     </div>
-
-    <p class="note" id="tNota"><b>Usa aud&iacute;fonos.</b> El sonido se genera con osciladores, no son archivos grabados &mdash;
-    por eso la frecuencia es exacta y se desliza contigo mientras subes.</p>
+    <p class="note" id="tNota"><b>Usa aud&iacute;fonos si puedes.</b> El sonido se genera con osciladores,
+    no son archivos grabados &mdash; por eso la frecuencia es exacta y se desliza contigo mientras subes.</p>
   </div>
 </div>
 
@@ -936,16 +980,20 @@ function showPanel(ch, i){
   $('pBlock').textContent = T(ch, 'bloqueo');
   $('pPract').textContent = T(ch, 'practica');
   $('pHz').textContent = L(`${ch.hz} Hz \u00B7 sobre esto`, `${ch.hz} Hz \u00B7 about this`);
-  $('pMed').textContent = L('Meditar aqu\u00ED', 'Meditate here');
-  $('pMed').style.background = ch.color;
-  $('pMed').style.borderColor = ch.color;
+  $('cMed').textContent = L('Meditar aqu\u00ED', 'Meditate here');
+  $('cMed').style.background = ch.color;
+  $('cMed').style.borderColor = ch.color;
   // La resonancia con microfono vive solo en Vishuddha, que es el centro del
   // sonido. En los otros seis pedia permiso de microfono sin ganarselo.
   const voz = $('pVoice');
   voz.hidden = i !== 4;
-  voz.textContent = L('Resonar con tu voz', 'Resonate with your voice');
+  voz.textContent = L('Usar la voz', 'Use your voice');
   voz.style.borderColor = ch.color;
   voz.style.color = ch.color;
+  const anchoSuficiente = innerWidth > 900;   // en telefono el texto largo tapa el mandala
+  $('pMas').hidden = !anchoSuficiente;
+  $('pLeer').hidden = anchoSuficiente;
+  $('pLeer').textContent = L('Leer m\u00E1s', 'Read more');
   setOffset(1.2);
   $('pNext').textContent = i === 6 ? L('Volver a la base', 'Back to the base') : L('Subir', 'Climb');
   panel.hidden = false;
@@ -964,12 +1012,34 @@ function paintRail(){
   [...rail.children].forEach((b, i) => b.setAttribute('aria-current', i === current ? 'true' : 'false'));
 }
 
-$('cView').addEventListener('click', () => goTo(-1));
+/* Una sola accion principal. Todo lo demas vive detras de "Mas": antes
+   habia cuatro botones permanentes y ninguno era lo que la gente vino a hacer. */
+function cerrarMenu(){ $('menu').hidden = true; $('cMenu').setAttribute('aria-expanded', 'false'); }
+$('cMenu').addEventListener('click', () => {
+  const abrir = $('menu').hidden;
+  $('menu').hidden = !abrir;
+  $('cMenu').setAttribute('aria-expanded', String(abrir));
+});
+$('cMed').addEventListener('click', () => {
+  cerrarMenu();
+  if (current < 0){                      // en vista general, primero elige donde
+    const g = store.get(SCAN_KEY);
+    goTo(g && typeof g.focus === 'number' ? g.focus : 0);
+    setTimeout(openMed, 2300);
+  } else openMed();
+});
+$('cView').addEventListener('click', () => { cerrarMenu(); goTo(-1); });
 $('cSound').addEventListener('click', e => {
+  cerrarMenu();
   const on = Sound.toggle();
   e.target.textContent = `${L('Sonido', 'Sound')}: ${on ? 'on' : 'off'}`;
 });
 $('pNext').addEventListener('click', () => goTo(current === 6 ? 0 : current + 1));
+$('pLeer').addEventListener('click', () => {
+  const abrir = $('pMas').hidden;
+  $('pMas').hidden = !abrir;
+  $('pLeer').textContent = abrir ? L('Leer menos', 'Read less') : L('Leer m\u00E1s', 'Read more');
+});
 $('pHz').addEventListener('click', () => { $('sheet').hidden = false; });
 $('sheetClose').addEventListener('click', () => { $('sheet').hidden = true; });
 
@@ -992,7 +1062,7 @@ function stopJourney(){
   if (journeyTimer){ clearTimeout(journeyTimer); journeyTimer = null; }
   $('cJourney').textContent = L('Viaje completo', 'Full journey');
 }
-$('cJourney').addEventListener('click', () => journeyTimer ? (stopJourney(), 0) : startJourney());
+$('cJourney').addEventListener('click', () => { cerrarMenu(); journeyTimer ? (stopJourney(), 0) : startJourney(); });
 
 /* --- meditaci\u00F3n --- */
 const med = $('med');
@@ -1003,7 +1073,7 @@ function openMed(){
   med.style.color = ch.color;
   $('medAfirm').textContent = T(ch, 'afirm');
   panel.hidden = true;
-  medEnd = performance.now() + 180000;
+  medEnd = performance.now() + duracion * 60000;
   if (Sound.on){ Sound.init(); Sound.fade(0.2, 2); }
   if (current >= 0) Media.playVoz(current, () => { if (Sound.on) Sound.fade(0.18, 3); });
   Breath.start();
@@ -1013,7 +1083,7 @@ function openMed(){
     $('medTime').textContent = `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
     if (left <= 0){
       closeMed();
-      registrarSesion(current < 0 ? 0 : current, 'meditacion', { seconds:180 });
+      registrarSesion(current < 0 ? 0 : current, 'meditacion', { seconds: duracion * 60 });
       openSeal(ch, 'meditacion');
       return;
     }
@@ -1029,7 +1099,6 @@ function closeMed(){
   if (Sound.on) Sound.fade(0.16, 1.5);
   if (current >= 0) panel.hidden = false;
 }
-$('pMed').addEventListener('click', openMed);
 $('medExit').addEventListener('click', closeMed);
 
 /* ============================================================
@@ -1068,15 +1137,21 @@ const ITEMS = [
      'I find it hard to name why I do what I do.']
 ];
 const SCAN_KEY = 'maat-chakra-scan';
+/* Catorce preguntas de entrada eran un muro. El corto usa una por centro
+   (la primera de cada par) y se responde en menos de un minuto; el profundo
+   queda para quien vuelve, que ya sabe por que las esta respondiendo. */
+let itemsActivos = ITEMS.filter((_, i) => i % 2 === 0);
 let scanIdx = 0, scanRaw = new Array(7).fill(0), scanDone = new Array(7).fill(0);
 
 function renderScan(){
-  const it = ITEMS[scanIdx];
-  $('scanStep').textContent = `${scanIdx + 1} / ${ITEMS.length}`;
-  $('scanBar').style.width = `${(scanIdx / ITEMS.length) * 100}%`;
+  const it = itemsActivos[scanIdx];
+  if (!it) return;
+  $('scanStep').textContent = `${scanIdx + 1} / ${itemsActivos.length}`;
+  $('scanBar').style.width = `${(scanIdx / itemsActivos.length) * 100}%`;
   $('scanQ').textContent = lang === 'es' ? it[1] : it[2];
 }
-function startScan(){
+function startScan(profundo){
+  itemsActivos = profundo ? ITEMS.slice() : ITEMS.filter((_, i) => i % 2 === 0);
   scanIdx = 0; scanRaw = new Array(7).fill(0); scanDone = new Array(7).fill(0);
   escaneoLuz = new Array(7).fill(null);
   pintarLuz();
@@ -1089,13 +1164,13 @@ function startScan(){
 }
 $('scanOpts').addEventListener('click', ev => {
   const b = ev.target.closest('button'); if (!b) return;
-  const [ci, ] = ITEMS[scanIdx];
+  const [ci, ] = itemsActivos[scanIdx];
   scanRaw[ci] += Number(b.dataset.v);
   scanDone[ci] += 1;
   escaneoLuz[ci] = 1 - (scanRaw[ci] / (scanDone[ci] * 2)) * 0.85;
   pintarLuz();
   scanIdx++;
-  if (scanIdx >= ITEMS.length) finishScan(); else renderScan();
+  if (scanIdx >= itemsActivos.length) finishScan(); else renderScan();
 });
 $('scanSkip').addEventListener('click', () => { $('scan').hidden = true; setOffset(1.2); goTo(0); });
 
@@ -1133,7 +1208,18 @@ function finishScan(){
   $('resGo').onclick = () => { $('res').hidden = true; setOffset(1.2); goTo(low); };
 }
 $('resAll').addEventListener('click', () => { $('res').hidden = true; setOffset(0); goTo(-1); });
-$('cScan').addEventListener('click', startScan);
+$('resProfundo').addEventListener('click', () => { $('res').hidden = true; startScan(true); });
+$('resSello').addEventListener('click', () => {
+  const g = store.get(SCAN_KEY);
+  if (g && g.scores) openSelloColumna(g.scores, g.focus);
+});
+$('sealMail').addEventListener('click', () => {
+  abrirPuerta('sello', () => {
+    $('sealMail').textContent = L('Te llega en un momento', 'On its way to you');
+    $('sealMail').disabled = true;
+  });
+});
+$('cScan').addEventListener('click', () => { cerrarMenu(); startScan(false); });
 
 /* El resultado viaja con el lead: saber qu\u00E9 centro est\u00E1 apagado es
    la mejor primera frase de una conversaci\u00F3n de venta. */
@@ -1149,215 +1235,89 @@ async function saveScan(sc, low){
 }
 
 /* ============================================================
-   5d \u00B7 RESONANCIA \u2014 la garganta se abre con tu voz, medida de verdad
-   Problema honesto: 741 Hz es Fa#5. Nadie zumba ahi. Por eso el
-   objetivo es LA MISMA NOTA EN TU OCTAVA (741/4 = 185.25 Hz = Fa#3):
-   una octava abajo es musicalmente la misma nota, y si es alcanzable.
+   5d \u00B7 VOZ \u2014 sin medicion, sin nota que acertar
+   Antes esto era un afinador: aguja, cents, objetivo, exito o fallo.
+   Un afinador CALIFICA, y calificar a alguien por como zumba contradice
+   la tesis de la pieza. Ademas exigia audifonos, cuarto en silencio y
+   ganas de cantar en voz alta: cuatro condiciones para que funcionara.
+   Ahora la voz solo ABRE el mandala. Sube el volumen, se abre; callas,
+   se asienta. No hay nada que acertar, asi que no hay como fallar.
+   (Y solo mide amplitud: O(n) en vez de la autocorrelacion O(n*lag).)
    ============================================================ */
-const NOTAS = ['Do','Do#','Re','Re#','Mi','Fa','Fa#','Sol','Sol#','La','La#','Si'];
-function noteName(f){
-  const n = Math.round(12 * Math.log2(f / 440));           // semitonos desde La4
-  const oct = 4 + Math.floor((n + 9) / 12);
-  return NOTAS[((n + 9) % 12 + 12) % 12] + oct;
-}
-function octaveNear(target, f){                            // baja/sube el objetivo a la octava del cantante
-  let t = target;
-  while (t / f > 1.45) t /= 2;
-  while (f / t > 1.45) t *= 2;
-  return t;
-}
-const centsOf = (f, t) => 1200 * Math.log2(f / t);
+const Voz = {
+  on:false, stream:null, analyser:null, buf:null, raf:null, nivel:0,
+  suma:0, ultimo:0, ch:null,
 
-/* Autocorrelacion normalizada con interpolacion parabolica.
-   Es el metodo estandar para voz sostenida: barato y estable. */
-function detectPitch(buf, rate){
-  const N = buf.length;
-  let rms = 0;
-  for (let i = 0; i < N; i++) rms += buf[i] * buf[i];
-  rms = Math.sqrt(rms / N);
-  if (rms < 0.012) return -1;                               // silencio
-  let r1 = 0, r2 = N - 1;
-  const th = 0.2;
-  for (let i = 0; i < N / 2; i++) if (Math.abs(buf[i]) < th){ r1 = i; break; }
-  for (let i = 1; i < N / 2; i++) if (Math.abs(buf[N - i]) < th){ r2 = N - i; break; }
-  const b = buf.slice(r1, r2), n = b.length;
-  if (n < 128) return -1;
-  // Solo interesan desfases entre 60 Hz y 1200 Hz. Calcular la correlacion
-  // completa es tirar la mitad del trabajo a la basura: esto es O(n * maxLag).
-  const minLag = Math.max(2, Math.floor(rate / 1200));
-  const maxLag = Math.min(n - 1, Math.ceil(rate / 60));
-  const c = new Float32Array(maxLag + 1);
-  for (let i = 0; i <= maxLag; i++){ let sum = 0; for (let j = 0; j < n - i; j++) sum += b[j] * b[j + i]; c[i] = sum; }
-  let d = 0; while (d < maxLag && c[d] > c[d + 1]) d++;
-  d = Math.max(d, minLag);
-  let max = -1, pos = -1;
-  for (let i = d; i <= maxLag; i++) if (c[i] > max){ max = c[i]; pos = i; }
-  if (pos <= 0) return -1;
-  let T = pos;
-  const x1 = c[T - 1], x2 = c[T], x3 = c[T + 1] !== undefined ? c[T + 1] : c[T];
-  const a = (x1 + x3 - 2 * x2) / 2, bb = (x3 - x1) / 2;
-  if (a) T = T - bb / (2 * a);
-  const f = rate / T;
-  return (f > 60 && f < 1200) ? f : -1;
-}
-
-const Voice = {
-  on:false, stream:null, analyser:null, buf:null, raf:null, last:0,
-  hold:0, target:0, ch:null, won:false, smooth:0, hist:[], sordo:0,
-
-  async open(){
+  async abrir(){
     const ch = CHAKRAS[current < 0 ? 4 : current];
-    this.ch = ch; this.hold = 0; this.won = false; this.smooth = 0; this.last = 0;
-    this.hist = []; this.sordo = 0;
-    const el = $('voice');
+    this.ch = ch; this.nivel = 0; this.suma = 0; this.ultimo = 0;
+    const el = $('voz');
     el.hidden = false; el.style.color = ch.color;
     panel.hidden = true; setOffset(0);
-    $('vHold').style.width = '0%';
-    $('vNote').textContent = '\u2014';
-    $('vState').textContent = L('Pidiendo el micr\u00F3fono...', 'Asking for the microphone...');
-    // objetivo por defecto: dos octavas abajo (registro comodo de zumbido)
-    this.target = ch.hz;
-    while (this.target > 260) this.target /= 2;
-    $('vTarget').innerHTML =
-      `${T(ch,'nombre')} \u00B7 <b>${ch.hz} Hz</b> = ${noteName(ch.hz)} &nbsp;\u00B7&nbsp; ` +
-      L('en tu octava: ', 'in your octave: ') +
-      `<b>${this.target.toFixed(1)} Hz</b> = ${noteName(this.target)}`;
-
+    $('vzEstado').textContent = L('Pidiendo el micr\u00F3fono...', 'Asking for the microphone...');
     Sound.init();
-    // El drone NO puede sonar mientras el microfono escucha: sin audifonos,
-    // el microfono oye la referencia y afina contra ella, no contra tu voz.
-    // La nota se da a peticion, en rafagas, con la deteccion en pausa.
-    if (Sound.on){ Sound.setFreq(this.target, 1.0); Sound.fade(0, 0.8); }
-
     try {
       this.stream = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation:false, noiseSuppression:false, autoGainControl:false }
+        audio: { echoCancellation:true, noiseSuppression:false, autoGainControl:false }
       });
     } catch (e){
-      $('vState').textContent = L('Sin micr\u00F3fono', 'No microphone');
-      $('vNote').textContent = '\u2014';
-      $('vTarget').innerHTML += '<br>' + L('No pudimos usar el micr\u00F3fono: ', 'We could not use the microphone: ') +
-        (e && e.name === 'NotAllowedError'
-          ? L('diste permiso negativo.', 'permission was denied.')
-          : L('no hay entrada de audio.', 'there is no audio input.'));
+      $('vzEstado').textContent = e && e.name === 'NotAllowedError'
+        ? L('No diste permiso del micr\u00F3fono', 'Microphone permission denied')
+        : L('No hay micr\u00F3fono disponible', 'No microphone available');
       return;
     }
     const ctx = Sound.ctx;
     const src = ctx.createMediaStreamSource(this.stream);
     this.analyser = ctx.createAnalyser();
-    this.analyser.fftSize = 2048;
-    src.connect(this.analyser);                              // el analizador NO va al destino: cero eco
+    this.analyser.fftSize = 1024;
+    src.connect(this.analyser);                 // no va al destino: cero eco
     this.buf = new Float32Array(this.analyser.fftSize);
     this.on = true;
-    $('vState').textContent = L('Zumba una vocal larga', 'Hum one long vowel');
-    this.loop(performance.now());
+    $('vzEstado').textContent = L('Zumba y mira qu\u00E9 pasa', 'Hum and watch what happens');
+    this.bucle(performance.now());
   },
 
-  loop(now){
+  bucle(now){
     if (!this.on) return;
-    this.raf = requestAnimationFrame(t => this.loop(t));
-    // El analisis cuesta ~2.5 ms en escritorio y ~10 ms en telefono. A 60 fps
-    // se comia el frame y la pieza iba a tirones. A 12 por segundo sobra para
-    // un zumbido sostenido, y la aguja sigue suave por la transicion CSS.
-    if (now - (this.last || 0) < 80) return;
-    const dt = Math.min(1, (now - (this.last || now)) / 1000);   // reloj real, no frames
-    this.last = now;
-    if (now < this.sordo){ $('vState').textContent = L('Escucha la nota', 'Listen to the note'); return; }
-
+    this.raf = requestAnimationFrame(t => this.bucle(t));
+    const dt = Math.min(0.1, (now - (this.ultimo || now)) / 1000);
+    this.ultimo = now;
     this.analyser.getFloatTimeDomainData(this.buf);
-    let f = detectPitch(this.buf, Sound.ctx.sampleRate);
-    // Mediana de las tres ultimas: mata el salto de octava ocasional de la
-    // autocorrelacion, que hacia parpadear la aguja de un extremo al otro.
-    if (f > 0){
-      this.hist.push(f); if (this.hist.length > 3) this.hist.shift();
-      if (this.hist.length === 3) f = [...this.hist].sort((a, b) => a - b)[1];
-    } else this.hist.length = 0;
-    const needle = $('vNeedle');
-
-    // ganada la resonancia, la aguja sigue viva pero el mensaje de logro se queda
-    if (f < 0){
-      needle.classList.remove('on');
-      if (!this.won){
-        $('vState').textContent = L('No te escucho', 'I cannot hear you');
-        $('vNote').textContent = '\u2014';
-        this.hold = Math.max(0, this.hold - dt * 0.6);
-      }
-    } else {
-      this.smooth = this.smooth ? this.smooth * 0.55 + f * 0.45 : f;   // la voz tiembla; el medidor no
-      const t = octaveNear(this.target, this.smooth);
-      const c = Math.max(-60, Math.min(60, centsOf(this.smooth, t)));
-      const tuned = Math.abs(c) <= 25;
-      needle.style.left = `${50 + (c / 60) * 50}%`;
-      needle.classList.toggle('on', tuned);
-      if (!this.won){
-        $('vNote').textContent = `${noteName(this.smooth)} \u00B7 ${Math.round(this.smooth)} Hz`;
-        $('vState').textContent = tuned ? L('Sost\u00E9n', 'Hold') : (c > 0 ? L('M\u00E1s grave', 'Lower') : L('M\u00E1s agudo', 'Higher'));
-        this.hold = tuned ? this.hold + dt : Math.max(0, this.hold - dt * 0.5);
-        if (current >= 0) setGlow(nodes[current], 0.3 + Math.min(1, this.hold / 8) * 0.7);
-      }
-    }
-    if (!this.won){
-      const pct = Math.min(100, (this.hold / 8) * 100);
-      $('vHold').style.width = `${pct}%`;
-      if (pct >= 100) this.win();
+    let rms = 0;
+    for (let i = 0; i < this.buf.length; i++) rms += this.buf[i] * this.buf[i];
+    rms = Math.sqrt(rms / this.buf.length);
+    const objetivo = Math.min(1, Math.max(0, (rms - 0.006) * 9));
+    this.nivel += (objetivo - this.nivel) * (objetivo > this.nivel ? 0.35 : 0.08);
+    if (objetivo > 0.12) this.suma += dt;       // cuanto tiempo lleva sonando
+    $('vzAro').style.transform = `scale(${(0.5 + this.nivel * 0.5).toFixed(3)})`;
+    $('vzAro').style.opacity = (0.35 + this.nivel * 0.65).toFixed(2);
+    if (current >= 0) setGlow(nodes[current], Math.max(luzDe(current), 0.25 + this.nivel * 0.75));
+    if (this.suma > 4 && $('vzEstado').dataset.paso !== '2'){
+      $('vzEstado').dataset.paso = '2';
+      $('vzEstado').textContent = L('Eso que vibra es tu cuerpo', 'That vibration is your body');
     }
   },
 
-  win(){
-    this.won = true;
-    $('vState').textContent = L('Resonaste', 'You resonated');
-    $('vHold').style.width = '100%';
-    $('vNote').innerHTML = `<span class="voice__win">${L(T(this.ch,'nombre') + ' abierto', T(this.ch,'nombre') + ' open')}</span>`;
-    if (current >= 0) setGlow(nodes[current], 1);
-    if (Sound.on){ Sound.setFreq(this.target * 1.5, 0.35); setTimeout(() => Sound.setFreq(this.target, 0.6), 420); }
-    const rec = store.get('maat-chakra-voz') || {};
-    rec[this.ch.sans.toLowerCase()] = { hz: Math.round(this.smooth), at: Date.now() };
-    store.set('maat-chakra-voz', rec);
-    saveResonance(this.ch, Math.round(this.smooth));
-    if (current >= 0) registrarSesion(current, 'voz', { hz: Math.round(this.smooth) });
-    setTimeout(() => { if (this.won) openSeal(this.ch, 'voz'); }, 2200);
-  },
-
-  close(){
+  cerrar(){
     this.on = false;
-    this.sordo = 0;
     if (this.raf) cancelAnimationFrame(this.raf);
     if (this.stream) this.stream.getTracks().forEach(t => t.stop());
     this.stream = null; this.analyser = null;
-    $('voice').hidden = true;
-    if (current >= 0){
-      panel.hidden = false; setOffset(1.2);
-      if (Sound.on) Sound.setFreq(CHAKRAS[current].hz, 1.4);
+    $('voz').hidden = true;
+    $('vzEstado').dataset.paso = '';
+    const hubo = this.suma;
+    if (current >= 0){ panel.hidden = false; setOffset(1.2); pintarLuz(); }
+    // 15 s de voz cuentan como sesion. Nunca se anuncia como meta:
+    // aparece despues, como un regalo, no como una calificacion.
+    if (hubo >= 15 && current >= 0){
+      registrarSesion(current, 'voz', { seconds: Math.round(hubo) });
+      openSeal(this.ch, 'voz');
     }
   }
 };
 
-async function saveResonance(ch, hz){
-  if (!sb) return;
-  const lead = store.get(LEAD_KEY);
-  if (!lead) return;
-  try {
-    await sb.functions.invoke(CONFIG.FN, { body:{
-      op:'resonance', lead_id: lead.id || null, email: lead.email || null,
-      chakra: ch.sans.toLowerCase(), chakra_es: ch.nombre, hz
-    }});
-  } catch (e){ /* best-effort */ }
-}
-
-$('pVoice').addEventListener('click', () => Voice.open());
-$('vExit').addEventListener('click', () => Voice.close());
-$('vGive').addEventListener('click', () => {
-  if (!Sound.on){ Sound.on = true; $('cSound').textContent = `${L('Sonido', 'Sound')}: on`; }
-  Sound.init();
-  if (Sound.ctx && Sound.ctx.state === 'suspended') Sound.ctx.resume();
-  Sound.setFreq(Voice.target, 0.5);
-  Sound.fade(0.2, 0.4);
-  // rafaga de 2.5 s con la deteccion en pausa: si no, el microfono se
-  // afinaria contra el altavoz en vez de contra la persona
-  Voice.sordo = performance.now() + 3000;
-  Voice.hist = [];
-  setTimeout(() => Sound.fade(0, 0.6), 2500);
-});
+$('pVoice').addEventListener('click', () => Voz.abrir());
+$('vzSalir').addEventListener('click', () => Voz.cerrar());
 
 /* ============================================================
    5e \u00B7 EL SELLO \u2014 cada sesi\u00F3n deja un objeto
@@ -1500,30 +1460,105 @@ async function drawSeal(ch, kind){
   ctx.fillText(L(`${fecha} \u00B7 sello ${id} \u00B7 ${kind === 'voz' ? 'resonancia' : 'meditaci\u00F3n'}`,
                  `${fecha} \u00B7 seal ${id} \u00B7 ${kind === 'voz' ? 'resonance' : 'meditation'}`), 540, 950);
 
-  // pluma + wordmark
-  await new Promise(res => {
+  await pintarFirma(ctx, 976);              // pluma + wordmark + dominio
+  return { id, fecha, semilla };
+}
+
+/* El sello de la COLUMNA: el resultado del escaneo hecho objeto.
+   Antes el unico artefacto compartible exigia tres minutos de meditacion,
+   asi que casi nadie lo veia. Este se gana en 90 segundos. */
+async function drawSelloColumna(sc, low){
+  const cv = $('sealCanvas'), ctx = cv.getContext('2d');
+  const lead = store.get(LEAD_KEY) || {};
+  const fecha = new Date().toISOString().slice(0, 10);
+  const semilla = `${lead.email || 'anon'}|columna|${fecha}`;
+  const h0 = xmur3(semilla)();
+  const id = h0.toString(16).slice(0, 4).toUpperCase();
+
+  ctx.fillStyle = PAPEL; ctx.fillRect(0, 0, 1080, 1080);
+  const franja = ctx.createLinearGradient(0, 0, 1080, 0);
+  [['#39A1C9',0],['#7DCD93',.25],['#EBA055',.5],['#D76B6E',.75],['#896C8E',1]]
+    .forEach(([c, p]) => franja.addColorStop(p, c));
+  ctx.fillStyle = franja; ctx.fillRect(0, 0, 1080, 14); ctx.fillRect(0, 1066, 1080, 14);
+
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#666666';
+  ctx.font = "400 20px 'Sora', sans-serif";
+  ctx.fillText(L('cuerpo & energ\u00EDa \u00B7 mi columna hoy', 'body & energy \u00B7 my column today'), 540, 74);
+
+  // la columna de pie: siete discos, cada uno con su luz
+  const cx = 330, base = 800, paso = 94;
+  ctx.strokeStyle = '#E2DACF'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(cx, base + 30); ctx.lineTo(cx, base - 6 * paso - 42); ctx.stroke();
+  CHAKRAS.forEach((ch, i) => {
+    const y = base - i * paso, luz = sc[i] / 100;
+    const col = mix(ch.color, PAPEL, 1 - (0.25 + luz * 0.75));
+    disc(ctx, cx, y, 40, col, mix(ch.color, '#B8A894', 0.72));
+    disc(ctx, cx, y, 16, mix(col, '#2A1F26', 0.35));
+    if (i === low){                                   // el apagado se senala, no se esconde
+      ctx.strokeStyle = ch.color; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(cx, y, 50, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#333333';
+    ctx.font = "700 30px 'Saira Condensed', sans-serif";
+    ctx.fillText(T(ch, 'nombre').toUpperCase(), cx + 82, y - 4);
+    ctx.fillStyle = '#8C8598';
+    ctx.font = "400 19px 'Sora', sans-serif";
+    ctx.fillText(`${sc[i]}%`, cx + 82, y + 24);
+    // barra de luz
+    ctx.fillStyle = '#EDE7DE'; ctx.fillRect(cx + 300, y - 20, 300, 12);
+    ctx.fillStyle = ch.color;  ctx.fillRect(cx + 300, y - 20, 300 * (sc[i] / 100), 12);
+  });
+
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#333333';
+  ctx.font = "900 54px 'Saira Condensed', sans-serif";
+  ctx.fillText(L(`HOY EMPIEZO POR ${T(CHAKRAS[low], 'nombre').toUpperCase()}`,
+                 `TODAY I START WITH ${T(CHAKRAS[low], 'nombre').toUpperCase()}`), 540, 900);
+  ctx.fillStyle = '#8C8598';
+  ctx.font = "400 18px 'Sora', sans-serif";
+  ctx.fillText(`${fecha} \u00B7 ${L('sello', 'seal')} ${id}`, 540, 932);
+  await pintarFirma(ctx, 950);
+  return { id, fecha };
+}
+
+/* La pluma y el wordmark, que van igual en los dos sellos. */
+function pintarFirma(ctx, y){
+  return new Promise(res => {
     const url = getComputedStyle(document.documentElement).getPropertyValue('--logo')
       .trim().replace(/^url\(["']?/, '').replace(/["']?\)$/, '');
     const img = new Image();
     img.onload = () => {
-      ctx.drawImage(img, 474, 976, 40, 40);
+      ctx.drawImage(img, 474, y, 40, 40);
       ctx.fillStyle = '#333333';
       ctx.font = "900 29px 'Saira Condensed', sans-serif";
       ctx.textAlign = 'left';
       ctx.letterSpacing = '10px';
-      ctx.fillText('maat', 524, 1008);
+      ctx.fillText('maat', 524, y + 32);
       ctx.letterSpacing = '0px';
-      // el sello circula: que sepa de d\u00F3nde sali\u00F3
       ctx.textAlign = 'center';
       ctx.fillStyle = '#8C8598';
       ctx.font = "400 17px 'Sora', sans-serif";
-      ctx.fillText('somosmaat.org', 540, 1044);
+      ctx.fillText('somosmaat.org', 540, y + 68);
       res();
     };
     img.onerror = res;
     img.src = url;
   });
-  return { id, fecha, semilla };
+}
+
+async function openSelloColumna(sc, low){
+  try { await document.fonts.load("900 54px 'Saira Condensed'"); } catch(e){}
+  const info = await drawSelloColumna(sc, low);
+  $('sealEyebrow').textContent = L(`mi columna \u00B7 ${info.fecha}`, `my column \u00B7 ${info.fecha}`);
+  $('seal').hidden = false;
+  sealFile = null;
+  $('sealCanvas').toBlob(b => {
+    sealFile = new File([b], `maat-columna-${info.id}.png`, { type:'image/png' });
+  }, 'image/png');
+  $('sealShare').hidden = !(navigator.canShare && navigator.canShare({ files:[new File([''], 'x.png', { type:'image/png' })] }));
+  saveSeal(CHAKRAS[low], 'escaneo', info.id);
 }
 
 async function openSeal(ch, kind){
@@ -1669,6 +1704,7 @@ function cerrarRetiro(){
 const I18N = {
   tTag:        ['cuerpo & energ\u00EDa \u00B7 siete centros \u00B7 una sola columna',
                 'body & energy \u00B7 seven centers \u00B7 one single column'],
+  tTagCorto:   ['cuerpo & energ\u00EDa', 'body & energy'],
   tLoc:        ['Ubicaci\u00F3n', 'Location'],
   tElem:       ['Elemento', 'Element'],
   tPet:        ['P\u00E9talos', 'Petals'],
@@ -1676,6 +1712,9 @@ const I18N = {
   tPract:      ['Pr\u00E1ctica:', 'Practice:'],
   cView:       ['Ver la columna', 'See the column'],
   cScan:       ['Escaneo', 'Scan'],
+  cMed:        ['Meditar aqu\u00ED', 'Meditate here'],
+  cMenu:       ['M\u00E1s', 'More'],
+  pLeer:       ['Leer m\u00E1s', 'Read more'],
   medExit:     ['Salir de la meditaci\u00F3n', 'Leave the meditation'],
   medSonido:   ['Activar el sonido', 'Turn the sound on'],
   tSheetT:     ['Sobre las frecuencias', 'About the frequencies'],
@@ -1684,11 +1723,11 @@ const I18N = {
   tSheetP2:    ['Lo que s\u00ED est\u00E1 documentado es m\u00E1s simple y m\u00E1s \u00FAtil: <b>una respiraci\u00F3n con exhalaci\u00F3n larga activa el sistema parasimp\u00E1tico</b>, y <b>un sonido estable sostenido reduce la carga de la atenci\u00F3n dispersa</b>. El tono es un ancla. El trabajo lo hace tu respiraci\u00F3n.',
                 'What is documented is simpler and more useful: <b>breathing with a long exhale activates the parasympathetic system</b>, and <b>a steady sustained sound lowers the load of scattered attention</b>. The tone is an anchor. The work is done by your breathing.'],
   sheetClose:  ['Entendido', 'Got it'],
-  tCentro:     ['en el centro', 'dead center'],
-  vGive:       ['Darme la nota', 'Give me the note'],
-  vExit:       ['Salir', 'Leave'],
-  tVozLegal:   ['<b>Usa aud\u00EDfonos.</b> Sin ellos el micr\u00F3fono escucha el tono en vez de tu voz \u2014 por eso la nota se da en r\u00E1fagas, con el bot\u00F3n. El audio se analiza dentro de tu navegador: no se graba nada.',
-                '<b>Use headphones.</b> Without them the microphone hears the tone instead of your voice \u2014 that is why the note comes in short bursts, from the button. The audio is analyzed inside your browser: nothing is recorded.'],
+  tVozLegal:   ['El micr\u00F3fono se analiza dentro de tu navegador. No se graba nada.',
+                'The microphone is analyzed inside your browser. Nothing is recorded.'],
+  tVozPista:   ['Inhala, y al exhalar deja salir una vocal larga. No hay nota correcta: mira d\u00F3nde vibra.',
+                'Breathe in, and on the way out let a long vowel go. There is no right note: notice where it vibrates.'],
+  vzSalir:     ['Listo', 'Done'],
   scanSkip:    ['saltar el escaneo', 'skip the scan'],
   tScanFoot:   ['Responde por c\u00F3mo has estado este mes, no por c\u00F3mo quieres estar.',
                 'Answer for how you have actually been this month, not for how you want to be.'],
@@ -1699,6 +1738,9 @@ const I18N = {
   tSealTxt:    ['Ning\u00FAn sello se repite: la forma sale de tu sesi\u00F3n, la fecha y tu correo. Es tuyo y es de hoy.',
                 'No two seals are alike: the shape comes from your session, the date and your email. It is yours and it is from today.'],
   sealDl:      ['Descargar', 'Download'],
+  sealMail:    ['Env\u00EDamelo por correo', 'Email it to me'],
+  resSello:    ['Guardar mi columna', 'Save my column'],
+  resProfundo: ['Hacer el escaneo profundo (14 preguntas)', 'Take the deep scan (14 questions)'],
   sealShare:   ['Compartir', 'Share'],
   sealClose:   ['Seguir', 'Continue'],
   tH1:         ['La columna<br><em>de luz</em>', 'The column<br><em>of light</em>'],
@@ -1712,9 +1754,15 @@ const I18N = {
   gateGo:      ['Entrar al viaje', 'Enter the journey'],
   tLegal:      ['Tus datos entran al sistema de MAAT. Sin spam y sin reventa a terceros.',
                 'Your details go into MAAT\u2019s system. No spam, never resold.'],
-  startSound:  ['Iniciar el ascenso', 'Begin the ascent'],
-  startSilent: ['Entrar en silencio', 'Enter in silence'],
-  tNota:       ['<b>Usa aud\u00EDfonos.</b> El sonido se genera con osciladores, no son archivos grabados \u2014 por eso la frecuencia es exacta y se desliza contigo mientras subes.',
+  entrar:      ['Empezar', 'Begin'],
+  gateGo:      ['Env\u00EDamelo', 'Send it to me'],
+  puNo:        ['Ahora no', 'Not now'],
+  tBvTxt:      ['Antes de cualquier cosa, una respiraci\u00F3n.<br>No tienes que hacer nada m\u00E1s.',
+                'Before anything else, one breath.<br>You do not have to do anything else.'],
+  bvEscaneo:   ['Ver cu\u00E1l est\u00E1 apagado', 'See which one is dim'],
+  bvExplorar:  ['Explorar por mi cuenta', 'Explore on my own'],
+  bvSaltar:    ['Saltar', 'Skip'],
+  tNota:       ['<b>Usa aud\u00EDfonos si puedes.</b> El sonido se genera con osciladores, no son archivos grabados \u2014 por eso la frecuencia es exacta y se desliza contigo mientras subes.',
                 '<b>Use headphones.</b> The sound is generated with oscillators, not recorded files \u2014 that is why the frequency is exact and slides with you as you climb.']
 };
 const OPCIONES_ES = ['Rara vez', 'A veces', 'Seguido'];
@@ -1722,9 +1770,12 @@ const OPCIONES_EN = ['Rarely', 'Sometimes', 'Often'];
 
 function aplicarIdioma(){
   document.documentElement.lang = lang;
+  // en pantallas estrechas la categoria larga se enredaba con el selector de idioma
+  const corto = innerWidth < 620;
   Object.keys(I18N).forEach(id => {
     const el = $(id); if (!el) return;
-    const txt = I18N[id][lang === 'es' ? 0 : 1];
+    let txt = I18N[id][lang === 'es' ? 0 : 1];
+    if (id === 'tTag' && corto) txt = I18N.tTagCorto[lang === 'es' ? 0 : 1];
     if (/<[a-z]/i.test(txt)) el.innerHTML = txt; else el.textContent = txt;
   });
   // el velo se elimina del DOM al entrar: todo lo suyo va con guarda
@@ -1741,7 +1792,7 @@ function aplicarIdioma(){
   [...$('lang').children].forEach(el => {
     if (el.dataset && el.dataset.l) el.setAttribute('aria-pressed', el.dataset.l === lang ? 'true' : 'false');
   });
-  if (scanIdx < ITEMS.length) renderScan();
+  if (scanIdx < itemsActivos.length) renderScan();
   if (!med.hidden) Breath.pintarPatrones();
   if (current >= 0) showPanel(CHAKRAS[current], current);
   const known0 = store.get(LEAD_KEY);
@@ -1766,11 +1817,13 @@ const PATRONES = [
   { id:'coher',  ins:5, sost:0, exh:5, es:'Coherencia', en:'Coherence' },
   { id:'suelta', ins:4, sost:0, exh:8, es:'Soltar',     en:'Release' }
 ];
-const RITMO_KEY = 'maat-respiracion';
+const RITMO_KEY = 'maat-respiracion', DUR_KEY = 'maat-duracion';
+const DURACIONES = [1, 3, 5];
+let duracion = Number(localStorage.getItem(DUR_KEY)) || 3;   // un minuto baja mucho la barrera
 let patron = PATRONES.find(p => p.id === localStorage.getItem(RITMO_KEY)) || PATRONES[0];
 
 const Breath = {
-  on:false, raf:null, timer:null, t0:0,
+  on:false, raf:null, timer:null, t0:0, aro:'medRing', fase:'medPhase',
   dur(){ return patron.ins + patron.sost + patron.exh; },
   // La imagen usa el reloj del sistema: el del AudioContext se detiene si el
   // navegador suspende el audio, y el aro se quedaria clavado a media inhalacion.
@@ -1778,8 +1831,9 @@ const Breath = {
   // se suspende y vuelve, se realinea solo en el ciclo siguiente.
   reloj(){ return performance.now() / 1000; },
 
-  start(){
+  start(aro, fase){
     this.stop();
+    this.aro = aro || 'medRing'; this.fase = fase || 'medPhase';
     this.on = true;
     if (Sound.on){ Sound.init(); Sound.initAire(); }
     this.t0 = this.reloj() + 0.12;
@@ -1827,11 +1881,15 @@ const Breath = {
       escala = 1 - suave(q) * 0.45;
       fase = L('exhala', 'exhale'); resta = d - p;
     }
-    $('medRing').style.transform = `scale(${escala.toFixed(3)})`;
-    $('medPhase').innerHTML = `${fase}<small>${Math.ceil(resta)}</small>`;
+    const aro = $(this.aro), lab = $(this.fase);
+    if (aro) aro.style.transform = `scale(${escala.toFixed(3)})`;
+    if (lab) lab.innerHTML = `${fase}<small>${Math.ceil(resta)}</small>`;
   },
 
   pintarPatrones(){
+    if (!$('medPat')) return;
+    $('medDur').innerHTML = DURACIONES.map(d =>
+      `<button data-d="${d}" aria-pressed="${d === duracion}">${d} min</button>`).join('');
     $('medPat').innerHTML = PATRONES.map(pt =>
       `<button data-p="${pt.id}" aria-pressed="${pt.id === patron.id}">${L(pt.es, pt.en)}</button>`).join('');
     $('medRitmo').textContent = patron.sost
@@ -1853,6 +1911,13 @@ const Breath = {
   }
 };
 
+$('medDur').addEventListener('click', ev => {
+  const b = ev.target.closest('button[data-d]'); if (!b) return;
+  duracion = Number(b.dataset.d);
+  try { localStorage.setItem(DUR_KEY, duracion); } catch(e){}
+  medEnd = performance.now() + duracion * 60000;             // el reloj se reinicia con la eleccion
+  Breath.pintarPatrones();
+});
 $('medPat').addEventListener('click', ev => {
   const b = ev.target.closest('button[data-p]'); if (!b) return;
   patron = PATRONES.find(pt => pt.id === b.dataset.p) || patron;
@@ -1872,7 +1937,7 @@ $('medSonido').addEventListener('click', () => {
 /* --- teclado --- */
 addEventListener('keydown', e => {
   if (e.key === 'r' || e.key === 'R'){ abrirRetiro(); return; }
-  if (e.key === 'Escape'){ if (retiroOn) return cerrarRetiro(); if (!$('seal').hidden) return $('seal').hidden = true; if (!$('voice').hidden) return Voice.close(); if (!med.hidden) return closeMed(); if (!$('sheet').hidden) return $('sheet').hidden = true; goTo(-1); }
+  if (e.key === 'Escape'){ if (retiroOn) return cerrarRetiro(); if (!$('seal').hidden) return $('seal').hidden = true; if (!$('voz').hidden) return Voz.cerrar(); if (!med.hidden) return closeMed(); if (!$('sheet').hidden) return $('sheet').hidden = true; goTo(-1); }
   const paso = d => {
     const n = Math.max(0, Math.min(6, current + d));
     if (retiroOn){ clearTimeout(retiroTimer); retiroPaso(n); } else goTo(n);
@@ -1918,7 +1983,7 @@ async function flushQueue(){
   store.set(QUEUE_KEY, left);
 }
 
-function buildPayload(){
+function buildPayload(motivo){
   const qs = new URLSearchParams(location.search), utm = {};
   ['utm_source','utm_medium','utm_campaign','utm_content','utm_term','ref']
     .forEach(k => { if (qs.get(k)) utm[k] = qs.get(k); });
@@ -1927,74 +1992,32 @@ function buildPayload(){
     email:    $('fMail').value.trim().toLowerCase(),
     whatsapp: $('fPhone').value.trim() || null,
     consent:  $('fOk').checked,
-    lang:     (localStorage.getItem('maat-lang') || 'es'),
-    source:   'chakras',
+    lang:     lang,
+    source:   'chakras' + (motivo ? ':' + motivo : ''),
     utm:      Object.keys(utm).length ? utm : null,
     referrer: document.referrer || null
   };
 }
 
-let gateTries = 0;
-const gate = $('gate'), gateMsg = $('gateMsg');
-function showEntry(name){
-  gate.hidden = true;
-  $('entryCta').hidden = false;
-  if (name){ $('hello').textContent = `${L('Bienvenido', 'Welcome')}, ${name.split(' ')[0]}`; $('hello').hidden = false; }
-}
-gate.addEventListener('submit', async ev => {
-  ev.preventDefault();
-  const p = buildPayload();
-  const bad = (el, on) => el.classList.toggle('bad', on);
-  bad($('fName'), !p.name);
-  bad($('fMail'), !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(p.email));
-  if (!p.name){ gateMsg.className = 'gate__msg'; gateMsg.textContent = L('Falta tu nombre.', 'Your name is missing.'); return; }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(p.email)){ gateMsg.className = 'gate__msg'; gateMsg.textContent = L('Ese correo no es v\u00E1lido.', 'That email is not valid.'); return; }
-  if (!p.consent){ gateMsg.className = 'gate__msg'; gateMsg.textContent = L('Necesitamos tu permiso para escribirte.', 'We need your permission to write to you.'); return; }
-
-  const btn = $('gateGo'), label = btn.textContent;
-  btn.disabled = true; btn.textContent = L('Enviando...', 'Sending...');
-  gateMsg.className = 'gate__msg'; gateMsg.textContent = '';
-  try {
-    const r = await sendLead(p);
-    store.set(LEAD_KEY, { name:p.name, email:p.email, id:(r && r.lead_id) || null, at:Date.now() });
-    showEntry(p.name);
-  } catch (err){
-    gateTries++;
-    if (window.__MALETA) gateTries = 2;      // sin red por dise\u00F1o: se encola de una
-    if (gateTries >= 2){
-      // no dejamos a nadie afuera por un problema de red: se encola y entra
-      const q = store.get(QUEUE_KEY) || []; q.push(p); store.set(QUEUE_KEY, q);
-      store.set(LEAD_KEY, { name:p.name, email:p.email, at:Date.now(), queued:true });
-      gateMsg.className = 'gate__msg ok';
-      gateMsg.textContent = L('Guardamos tus datos y los enviamos cuando vuelva la conexi\u00F3n.',
-                              'We saved your details and will send them when the connection is back.');
-      setTimeout(() => showEntry(p.name), 900);
-    } else {
-      gateMsg.textContent = (err && err.message ? err.message : L('No se pudo enviar', 'Could not send'))
-        + L(' \u2014 intenta otra vez.', ' \u2014 try again.');
-    }
-  } finally {
-    btn.disabled = false; btn.textContent = label;
-  }
-});
-
 /* ============================================================
-   5b-bis \u00B7 CLIENTE MAAT \u2014 misma sesi\u00F3n de Supabase (mismo origen)
-   Si quien entra ya es cliente, no se le pide nada: se le muestra
-   su columna. Cada sesi\u00F3n completada deposita luz permanente.
+   5b-bis \u00B7 CLIENTE MAAT \u2014 misma sesion de Supabase (mismo origen)
+   Si quien entra ya es cliente, no se le pide nada: se le muestra su
+   columna. Cada sesion completada deposita luz permanente.
    ============================================================ */
-let usuario = null;                       // { id, nombre } si hay sesi\u00F3n MAAT
+let usuario = null;                       // { id, nombre } si hay sesion MAAT
 const luzAcum = new Array(7).fill(0);     // sesiones completadas por centro
+let escaneoLuz = new Array(7).fill(null); // luz del escaneo de hoy
 
 const luzDe = i => Math.min(1, luzAcum[i] / 5);   // cinco sesiones encienden un centro
 
+/* El escaneo pinta la luz de HOY; la acumulada es lo construido. Se toma
+   el maximo: un mal dia no borra meses de trabajo. */
 function pintarLuz(){
   nodes.forEach((n, i) => {
-    const escaneo = escaneoLuz[i];
-    setGlow(n, Math.max(escaneo === null ? 0.9 : escaneo, 0.15 + luzDe(i) * 0.85));
+    const esc = escaneoLuz[i];
+    setGlow(n, Math.max(esc === null ? 0.9 : esc, 0.15 + luzDe(i) * 0.85));
   });
 }
-let escaneoLuz = new Array(7).fill(null);
 
 async function entrarComoCliente(){
   if (!sb) return false;
@@ -2003,7 +2026,6 @@ async function entrarComoCliente(){
   if (!ses || !ses.user) return false;
   usuario = { id: ses.user.id, nombre: (ses.user.user_metadata || {}).full_name || '' };
   store.set(LEAD_KEY, { name: usuario.nombre, email: ses.user.email, id: null, at: Date.now(), cliente: true });
-  showEntry(usuario.nombre);
   await cargarLuz();
   return true;
 }
@@ -2029,8 +2051,8 @@ function mostrarLuzPanel(i){
   el.hidden = false;
 }
 
-/* Cada meditaci\u00F3n o resonancia completada deposita luz. Para el cliente
-   queda en su historial; para el visitante, sin due\u00F1o y sin correo. */
+/* Cada meditacion o voz completada deposita luz. Para el cliente queda en
+   su historial; para el visitante, sin dueno. */
 async function registrarSesion(i, kind, extra){
   luzAcum[i] += 1;
   pintarLuz();
@@ -2046,31 +2068,144 @@ async function registrarSesion(i, kind, extra){
   if (error) console.warn('sesion no guardada:', error.message);
 }
 
-/* visitante que ya dejo sus datos: no se los volvemos a pedir */
-const known = store.get(LEAD_KEY);
-if (known && known.email) showEntry(known.name);
-entrarComoCliente();                  // si ya es cliente MAAT, la puerta sobra
-if (RETIRO) showEntry(null);          // en un retiro nadie llena formularios
-flushQueue();
+/* ============================================================
+   LA PUERTA \u2014 se cobra por el artefacto, no por la entrada
+   Antes el formulario era lo primero: la persona daba sus datos sin
+   haber visto ni sentido nada. Ahora entra directo, y el correo se
+   pide cuando ya hay algo suyo que llevarse (su columna, su sello).
+   Se puede decir que no y seguir usando todo.
+   ============================================================ */
+const COPY_PUERTA = {
+  escaneo: {
+    eyebrow: ['tu columna', 'your column'],
+    titulo:  ['Guarda tu columna', 'Save your column'],
+    texto:   ['Te mandamos el resultado con lo que significa cada centro, y el camino para trabajar el que est\u00E1 apagado.',
+              'We send you the result with what each center means, and the way to work on the one that is dim.']
+  },
+  sello: {
+    eyebrow: ['tu sello', 'your seal'],
+    titulo:  ['Te lo mandamos', 'We will send it'],
+    texto:   ['Te mandamos tu sello en alta resoluci\u00F3n y el trabajo de MAAT: estoicismo aplicado, sin humo.',
+              'We send you your seal in high resolution plus MAAT\u2019s work: applied stoicism, no smoke.']
+  }
+};
+let puertaMotivo = 'escaneo', puertaLuego = null, puertaIntentos = 0;
 
-/* --- entrada --- */
-function enter(withSound){
-  Sound.on = withSound;
-  $('cSound').textContent = `${L('Sonido', 'Sound')}: ${withSound ? 'on' : 'off'}`;
-  if (withSound){ Sound.init(); if (Sound.ctx && Sound.ctx.state === 'suspended') Sound.ctx.resume(); Sound.setFreq(CHAKRAS[0].hz, 0.1); Sound.fade(0.07, 2.5); }
+function abrirPuerta(motivo, alTerminar){
+  const lead = store.get(LEAD_KEY);
+  if (lead && lead.email){ if (alTerminar) alTerminar(); return; }   // ya lo dio antes
+  puertaMotivo = motivo; puertaLuego = alTerminar || null; puertaIntentos = 0;
+  const c = COPY_PUERTA[motivo] || COPY_PUERTA.escaneo;
+  const i = lang === 'es' ? 0 : 1;
+  $('puEyebrow').textContent = c.eyebrow[i];
+  $('puTitulo').textContent  = c.titulo[i];
+  $('puTexto').textContent   = c.texto[i];
+  const col = current >= 0 ? CHAKRAS[current].color : 'var(--sky)';
+  $('puBar').style.background = col;
+  $('gateGo').style.background = col; $('gateGo').style.borderColor = col;
+  $('gateMsg').textContent = '';
+  $('puerta').hidden = false;
+  setTimeout(() => { const n = $('fName'); if (n && !n.value) n.focus(); }, 120);
+}
+function cerrarPuerta(hecho){
+  $('puerta').hidden = true;
+  const luego = puertaLuego; puertaLuego = null;
+  if (hecho && luego) luego();
+}
+$('puNo').addEventListener('click', () => cerrarPuerta(false));
+$('puerta').addEventListener('click', ev => { if (ev.target === $('puerta')) cerrarPuerta(false); });
+
+$('puForm').addEventListener('submit', async ev => {
+  ev.preventDefault();
+  const p = buildPayload(puertaMotivo);
+  const msg = $('gateMsg');
+  const mal = (el, on) => el.classList.toggle('bad', on);
+  const correoOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(p.email);
+  mal($('fName'), !p.name); mal($('fMail'), !correoOk);
+  if (!p.name){ msg.className = 'gate__msg'; msg.textContent = L('Falta tu nombre.', 'Your name is missing.'); return; }
+  if (!correoOk){ msg.className = 'gate__msg'; msg.textContent = L('Ese correo no es v\u00E1lido.', 'That email is not valid.'); return; }
+  if (!p.consent){ msg.className = 'gate__msg'; msg.textContent = L('Necesitamos tu permiso para escribirte.', 'We need your permission to write to you.'); return; }
+
+  const btn = $('gateGo'), etiqueta = btn.textContent;
+  btn.disabled = true; btn.textContent = L('Enviando...', 'Sending...');
+  msg.className = 'gate__msg'; msg.textContent = '';
+  try {
+    const r = await sendLead(p);
+    store.set(LEAD_KEY, { name:p.name, email:p.email, id:(r && r.lead_id) || null, at:Date.now() });
+    cerrarPuerta(true);
+  } catch (err){
+    puertaIntentos++;
+    if (puertaIntentos >= 2 || window.__MALETA){
+      const q = store.get(QUEUE_KEY) || []; q.push(p); store.set(QUEUE_KEY, q);
+      store.set(LEAD_KEY, { name:p.name, email:p.email, at:Date.now(), queued:true });
+      msg.className = 'gate__msg ok';
+      msg.textContent = L('Guardado. Lo enviamos cuando vuelva la conexi\u00F3n.',
+                          'Saved. We will send it when the connection is back.');
+      setTimeout(() => cerrarPuerta(true), 1100);
+    } else {
+      msg.textContent = (err && err.message ? err.message : L('No se pudo enviar', 'Could not send'))
+        + L(' \u2014 intenta otra vez.', ' \u2014 try again.');
+    }
+  } finally {
+    btn.disabled = false; btn.textContent = etiqueta;
+  }
+});
+
+flushQueue();
+entrarComoCliente();          // si ya es cliente MAAT, la puerta nunca aparece
+
+/* ============================================================
+   ENTRADA \u2014 un solo boton, y lo primero que pasa es una respiracion
+   ============================================================ */
+function enter(){
+  Sound.on = true;                       // el clic ES el gesto que desbloquea el audio
+  Sound.init();
+  if (Sound.ctx && Sound.ctx.state === 'suspended') Sound.ctx.resume();
+  Sound.setFreq(CHAKRAS[0].hz, 0.1);
+  Sound.fade(0.07, 2.5);
   const v = $('veil'); v.classList.add('out');
   setTimeout(() => v.remove(), 900);
-  const prev = store.get(SCAN_KEY);
-  if (RETIRO){ setTimeout(abrirRetiro, 900); return; }
-  setTimeout(() => {
-    if (prev && typeof prev.focus === 'number'){
-      if (prev.scores){ escaneoLuz = prev.scores.map(v => 0.15 + (v / 100) * 0.85); pintarLuz(); }
-      goTo(prev.focus);
-    } else startScan();
-  }, 700);
+  if (RETIRO){ setTimeout(abrirRetiro, 800); return; }   // en un retiro no hay bienvenida ni preguntas
+  setTimeout(bienvenida, 650);
 }
-$('startSound').addEventListener('click', () => enter(true));
-$('startSilent').addEventListener('click', () => enter(false));
+$('entrar').addEventListener('click', enter);
+
+/* La primera pantalla no pregunta nada: respira. Dos ciclos completos
+   y recien entonces aparece la eleccion. Que lo primero que pase sea
+   algo en el cuerpo, no algo en la cabeza. */
+let bvTimer = null;
+function bienvenida(){
+  goTo(-1, { keepJourney:true });
+  const prev = store.get(SCAN_KEY);
+  $('bienve').hidden = false;
+  $('bvAcciones').hidden = true;
+  $('bvSaltar').hidden = false;
+  Sound.initAire();
+  Breath.start('bvAro', 'bvFase');
+  const ciclo = (patron.ins + patron.sost + patron.exh) * 1000;
+  bvTimer = setTimeout(mostrarEleccion, ciclo * 2);
+  if (prev && typeof prev.focus === 'number' && prev.scores){
+    escaneoLuz = prev.scores.map(v => 0.15 + (v / 100) * 0.85);
+    pintarLuz();
+  }
+}
+function mostrarEleccion(){
+  $('bvAcciones').hidden = false;
+  $('bvSaltar').hidden = true;
+  $('tBvTxt').innerHTML = L('\u00BFPor d\u00F3nde quieres empezar?', 'Where do you want to start?');
+}
+function cerrarBienvenida(){
+  if (bvTimer){ clearTimeout(bvTimer); bvTimer = null; }
+  Breath.stop();
+  $('bienve').hidden = true;
+}
+$('bvSaltar').addEventListener('click', mostrarEleccion);
+$('bvEscaneo').addEventListener('click', () => { cerrarBienvenida(); startScan(false); });
+$('bvExplorar').addEventListener('click', () => {
+  cerrarBienvenida();
+  const prev = store.get(SCAN_KEY);
+  goTo(prev && typeof prev.focus === 'number' ? prev.focus : 0);
+});
 
 /* ============================================================
    6 \u00B7 LOOP
@@ -2131,6 +2266,7 @@ function medirBarra(){
 medirBarra();
 addEventListener('resize', () => {
   medirBarra();
+  aplicarIdioma();
   camera.aspect = innerWidth/innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(innerWidth, innerHeight);
