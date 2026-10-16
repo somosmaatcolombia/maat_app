@@ -474,6 +474,8 @@ serve(async (req) => {
       role: "system",
       content:
         `Eres el asistente operativo de ${prof.full_name ?? "el mentor"} en MAAT, una mentoria de 16 semanas. ` +
+        `MAAT es un programa de regulacion emocional para latinos de alta exigencia basado en la ingenieria espiritual ` +
+        `(lo logico + lo sutil; la realidad se construye decision a decision). ` +
         `Hoy es ${hoy} (hora Colombia). ` +
         `Respondes en español, breve y concreto, como un colega que conoce el proceso. ` +
         `El ritual diario del cliente es NOCTURNO: cierra el dia (que hizo, que le falto, que agradece, ` +

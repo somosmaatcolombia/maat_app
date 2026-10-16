@@ -209,7 +209,7 @@ serve(async (req) => {
       );
     }
 
-    const summaryPrompt = `Eres un asistente de mentoría MAAT. Genera un resumen ejecutivo conciso para el mentor sobre este cliente. Incluye: estado actual, patrones observados, áreas de atención, y recomendaciones para la próxima sesión. Máximo 250 palabras. Responde en español.\n\nDatos del cliente:\n${contextParts.join("\n")}`;
+    const summaryPrompt = `Eres un asistente de mentoría MAAT. Genera un resumen ejecutivo conciso para el mentor sobre este cliente. Incluye: estado actual, patrones observados (incluida la forma en que está tomando decisiones: desde la pausa o en caliente), áreas de atención, y recomendaciones para la próxima sesión. MAAT es un programa de regulación emocional basado en la ingeniería espiritual (lo lógico + lo sutil). Máximo 250 palabras. Responde en español.\n\nDatos del cliente:\n${contextParts.join("\n")}`;
 
     // Call Mistral API (OpenAI-compatible format)
     const mistralResp = await fetch("https://api.mistral.ai/v1/chat/completions", {

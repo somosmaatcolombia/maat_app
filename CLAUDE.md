@@ -2,7 +2,9 @@
 
 ## Qué es este proyecto
 
-MAAT es un sistema de mentoría que integra neurociencia aplicada, filosofía práctica y metacognición. Dirigido a profesionales de alto rendimiento que han perdido sentido, pasión y energía — trabajan en automático, sin propósito.
+MAAT es un programa especializado en la **regulación emocional de los latinos de alta exigencia**: diseñamos vidas con coherencia, propósito y paz mental. Su método, la **ingeniería espiritual**, une lo lógico (neurociencia aplicada, metacognición, estoicismo, hábitos medidos) con lo sutil y emocional (sentido, gratitud, una conexión espiritual honesta), y parte de que la realidad se construye decisión a decisión (3 preguntas: ¿cómo decides?, ¿contra qué la contrastas?, ¿qué paz te trae?; la pausa: respira · observa · decide).
+
+Cliente ideal: profesional latino de 30–45 años, dentro o fuera de LATAM, en la crisis de identidad de la mediana edad (por fuera todo funciona, por dentro vive en automático). El filtro es el momento vital, no el ingreso ni el cargo. Categorías: líderes y ejecutivos, artistas y deportistas, empresarios y fundadores, organizaciones. Perfil completo y reglas de lenguaje ("alta exigencia" en vez de "alto rendimiento"; no es terapia): skill `maat-icp` en `OneDrive-Personal/MAAT/Branding/skills/maat-icp/SKILL.md`.
 
 **DOS productos digitales**, misma base de datos Supabase:
 

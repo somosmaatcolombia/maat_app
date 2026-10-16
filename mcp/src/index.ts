@@ -29,6 +29,8 @@ const server = new McpServer(
   {
     instructions:
       "Herramientas de la mentoria MAAT (proceso de 16 semanas). " +
+      "MAAT es un programa de regulacion emocional para latinos de alta exigencia basado en la ingenieria espiritual " +
+      "(lo logico + lo sutil; la realidad se construye decision a decision). Para copy, ICP y lenguaje usa el skill maat-icp. " +
       "El ritual diario del cliente es NOCTURNO: cierra el dia (que hizo, que le falto, que agradece, " +
       "termometro de coherencia 1-10, aprendizaje) y elige lo mas importante de manana; por la manana lee su " +
       "statement y escucha su autohipnosis. " +

@@ -8,7 +8,7 @@
 
 - **B2C de bienestar tiene churn brutal** y CAC alto. Vender uno a uno es agotador.
 - **Las empresas SÍ pagan** por: retención de talento, burnout, productividad, liderazgo.
-- MAAT ataca exactamente el dolor de las empresas: **profesionales de alto rendimiento que perdieron sentido y energía** (= burnout silencioso, fuga de talento, líderes en automático).
+- MAAT ataca exactamente el dolor de las empresas: **profesionales de alta exigencia que perdieron sentido y energía** (= burnout silencioso, fuga de talento, líderes en automático).
 - Un solo contrato B2B = ingresos de decenas de usuarios B2C, con menor churn y venta más estable.
 
 ---

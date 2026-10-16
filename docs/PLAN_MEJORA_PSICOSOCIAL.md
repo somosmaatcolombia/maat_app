@@ -6,7 +6,7 @@
 
 ## 0. El problema en una frase
 
-> La app le pide a profesionales de alto rendimiento —saturados de tiempo, orientados a resultados y emocionalmente agotados— que hagan algo **lento, introspectivo, vulnerable y sin recompensa inmediata**, mientras saben que **un mentor los está observando**.
+> La app le pide a profesionales de alta exigencia —saturados de tiempo, orientados a resultados y emocionalmente agotados— que hagan algo **lento, introspectivo, vulnerable y sin recompensa inmediata**, mientras saben que **un mentor los está observando**.
 
 Eso genera tres fricciones simultáneas que hay que nombrar antes de "mejorar la UX":
 
@@ -81,7 +81,7 @@ La motivación intrínseca necesita 3 nutrientes:
 - La app tiene muchas secciones. **Riesgo de parálisis.** El home debe tener **UN solo siguiente paso obvio**, no un menú.
 - La gente recuerda el **pico emocional** y el **final** de cada sesión. Diseñar deliberadamente un buen cierre de cada interacción (no terminar en un formulario seco, sino en una frase que resuene).
 
-### 2.5 Vulnerabilidad y vergüenza (Brené Brown) — el bloqueo del alto rendimiento
+### 2.5 Vulnerabilidad y vergüenza (Brené Brown) — el bloqueo de la alta exigencia
 Tu público se define por "tener todo bajo control". Pedirles introspección emocional activa **defensas**. Estrategias:
 - Lenguaje que normalice: "los profesionales más exigentes son los que más necesitan este espacio".
 - Marco de **fortaleza, no de terapia**: "esto es entrenamiento mental de élite", no "esto es para gente que está mal".

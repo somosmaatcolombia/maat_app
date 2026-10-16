@@ -404,3 +404,6 @@ verify_jwt = false
 
 [functions.chakra-lead]
 verify_jwt = false
+
+[functions.maat-summary]
+verify_jwt = false
