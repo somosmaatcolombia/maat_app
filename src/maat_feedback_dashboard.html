@@ -53,6 +53,7 @@ h2{font-family:var(--font-title);font-size:20px;font-weight:600;letter-spacing:1
 .kpi[data-t="nps"]::before{background:var(--m);}
 .kpi[data-t="sat"]::before{background:var(--o);}
 .kpi[data-t="ref"]::before{background:var(--v);}
+.kpi[data-t="tw"]::before{background:var(--r);}
 .kpi .label{font-family:var(--font-title);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mu);margin-bottom:6px;}
 .kpi .val{font-family:var(--font-title);font-size:36px;font-weight:700;line-height:1;}
 .kpi .foot{font-size:11.5px;color:var(--mu2);margin-top:6px;}
@@ -80,6 +81,32 @@ select{background:var(--bg);color:var(--text);border:1.5px solid var(--bd);borde
 .tag{display:inline-block;font-size:10.5px;font-family:var(--font-title);letter-spacing:1px;text-transform:uppercase;padding:2px 8px;border-radius:20px;border:1px solid var(--bd);color:var(--mu);}
 .tag.ok{color:var(--m);border-color:rgba(125,205,147,.4);}
 @media (max-width:860px){.grid2{grid-template-columns:1fr;}}
+/* ---------- Testimonios en la web (moderacion) ---------- */
+.tw-filter{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+.tw-filter button{background:var(--bg);border:1px solid var(--bd);color:var(--mu);padding:7px 13px;border-radius:20px;font-family:var(--font-title);font-size:12px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;}
+.tw-filter button.on{background:var(--v);border-color:var(--v);color:#fff;}
+.tw-filter button .n{opacity:.8;margin-left:4px;}
+.tw-item{border:1px solid var(--bd);border-radius:14px;padding:18px;margin-bottom:14px;background:var(--bg);}
+.tw-head{display:flex;gap:14px;align-items:center;margin-bottom:10px;flex-wrap:wrap;}
+.tw-ph{width:56px;height:56px;border-radius:50%;object-fit:cover;flex:none;background:var(--bg2);border:1px solid var(--bd);}
+.tw-ini{width:56px;height:56px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;background:var(--bg2);border:1px solid var(--bd);font-family:var(--font-title);font-size:18px;color:var(--mu);}
+.tw-who{flex:1;min-width:180px;}
+.tw-who strong{display:block;font-size:15px;}
+.tw-who span{font-size:12.5px;color:var(--mu);}
+.tw-chips{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 10px;}
+.tag.warn{color:var(--o);border-color:rgba(235,160,85,.5);}
+.tag.bad{color:var(--r);border-color:rgba(215,107,110,.5);}
+.tw-quote{white-space:pre-wrap;font-size:14px;color:var(--text);margin:8px 0 12px;padding:10px 14px;border-left:3px solid var(--v);background:rgba(137,108,142,.08);border-radius:0 8px 8px 0;}
+.tw-meta{font-size:12px;color:var(--mu2);margin-bottom:12px;word-break:break-word;}
+.tw-alert{background:rgba(235,160,85,.1);border:1px solid rgba(235,160,85,.4);color:var(--o);padding:9px 12px;border-radius:8px;font-size:12.5px;margin-bottom:10px;}
+.tw-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.tw-actions label{font-size:12.5px;color:var(--mu);display:flex;gap:6px;align-items:center;}
+.tw-actions select{min-width:0;padding:7px 10px;font-size:13px;}
+.tw-actions .btn-ghost.go{background:var(--v);border-color:var(--v);color:#fff;}
+.tw-actions .btn-ghost.danger:hover{border-color:var(--r);color:var(--r);}
+.tw-note{width:100%;margin-top:10px;padding:8px 10px;background:var(--bg2);border:1px solid var(--bd);border-radius:8px;color:var(--text);font-family:var(--font-body);font-size:12.5px;}
+.tw-setup{background:rgba(215,107,110,.1);border:1px solid rgba(215,107,110,.4);color:var(--r);padding:12px 14px;border-radius:10px;font-size:13px;}
+
 </style>
 </head>
 <body>
@@ -133,6 +160,13 @@ select{background:var(--bg);color:var(--text);border:1.5px solid var(--bd);borde
       <div id="ficha" style="margin-top:18px;"></div>
     </div>
 
+    <div class="card" id="tw-card">
+      <h2 id="s-h2-tweb"></h2>
+      <p class="muted" id="tw-sub" style="font-size:13px;margin:-6px 0 14px;"></p>
+      <div class="tw-filter" id="tw-bar"></div>
+      <div id="tw-list"></div>
+    </div>
+
     <div class="grid2">
       <div class="card">
         <h2 id="s-h2-testi"></h2>
@@ -183,6 +217,8 @@ function applyStaticI18N(){
   setTxt("s-h2-nps",L("Recomendaci\u00F3n (NPS)","Recommendation (NPS)"));
   setTxt("s-h2-ficha",L("Ficha individual","Individual profile"));
   setTxt("s-h2-testi",L("Testimonios autorizados","Authorized testimonials"));
+  setTxt("s-h2-tweb",L("Testimonios en la web","Website testimonials"));
+  setTxt("tw-sub",L("Los env\u00EDan los clientes desde somosmaat.org/es/testimonios. Nada se publica hasta que lo apruebas aqu\u00ED; el correo nunca se muestra en el sitio.","Clients send them from somosmaat.org/en/testimonials. Nothing is published until you approve it here; the email is never shown on the site."));
   setTxt("s-h2-refs",L("Leads referidos","Referred leads"));
   if(D.me)setHeadSub(D.me);
 }
@@ -204,7 +240,7 @@ const MOM_LABEL={inicio:{es:"Inicio",en:"Start"},intermedio:{es:"Intermedio",en:
 function dimT(d){return d[lang];}
 function momL(m){return MOM_LABEL[m][lang];}
 
-const D={rows:[],refs:[],profiles:{},overview:null,me:null};
+const D={rows:[],refs:[],profiles:{},overview:null,me:null,tw:[],twErr:false,twFilter:"pending"};
 
 function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");}
 function show(id){document.getElementById(id).classList.remove("hidden");}
@@ -253,14 +289,17 @@ async function loadData(){
   const res=await Promise.allSettled([
     sb.from("client_feedback").select("*"),
     sb.from("client_referrals").select("*").order("created_at",{ascending:false}),
-    sb.from("profiles").select("id,full_name,current_week").eq("role","client"),
-    sb.rpc("get_feedback_overview")
+    sb.from("profiles").select("id,full_name,current_week,preferred_lang").eq("role","client"),
+    sb.rpc("get_feedback_overview"),
+    sb.from("testimonials").select("id,created_at,status,lang,name,email,role,location,quote,photo_path,niche,featured,matched_user_id,admin_note,published_at").order("created_at",{ascending:false})
   ]);
   D.rows=(res[0].status==="fulfilled"&&res[0].value.data)||[];
   D.refs=(res[1].status==="fulfilled"&&res[1].value.data)||[];
   const profs=(res[2].status==="fulfilled"&&res[2].value.data)||[];
   D.profiles={};profs.forEach(p=>{D.profiles[p.id]=p;});
   D.overview=(res[3].status==="fulfilled"&&res[3].value.data)||null;
+  D.twErr=!(res[4].status==="fulfilled"&&!res[4].value.error);
+  D.tw=(!D.twErr&&res[4].value.data)||[];
   renderAll();
 }
 
@@ -271,6 +310,7 @@ function renderAll(){
   renderNPS();
   renderClientSel();
   renderFicha();
+  renderTW();
   renderTestimonios();
   renderReferidos();
 }
@@ -292,6 +332,7 @@ function renderKPIs(totalClients){
     <div class="kpi" data-t="nps"><div class="label">NPS</div><div class="val">${n.score==null?"--":(n.score>0?"+":"")+n.score}</div><div class="foot">${n.n} ${L("respuesta(s) de cierre","closing response(s)")}</div></div>
     <div class="kpi" data-t="sat"><div class="label">${L("Satisfacci\u00F3n final","Final satisfaction")}</div><div class="val">${f1(sat)}</div><div class="foot">${L("promedio sobre 10","average out of 10")}</div></div>
     <div class="kpi"><div class="label">${L("Cierres completados","Completed closings")}</div><div class="val">${finales}</div><div class="foot">${inicios} ${L("l\u00EDnea(s) base registrada(s)","baseline(s) recorded")}</div></div>
+    <div class="kpi" data-t="tw"><div class="label">${L("Testimonios publicados","Published testimonials")}</div><div class="val">${D.tw.filter(t=>t.status==="approved").length}</div><div class="foot">${D.tw.filter(t=>t.status==="pending").length} ${L("por revisar","to review")}</div></div>
     <div class="kpi" data-t="ref"><div class="label">${L("Leads referidos","Referred leads")}</div><div class="val">${D.refs.length}</div><div class="foot">${pend} ${L("sin pasar al CRM","not yet in CRM")}</div></div>`;
 }
 
@@ -443,6 +484,127 @@ function renderFicha(){
     ${mejora||""}`;
 }
 
+
+/* ---------- Testimonios en la web: revision + satisfaccion del cliente ---------- */
+const TW_ST={pending:{es:"Por revisar",en:"To review"},approved:{es:"Publicado",en:"Published"},rejected:{es:"No publicado",en:"Not published"},withdrawn:{es:"Retirado",en:"Withdrawn"}};
+const TW_ORDER=["pending","approved","rejected","withdrawn"];
+const TW_NICHE=[["pros",{es:"L\u00EDderes y ejecutivos",en:"Leaders & executives"}],["artists",{es:"Artistas y deportistas",en:"Artists & athletes"}],["founders",{es:"Empresarios y fundadores",en:"Founders & business owners"}],["orgs",{es:"Organizaciones",en:"Organizations"}]];
+function twPhoto(t){return t.photo_path?CONFIG.SUPABASE_URL+"/storage/v1/object/public/testimonial-photos/"+encodeURIComponent(t.photo_path):null;}
+function twInit(n){const w=String(n||"").trim().split(/\s+/);return ((w[0]||"").charAt(0)+(w.length>1?w[w.length-1].charAt(0):"")).toUpperCase();}
+/* Satisfaccion y NPS del cliente cuyo correo coincide (modulo de feedback): el cierre manda; si no hay, el intermedio. */
+function twFeedback(t){
+  if(!t.matched_user_id)return null;
+  const mine=D.rows.filter(r=>r.user_id===t.matched_user_id);
+  const fin=mine.find(r=>r.moment==="final");
+  const mid=mine.find(r=>r.moment==="intermedio");
+  const sat=fin&&fin.satisfaccion!=null?fin.satisfaccion:(mid?mid.satisfaccion:null);
+  const nps=fin&&fin.nps!=null?fin.nps:null;
+  const p=D.profiles[t.matched_user_id];
+  return{name:p&&p.full_name?p.full_name:null,sat:sat,satFrom:fin&&fin.satisfaccion!=null?"final":(mid?"intermedio":null),nps:nps,closed:!!fin,
+         low:(sat!=null&&sat<=6)||(nps!=null&&nps<=6)};
+}
+function twChips(t,fb){
+  const c=[`<span class="tag ${t.status==="approved"?"ok":t.status==="pending"?"warn":""}">${esc(TW_ST[t.status][lang])}</span>`,`<span class="tag">${esc(String(t.lang||"es").toUpperCase())}</span>`];
+  if(fb){
+    c.push(`<span class="tag ok">${L("Cliente verificado","Verified client")}</span>`);
+    c.push(fb.sat!=null?`<span class="tag ${fb.sat<=6?"bad":"ok"}">${L("Satisfacci\u00F3n","Satisfaction")} ${fb.sat}/10 (${fb.satFrom==="final"?L("cierre","closing"):L("intermedio","midpoint")})</span>`
+                         :`<span class="tag">${L("Sin satisfacci\u00F3n a\u00FAn","No satisfaction yet")}</span>`);
+    c.push(fb.nps!=null?`<span class="tag ${fb.nps<=6?"bad":fb.nps>=9?"ok":""}">NPS ${fb.nps}</span>`:`<span class="tag">${fb.closed?L("Cierre sin NPS","Closing without NPS"):L("Sin cierre a\u00FAn","Closing not done yet")}</span>`);
+  }else c.push(`<span class="tag warn">${L("Sin cuenta: verif\u00EDcalo t\u00FA","No account: verify it yourself")}</span>`);
+  if(t.featured)c.push(`<span class="tag ok">${L("Destacado","Featured")}</span>`);
+  return c.join("");
+}
+function twActions(t){
+  const nopts=`<option value="">${L("Sin categor\u00EDa","No category")}</option>`+TW_NICHE.map(n=>`<option value="${n[0]}"${t.niche===n[0]?" selected":""}>${esc(n[1][lang])}</option>`).join("");
+  const sel=`<label>${L("Categor\u00EDa","Category")} <select data-niche>${nopts}</select></label>`;
+  const feat=`<label><input type="checkbox" data-feat${t.featured?" checked":""}> ${L("Destacar en la portada","Feature on home")}</label>`;
+  const del=`<button class="btn-ghost danger" data-act="delete" data-id="${esc(t.id)}">${L("Eliminar","Delete")}</button>`;
+  if(t.status==="pending")return sel+feat+`<button class="btn-ghost go" data-act="approve" data-id="${esc(t.id)}">${L("Aprobar y publicar","Approve & publish")}</button><button class="btn-ghost" data-act="reject" data-id="${esc(t.id)}">${L("No publicar","Don't publish")}</button>`+del;
+  if(t.status==="approved")return sel+feat+`<button class="btn-ghost" data-act="save" data-id="${esc(t.id)}">${L("Guardar","Save")}</button><button class="btn-ghost" data-act="unpublish" data-id="${esc(t.id)}">${L("Despublicar","Unpublish")}</button>`+del;
+  if(t.status==="rejected")return `<button class="btn-ghost" data-act="reopen" data-id="${esc(t.id)}">${L("Volver a por revisar","Back to review")}</button>`+del;
+  return del;
+}
+function renderTW(){
+  const bar=document.getElementById("tw-bar"),box=document.getElementById("tw-list");
+  if(D.twErr){bar.innerHTML="";box.innerHTML=`<div class="tw-setup">${L("No se pudo leer la tabla de testimonios. Si es la primera vez, ejecuta sql/maat_testimonials.sql en Supabase.","Could not read the testimonials table. If this is the first time, run sql/maat_testimonials.sql in Supabase.")}</div>`;return;}
+  const count=st=>D.tw.filter(t=>t.status===st).length;
+  bar.innerHTML=TW_ORDER.map(st=>`<button data-f="${st}" class="${D.twFilter===st?"on":""}">${esc(TW_ST[st][lang])}<span class="n">${count(st)}</span></button>`).join("")+
+    `<button data-f="all" class="${D.twFilter==="all"?"on":""}">${L("Todos","All")}<span class="n">${D.tw.length}</span></button>`;
+  const list=D.tw.filter(t=>D.twFilter==="all"||t.status===D.twFilter);
+  if(!list.length){box.innerHTML=`<div class="empty">${L("No hay testimonios en esta vista.","No testimonials in this view.")}</div>`;return;}
+  box.innerHTML=list.map(t=>{
+    const fb=twFeedback(t),ph=twPhoto(t);
+    const warn=fb&&fb.low&&t.status!=="approved"?`<div class="tw-alert">${L("Su satisfacci\u00F3n o su NPS son bajos: revisa su feedback y h\u00E1blale antes de publicar.","Their satisfaction or NPS is low: review their feedback and talk to them before publishing.")}</div>`:"";
+    return `<div class="tw-item" data-id="${esc(t.id)}">
+      <div class="tw-head">
+        ${ph?`<img class="tw-ph" src="${esc(ph)}" alt="" loading="lazy">`:`<div class="tw-ini">${esc(twInit(t.name))}</div>`}
+        <div class="tw-who"><strong>${esc(t.name)}</strong><span>${esc(t.role)} &middot; ${esc(t.location)}</span></div>
+        <span class="muted" style="font-size:12px;">${esc((t.created_at||"").slice(0,10))}</span>
+      </div>
+      <div class="tw-chips">${twChips(t,fb)}</div>
+      ${warn}
+      <div class="tw-quote">${esc(t.quote)}</div>
+      <div class="tw-meta">${esc(t.email)}${fb&&fb.name?" &middot; "+L("cliente: ","client: ")+esc(fb.name):""}</div>
+      <div class="tw-actions">${twActions(t)}</div>
+      <input class="tw-note" data-note placeholder="${L("Nota interna (no se publica)","Internal note (never published)")}" value="${esc(t.admin_note||"")}" maxlength="500">
+    </div>`;
+  }).join("");
+}
+async function twUpdate(id,patch){
+  const{error}=await sb.from("testimonials").update(patch).eq("id",id);
+  if(error){alert(L("No pudimos guardar: ","Could not save: ")+error.message);return false;}
+  const t=D.tw.find(x=>x.id===id);if(t)Object.assign(t,patch);
+  return true;
+}
+async function twAct(act,id,btn){
+  const t=D.tw.find(x=>x.id===id);if(!t)return;
+  const card=btn.closest(".tw-item");
+  const niche=(card.querySelector("[data-niche]")||{}).value||null;
+  const feat=!!(card.querySelector("[data-feat]")||{}).checked;
+  const note=(card.querySelector("[data-note]")||{}).value||null;
+  btn.disabled=true;
+  try{
+    if(act==="approve"){
+      const fb=twFeedback(t);
+      if(fb&&fb.low&&!confirm(L("Su satisfacci\u00F3n o su NPS son bajos. \u00BFPublicar de todos modos?","Their satisfaction or NPS is low. Publish anyway?")))return;
+      await twUpdate(id,{status:"approved",niche:niche,featured:feat,admin_note:note});
+    }else if(act==="save"){await twUpdate(id,{niche:niche,featured:feat,admin_note:note});}
+    else if(act==="reject"){await twUpdate(id,{status:"rejected",admin_note:note});}
+    else if(act==="unpublish"||act==="reopen"){await twUpdate(id,{status:"pending",admin_note:note});}
+    else if(act==="delete"){
+      if(!confirm(L("\u00BFEliminar este testimonio y su foto? No se puede deshacer.","Delete this testimonial and its photo? This cannot be undone.")))return;
+      if(t.photo_path){const r=await sb.storage.from("testimonial-photos").remove([t.photo_path]);if(r.error){alert(L("No pudimos borrar la foto: ","Could not delete the photo: ")+r.error.message);return;}}
+      const{error}=await sb.from("testimonials").delete().eq("id",id);
+      if(error){alert(L("No pudimos eliminarlo: ","Could not delete it: ")+error.message);return;}
+      D.tw=D.tw.filter(x=>x.id!==id);
+    }
+  }finally{btn.disabled=false;}
+  renderKPIs(Object.keys(D.profiles).length);renderTW();renderTestimonios();
+}
+document.getElementById("tw-list").addEventListener("click",e=>{const b=e.target.closest("[data-act]");if(b)twAct(b.dataset.act,b.dataset.id,b);});
+document.getElementById("tw-list").addEventListener("change",e=>{
+  if(!e.target.matches("[data-note]"))return;
+  const id=e.target.closest(".tw-item").dataset.id;twUpdate(id,{admin_note:e.target.value.trim()||null});
+});
+document.getElementById("tw-bar").addEventListener("click",e=>{const b=e.target.closest("[data-f]");if(b){D.twFilter=b.dataset.f;renderTW();}});
+
+/* Invitacion: mensaje listo para pegar en WhatsApp para quien autorizo su frase de cierre */
+function twInviteMsg(userId){
+  const p=D.profiles[userId]||{};
+  const first=String(p.full_name||"").trim().split(/\s+/)[0]||"";
+  const en=p.preferred_lang==="en";
+  const url="https://somosmaat.org/"+(en?"en/testimonials/":"es/testimonios/")+(en?"#share":"#comparte");
+  return en
+    ?"Hi "+first+", thank you for closing your MAAT process. Would you share your experience with a photo, your profession and where you are from? It takes 5 minutes and you can edit or withdraw it any time: "+url
+    :"Hola "+first+", gracias por cerrar tu proceso MAAT. \u00BFTe animas a contar tu experiencia con tu foto, tu profesi\u00F3n y desde d\u00F3nde nos escribes? Toma 5 minutos y puedes editarlo o retirarlo cuando quieras: "+url;
+}
+async function twCopyInvite(userId,btn){
+  const msg=twInviteMsg(userId),old=btn.textContent;
+  try{await navigator.clipboard.writeText(msg);btn.textContent=L("\u00A1Copiado!","Copied!");}
+  catch(_){window.prompt(L("Copia el mensaje:","Copy the message:"),msg);}
+  setTimeout(()=>{btn.textContent=old;},2000);
+}
+
 /* ---------- Testimonios ---------- */
 function renderTestimonios(){
   const t=D.rows.filter(r=>r.testimonial_ok&&r.testimonial_text);
@@ -450,9 +612,14 @@ function renderTestimonios(){
   if(!t.length){box.innerHTML=`<div class="empty">${L("A\u00FAn no hay testimonios autorizados.","No authorized testimonials yet.")}</div>`;return;}
   box.innerHTML=t.map(r=>{
     const p=D.profiles[r.user_id];
-    return `<div class="quote">${esc(r.testimonial_text)}<span class="who">${esc(p&&p.full_name?p.full_name:L("Cliente","Client"))}${r.nps!=null?" &middot; NPS "+r.nps:""}</span></div>`;
+    const sent=D.tw.find(x=>x.matched_user_id===r.user_id&&x.status!=="withdrawn");
+    const tag=sent?`<span class="tag ok">${L("Ya envi\u00F3 el formulario","Form already sent")}</span>`
+                  :`<span class="tag warn">${L("Falta el formulario completo","Full form missing")}</span> <button class="btn-ghost" style="padding:3px 9px;font-size:11px;" data-invite="${esc(r.user_id)}">${L("Copiar invitaci\u00F3n","Copy invitation")}</button>`;
+    return `<div class="quote">${esc(r.testimonial_text)}<span class="who">${esc(p&&p.full_name?p.full_name:L("Cliente","Client"))}${r.nps!=null?" &middot; NPS "+r.nps:""}</span><div style="margin-top:8px;">${tag}</div></div>`;
   }).join("");
 }
+
+document.getElementById("testimonios").addEventListener("click",e=>{const b=e.target.closest("[data-invite]");if(b)twCopyInvite(b.dataset.invite,b);});
 
 /* ---------- Referidos ---------- */
 function renderReferidos(){

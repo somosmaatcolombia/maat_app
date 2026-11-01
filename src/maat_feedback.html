@@ -142,6 +142,10 @@ body{font-family:var(--font-body);background:var(--paper);color:var(--ink);font-
         <div class="check" id="succ-check">&#10003;</div>
         <h3 id="succ-title"></h3>
         <p id="succ-body"></p>
+        <div id="succ-testi" class="hidden" style="margin-top:22px;padding-top:22px;border-top:1px solid var(--bd);">
+          <p id="succ-testi-p" style="margin-bottom:14px;"></p>
+          <a class="btn" id="succ-testi-a" href="#" style="display:block;text-align:center;text-decoration:none;"></a>
+        </div>
       </div>
     </div>
   </div>
@@ -464,7 +468,34 @@ function showSuccess(){
   document.getElementById("succ-check").style.display="none";
   document.getElementById("succ-title").textContent=(name?name+", ":"")+L("\u00A1listo! \u2728","done! \u2728");
   document.getElementById("succ-body").textContent=msgs[STATE.moment]||L("Respuestas guardadas.","Answers saved.");
+  setupTestimonialInvite();
   show("success-card");
+}
+
+/* Cierre -> testimonio completo en la web. Solo se ofrece a quien autoriz\u00F3 su frase como testimonio.
+   El formulario vive en somosmaat.org (mismo origen que esta p\u00E1gina): nombre, correo y frase viajan por
+   localStorage, nunca por la URL, y el formulario los borra al leerlos. */
+function setupTestimonialInvite(){
+  const box=document.getElementById("succ-testi");
+  const ok=STATE.moment==="final"&&!!(document.getElementById("f-testok")||{}).checked;
+  if(!ok){box.classList.add("hidden");return;}
+  const url=lang==="en"?"/en/testimonials/#share":"/es/testimonios/#comparte";
+  document.getElementById("succ-testi-p").textContent=L(
+    "Si quieres, cuenta tu experiencia completa en la web: con tu foto, tu profesi\u00F3n y desde d\u00F3nde nos escribes. T\u00FA decides qu\u00E9 se publica y puedes editarlo o retirarlo cuando quieras.",
+    "If you like, tell your full experience on the website: with your photo, your profession and where you are from. You decide what gets published and you can edit or withdraw it any time.");
+  const a=document.getElementById("succ-testi-a");
+  a.textContent=L("Contar mi experiencia","Share my experience");
+  a.href=url;
+  a.onclick=function(){
+    try{
+      const tt=document.getElementById("f-testtext");
+      localStorage.setItem("maat-testimonial-prefill",JSON.stringify({
+        name:STATE.profile.full_name||"",email:(STATE.user&&STATE.user.email)||"",
+        quote:tt&&tt.value.trim()?tt.value.trim():"",t:Date.now()}));
+    }catch(_){}
+    return true;
+  };
+  box.classList.remove("hidden");
 }
 
 /* Enter en login */

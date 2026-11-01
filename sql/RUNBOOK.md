@@ -30,6 +30,7 @@
 | 20 | `maat_cron_community_activity.sql` | Cron 3h community-activity | ✅ aplicado |
 | 21 | `maat_notif_custom.sql` | profiles.notif_custom_morning | ✅ aplicado |
 | 22 | `maat_ritual_cierre.sql` | Columnas del ritual de cierre en calibrations | ✅ aplicado |
+| 23 | `maat_testimonials.sql` | testimonials + RPC get_public_testimonials + bucket testimonial-photos (requiere #1 y #18) | ⏳ pendiente de correr (Oct 2026) |
 
 ## Mantenimiento puntual (correr cuando aplique)
 

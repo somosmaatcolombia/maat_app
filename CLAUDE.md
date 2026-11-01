@@ -61,6 +61,7 @@ maat-project/
     ├── session-reminders                  ← Recordatorios + prep de sesion (cron 15min)
     ├── community-activity                 ← Reacciones agrupadas ComuniMAAT (cron 3h)
     ├── broadcast-session-notes / send-custom-push / send-biotipo-result / link-preview
+    ├── testimonial                        ← Testimonios autogestionados desde la web (publica, --no-verify-jwt; ver docs/TESTIMONIOS.md)
     └── _shared/webpush.ts                 ← Libreria push compartida
 ```
 
@@ -118,7 +119,8 @@ ANON KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6I
 > Las 13 tablas de abajo son el **nucleo original**. Features posteriores sumaron mas
 > (~27 en total): `community_posts/reactions` (ComuniMAAT), `mentor_groups/members/sessions`
 > (mentorias grupales), `meditations`, `events(+registrations)`, `usage_events`,
-> `client_feedback`, `client_referrals`, `notification_templates`, biotipos, etc.
+> `client_feedback`, `client_referrals`, `testimonials` (testimonios de la web: pendientes hasta que mentor/admin
+> aprueban; ver docs/TESTIMONIOS.md), `notification_templates`, biotipos, etc.
 > El detalle vive en su SQL de origen — ver `sql/RUNBOOK.md`.
 >
 > `calibrations` fue extendida (Ago 2026) por el **ritual de cierre**: la reflexion es
@@ -250,6 +252,7 @@ supabase functions deploy maat-summary
 **coach-maat** — Proxy seguro para el Coach IA (Mistral). Recibe `{messages}`, retorna `{reply}`.
 **maat-summary** — Resumen IA del progreso de un cliente (Mistral). Recibe `{client_id}`, retorna `{summary}`.
 **send-notifications** — Push notifications cron. Auth via CRON_SECRET o admin JWT.
+**testimonial** — Recibe el testimonio (foto, profesion, ubicacion, experiencia) del formulario de somosmaat.org. Publica (`--no-verify-jwt`): valida en servidor, sube la foto y guarda como PENDIENTE; ops `submit|get|update|withdraw` (enlace privado por token). Pruebas: `node --test supabase/functions/testimonial/*.test.ts`.
 
 ## Pendientes
 
