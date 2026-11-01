@@ -105,6 +105,12 @@ select{background:var(--bg);color:var(--text);border:1.5px solid var(--bd);borde
 .tw-actions .btn-ghost.go{background:var(--v);border-color:var(--v);color:#fff;}
 .tw-actions .btn-ghost.danger:hover{border-color:var(--r);color:var(--r);}
 .tw-note{width:100%;margin-top:10px;padding:8px 10px;background:var(--bg2);border:1px solid var(--bd);border-radius:8px;color:var(--text);font-family:var(--font-body);font-size:12.5px;}
+.tw-msg{padding:11px 14px;border-radius:8px;font-size:13px;margin-bottom:14px;}
+.tw-msg.err{background:rgba(215,107,110,.12);border:1px solid rgba(215,107,110,.45);color:var(--r);}
+.tw-msg.ok{background:rgba(125,205,147,.1);border:1px solid rgba(125,205,147,.4);color:var(--m);}
+.tw-ask{display:flex;gap:10px;align-items:center;flex-wrap:wrap;width:100%;padding:10px 12px;border-radius:10px;background:rgba(235,160,85,.1);border:1px solid rgba(235,160,85,.4);font-size:13px;}
+.tw-ask span{flex:1;min-width:200px;color:var(--text);}
+.tw-ask .btn-ghost.danger{background:var(--r);border-color:var(--r);color:#fff;}
 .tw-setup{background:rgba(215,107,110,.1);border:1px solid rgba(215,107,110,.4);color:var(--r);padding:12px 14px;border-radius:10px;font-size:13px;}
 
 </style>
@@ -164,6 +170,7 @@ select{background:var(--bg);color:var(--text);border:1.5px solid var(--bd);borde
       <h2 id="s-h2-tweb"></h2>
       <p class="muted" id="tw-sub" style="font-size:13px;margin:-6px 0 14px;"></p>
       <div class="tw-filter" id="tw-bar"></div>
+      <div id="tw-msg" class="tw-msg hidden" role="status" aria-live="polite"></div>
       <div id="tw-list"></div>
     </div>
 
@@ -240,7 +247,7 @@ const MOM_LABEL={inicio:{es:"Inicio",en:"Start"},intermedio:{es:"Intermedio",en:
 function dimT(d){return d[lang];}
 function momL(m){return MOM_LABEL[m][lang];}
 
-const D={rows:[],refs:[],profiles:{},overview:null,me:null,tw:[],twErr:false,twFilter:"pending"};
+const D={rows:[],refs:[],profiles:{},overview:null,me:null,tw:[],twErr:false,twFilter:"pending",twAsk:null};
 
 function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");}
 function show(id){document.getElementById(id).classList.remove("hidden");}
@@ -515,10 +522,18 @@ function twChips(t,fb){
   return c.join("");
 }
 function twActions(t){
+  if(D.twAsk&&D.twAsk.id===t.id){
+    const del=D.twAsk.act==="delete";
+    const q=del?L("\u00BFEliminar este testimonio y su foto? No se puede deshacer.","Delete this testimonial and its photo? This cannot be undone.")
+               :L("Su satisfacci\u00F3n o su NPS son bajos. \u00BFPublicar de todos modos?","Their satisfaction or NPS is low. Publish anyway?");
+    return `<div class="tw-ask"><span>${q}</span>
+      <button class="btn-ghost ${del?"danger":"go"}" data-act="${del?"delete":"approve-force"}" data-id="${esc(t.id)}">${del?L("S\u00ED, eliminar","Yes, delete"):L("S\u00ED, publicar","Yes, publish")}</button>
+      <button class="btn-ghost" data-act="cancel" data-id="${esc(t.id)}">${L("Cancelar","Cancel")}</button></div>`;
+  }
   const nopts=`<option value="">${L("Sin categor\u00EDa","No category")}</option>`+TW_NICHE.map(n=>`<option value="${n[0]}"${t.niche===n[0]?" selected":""}>${esc(n[1][lang])}</option>`).join("");
   const sel=`<label>${L("Categor\u00EDa","Category")} <select data-niche>${nopts}</select></label>`;
   const feat=`<label><input type="checkbox" data-feat${t.featured?" checked":""}> ${L("Destacar en la portada","Feature on home")}</label>`;
-  const del=`<button class="btn-ghost danger" data-act="delete" data-id="${esc(t.id)}">${L("Eliminar","Delete")}</button>`;
+  const del=`<button class="btn-ghost danger" data-act="ask-delete" data-id="${esc(t.id)}">${L("Eliminar","Delete")}</button>`;
   if(t.status==="pending")return sel+feat+`<button class="btn-ghost go" data-act="approve" data-id="${esc(t.id)}">${L("Aprobar y publicar","Approve & publish")}</button><button class="btn-ghost" data-act="reject" data-id="${esc(t.id)}">${L("No publicar","Don't publish")}</button>`+del;
   if(t.status==="approved")return sel+feat+`<button class="btn-ghost" data-act="save" data-id="${esc(t.id)}">${L("Guardar","Save")}</button><button class="btn-ghost" data-act="unpublish" data-id="${esc(t.id)}">${L("Despublicar","Unpublish")}</button>`+del;
   if(t.status==="rejected")return `<button class="btn-ghost" data-act="reopen" data-id="${esc(t.id)}">${L("Volver a por revisar","Back to review")}</button>`+del;
@@ -550,35 +565,53 @@ function renderTW(){
     </div>`;
   }).join("");
 }
+/* Mensajes dentro de la pagina: alert()/confirm() del navegador fallan en navegadores integrados y no avisaban de nada. */
+function twMsg(text,kind){
+  const m=document.getElementById("tw-msg");
+  if(!text){m.classList.add("hidden");m.textContent="";return;}
+  m.textContent=text;m.className="tw-msg "+(kind||"err");
+}
+/* .select("id") hace que la base devuelva las filas afectadas: si vienen 0, el RLS lo rechazo en silencio y lo mostramos. */
 async function twUpdate(id,patch){
-  const{error}=await sb.from("testimonials").update(patch).eq("id",id);
-  if(error){alert(L("No pudimos guardar: ","Could not save: ")+error.message);return false;}
+  const{data,error}=await sb.from("testimonials").update(patch).eq("id",id).select("id");
+  if(error){twMsg(L("No pudimos guardar: ","Could not save: ")+error.message,"err");return false;}
+  if(!data||!data.length){twMsg(L("No se guard\u00F3 el cambio: la base de datos no lo permiti\u00F3 (permisos). Recarga la p\u00E1gina e int\u00E9ntalo de nuevo.","The change was not saved: the database did not allow it (permissions). Reload the page and try again."),"err");return false;}
   const t=D.tw.find(x=>x.id===id);if(t)Object.assign(t,patch);
+  return true;
+}
+async function twDelete(t){
+  if(t.photo_path){
+    const r=await sb.storage.from("testimonial-photos").remove([t.photo_path]);
+    if(r.error){twMsg(L("No pudimos borrar la foto: ","Could not delete the photo: ")+r.error.message,"err");return false;}
+  }
+  const{data,error}=await sb.from("testimonials").delete().eq("id",t.id).select("id");
+  if(error){twMsg(L("No pudimos eliminarlo: ","Could not delete it: ")+error.message,"err");return false;}
+  if(!data||!data.length){twMsg(L("No se elimin\u00F3: la base de datos no lo permiti\u00F3 (permisos). Recarga la p\u00E1gina e int\u00E9ntalo de nuevo.","Not deleted: the database did not allow it (permissions). Reload the page and try again."),"err");return false;}
+  D.tw=D.tw.filter(x=>x.id!==t.id);
+  twMsg(L("Testimonio eliminado.","Testimonial deleted."),"ok");
   return true;
 }
 async function twAct(act,id,btn){
   const t=D.tw.find(x=>x.id===id);if(!t)return;
+  if(act==="cancel"){D.twAsk=null;renderTW();return;}
+  twMsg(null);
+  if(act==="ask-delete"){D.twAsk={id:id,act:"delete"};renderTW();return;}
   const card=btn.closest(".tw-item");
-  const niche=(card.querySelector("[data-niche]")||{}).value||null;
-  const feat=!!(card.querySelector("[data-feat]")||{}).checked;
-  const note=(card.querySelector("[data-note]")||{}).value||null;
+  let v={niche:(card.querySelector("[data-niche]")||{}).value||null,feat:!!(card.querySelector("[data-feat]")||{}).checked,note:(card.querySelector("[data-note]")||{}).value||null};
+  if(act==="approve"){
+    const fb=twFeedback(t);
+    if(fb&&fb.low){D.twAsk={id:id,act:"approve",vals:v};renderTW();return;}
+  }
+  if(act==="approve-force"&&D.twAsk&&D.twAsk.id===id&&D.twAsk.vals)v=D.twAsk.vals;
   btn.disabled=true;
   try{
-    if(act==="approve"){
-      const fb=twFeedback(t);
-      if(fb&&fb.low&&!confirm(L("Su satisfacci\u00F3n o su NPS son bajos. \u00BFPublicar de todos modos?","Their satisfaction or NPS is low. Publish anyway?")))return;
-      await twUpdate(id,{status:"approved",niche:niche,featured:feat,admin_note:note});
-    }else if(act==="save"){await twUpdate(id,{niche:niche,featured:feat,admin_note:note});}
-    else if(act==="reject"){await twUpdate(id,{status:"rejected",admin_note:note});}
-    else if(act==="unpublish"||act==="reopen"){await twUpdate(id,{status:"pending",admin_note:note});}
-    else if(act==="delete"){
-      if(!confirm(L("\u00BFEliminar este testimonio y su foto? No se puede deshacer.","Delete this testimonial and its photo? This cannot be undone.")))return;
-      if(t.photo_path){const r=await sb.storage.from("testimonial-photos").remove([t.photo_path]);if(r.error){alert(L("No pudimos borrar la foto: ","Could not delete the photo: ")+r.error.message);return;}}
-      const{error}=await sb.from("testimonials").delete().eq("id",id);
-      if(error){alert(L("No pudimos eliminarlo: ","Could not delete it: ")+error.message);return;}
-      D.tw=D.tw.filter(x=>x.id!==id);
-    }
+    if(act==="approve"||act==="approve-force")await twUpdate(id,{status:"approved",niche:v.niche,featured:v.feat,admin_note:v.note});
+    else if(act==="save")await twUpdate(id,{niche:v.niche,featured:v.feat,admin_note:v.note});
+    else if(act==="reject")await twUpdate(id,{status:"rejected",admin_note:v.note});
+    else if(act==="unpublish"||act==="reopen")await twUpdate(id,{status:"pending",admin_note:v.note});
+    else if(act==="delete")await twDelete(t);
   }finally{btn.disabled=false;}
+  D.twAsk=null;
   renderKPIs(Object.keys(D.profiles).length);renderTW();renderTestimonios();
 }
 document.getElementById("tw-list").addEventListener("click",e=>{const b=e.target.closest("[data-act]");if(b)twAct(b.dataset.act,b.dataset.id,b);});
