@@ -14,7 +14,7 @@ MINIFY=1
 [ "$1" = "--no-minify" ] && MINIFY=0
 
 rm -rf deploy
-mkdir -p deploy/app deploy/mentor deploy/onboarding deploy/feedback deploy/feedback-panel deploy/biotipo deploy/chakras
+mkdir -p deploy/app deploy/mentor deploy/onboarding deploy/feedback deploy/feedback-panel deploy/biotipo deploy/chakras deploy/panel
 
 # App del cliente (PWA completa: index + service worker + manifest + iconos)
 cp src/maat_dashboard.html      deploy/app/index.html
@@ -39,6 +39,10 @@ cp src/maat_feedback.html       deploy/feedback/index.html
 
 # Dashboard de feedback (mentor/admin)
 cp src/maat_feedback_dashboard.html deploy/feedback-panel/index.html
+
+# Panel de control (mentor/admin): acceso rapido a la app, el feedback, el CRM y las redes. Mismo dominio
+# que /app/ para compartir la sesion de Supabase; noindex.
+cp src/maat_panel.html          deploy/panel/index.html
 
 # Cuestionario de Biotipo (lead magnet + guarda en perfil). DEBE ir en el mismo
 # dominio que /app/ para compartir la sesion de Supabase (guardar en perfil).
@@ -70,7 +74,7 @@ HTML
 # .htaccess por carpeta: evita que las caches (LiteSpeed / proxy / navegador)
 # sirvan HTML viejo tras un deploy. El HTML es pequenio: preferimos frescura.
 # NOTA: esto solo afecta a DESPUES de purgar la cache actual una vez.
-for d in app mentor onboarding feedback feedback-panel biotipo chakras; do
+for d in app mentor onboarding feedback feedback-panel biotipo chakras panel; do
   cat > "deploy/$d/.htaccess" <<'HTACCESS'
 AddDefaultCharset utf-8
 <IfModule mod_headers.c>
@@ -91,7 +95,7 @@ done
 if [ "$MINIFY" = "1" ] && command -v npx >/dev/null 2>&1; then
   echo "Minificando .html ..."
   for f in deploy/app/index.html deploy/mentor/index.html deploy/onboarding/index.html \
-           deploy/feedback/index.html deploy/feedback-panel/index.html deploy/biotipo/index.html; do
+           deploy/feedback/index.html deploy/feedback-panel/index.html deploy/biotipo/index.html deploy/panel/index.html; do
     npx --yes html-minifier-terser \
       --collapse-whitespace --conservative-collapse --remove-comments \
       --minify-css true \

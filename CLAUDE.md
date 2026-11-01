@@ -52,6 +52,7 @@ maat-project/
 │   ├── maat_feedback.html                 ← Cuestionario trazabilidad (ES/EN) → /feedback/
 │   ├── maat_feedback_dashboard.html       ← Dashboard feedback mentor → /feedback-panel/
 │   ├── maat_biotipo.html                  ← Quiz de biotipos → /biotipo/
+│   ├── maat_panel.html                    ← Panel de control (mentor/admin): app, feedback, CRM, redes → /panel/ (ver docs/PANEL.md)
 │   └── sw.js                              ← Service Worker (CACHE_NAME se versiona en el build)
 ├── sql/                                   ← 28 archivos; ver sql/RUNBOOK.md para orden y estado
 └── supabase/functions/                    ← Deploy por supabase CLI, NUNCA por el Action

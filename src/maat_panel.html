@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>MAAT &#x2014; Panel de control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@400;600;700&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --c:#39A1C9; --o:#EBA055; --m:#7DCD93; --v:#896C8E; --r:#D76B6E;
+  --bg:#0d1117; --bg2:#111827; --text:#e8eaf0; --mu:#8892a4; --mu2:#6b7280; --bone:#F1EEE7;
+  --bd:rgba(255,255,255,0.08);
+  --font-title:'Saira Condensed',sans-serif; --font-body:'Sora',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;padding:0 0 64px;min-height:100vh;}
+.stripe{height:3px;background:linear-gradient(90deg,var(--c),var(--o),var(--m),var(--v),var(--r));}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px;}
+.hidden{display:none !important;}
+a{color:inherit;}
+
+/* ---- cabecera ---- */
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:22px 0;flex-wrap:wrap;}
+.brand{font-family:var(--font-title);font-weight:700;font-size:30px;letter-spacing:1px;}
+.brand small{display:block;font:500 11px/1 var(--font-body);letter-spacing:.24em;text-transform:uppercase;color:var(--mu);margin-top:4px;}
+.top-right{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.who{font-size:12.5px;color:var(--mu);}
+.lang-toggle{display:inline-flex;gap:2px;background:var(--bg2);border:1px solid var(--bd);border-radius:20px;padding:3px;}
+.lang-toggle button{border:none;background:transparent;font-family:var(--font-title);font-size:12px;font-weight:700;letter-spacing:1px;color:var(--mu);padding:5px 11px;border-radius:16px;cursor:pointer;}
+.lang-toggle button.on{background:var(--v);color:#fff;}
+.btn-ghost{background:none;border:1px solid var(--bd);color:var(--mu);padding:8px 14px;border-radius:8px;font-family:var(--font-title);font-size:12px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;}
+.btn-ghost:hover{border-color:var(--c);color:var(--text);}
+
+/* ---- entrada ---- */
+.auth{max-width:420px;margin:12vh auto 0;background:var(--bg2);border:1px solid var(--bd);border-radius:18px;padding:32px 28px;}
+.auth h1{font-family:var(--font-title);font-size:34px;font-weight:700;letter-spacing:.5px;margin:10px 0 4px;}
+.auth p.sub{color:var(--mu);font-size:13.5px;margin-bottom:22px;}
+.field{margin-bottom:14px;}
+.field label{display:block;font-family:var(--font-title);font-size:12px;letter-spacing:1.5px;color:var(--mu);text-transform:uppercase;margin-bottom:6px;}
+.field input{width:100%;padding:12px 14px;background:var(--bg);border:1.5px solid var(--bd);border-radius:10px;font-family:var(--font-body);font-size:15px;color:var(--text);outline:none;}
+.field input:focus{border-color:var(--c);}
+.btn{width:100%;padding:14px;background:var(--v);color:#fff;border:none;border-radius:10px;font-family:var(--font-title);font-size:15px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;}
+.btn:hover{background:var(--c);}
+.btn:disabled{opacity:.6;cursor:not-allowed;}
+.err-box{background:rgba(215,107,110,.12);color:var(--r);padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:12px;display:none;}
+.err-box.show{display:block;}
+
+/* ---- saludo y cifras ---- */
+.hello{padding:8px 0 22px;}
+.hello h1{font-family:var(--font-title);font-size:clamp(34px,5vw,52px);font-weight:700;letter-spacing:.5px;line-height:1.05;}
+.hello p{color:var(--mu);font-size:14.5px;margin-top:6px;max-width:60ch;}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:34px;}
+.kpi{background:var(--bg2);border:1px solid var(--bd);border-radius:14px;padding:16px 18px;position:relative;overflow:hidden;}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--k,var(--c));}
+.kpi .label{font-family:var(--font-title);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mu);margin-bottom:4px;}
+.kpi .val{font-family:var(--font-title);font-size:34px;font-weight:700;line-height:1;}
+.kpi.warn .val{color:var(--o);}
+
+/* ---- grupos y tarjetas ---- */
+.group{margin-bottom:30px;}
+.group h2{font-family:var(--font-title);font-size:15px;font-weight:600;letter-spacing:2.4px;text-transform:uppercase;color:var(--mu);margin-bottom:12px;display:flex;align-items:center;gap:12px;}
+.group h2::after{content:'';flex:1;height:1px;background:var(--bd);}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:14px;}
+.tile{position:relative;display:flex;flex-direction:column;gap:6px;padding:20px 20px 18px;background:var(--bg2);border:1px solid var(--bd);border-radius:16px;text-decoration:none;color:var(--text);overflow:hidden;transition:transform .2s,border-color .2s,background .2s;min-height:168px;}
+.tile::before{content:'';position:absolute;left:0;right:0;top:0;height:3px;background:var(--k,var(--c));}
+.tile:hover,.tile:focus-visible{transform:translateY(-3px);border-color:var(--k,var(--c));background:#141c2b;outline:none;}
+.rune{display:block;width:34px;height:42px;background-color:var(--bone);-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:left center;mask-position:left center;-webkit-mask-size:contain;mask-size:contain;margin-bottom:8px;}
+.tile h3{font-family:var(--font-title);font-size:24px;font-weight:700;letter-spacing:.3px;line-height:1.1;}
+.tile p{font-size:13px;color:var(--mu);line-height:1.5;}
+.tile .go{margin-top:auto;padding-top:10px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:600;color:var(--k,var(--c));display:flex;align-items:center;gap:8px;}
+.tile .addr{font-size:11px;color:var(--mu2);letter-spacing:.02em;}
+.badge{position:absolute;top:16px;right:16px;min-width:26px;height:26px;padding:0 8px;border-radius:13px;background:var(--bg);border:1px solid var(--bd);font-family:var(--font-title);font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;color:var(--mu);}
+.badge.on{background:var(--o);border-color:var(--o);color:#0d1117;}
+.note{color:var(--mu2);font-size:12.5px;text-align:center;margin-top:10px;}
+.note a{color:var(--mu);}
+@media (max-width:560px){.wrap{padding:0 14px;}.tiles{grid-template-columns:1fr;}.tile{min-height:0;}}
+</style>
+</head>
+<body>
+<div class="stripe"></div>
+<div class="wrap">
+
+  <!-- ENTRADA -->
+  <div id="auth-card" class="auth hidden">
+    <div class="brand">maat<small id="s-brand-sub"></small></div>
+    <h1 id="s-auth-h1"></h1>
+    <p class="sub" id="s-auth-sub"></p>
+    <div class="err-box" id="auth-err"></div>
+    <div class="field"><label for="a-email" id="lbl-email"></label><input id="a-email" type="email" autocomplete="username"></div>
+    <div class="field"><label for="a-pass" id="lbl-pass"></label><input id="a-pass" type="password" autocomplete="current-password"></div>
+    <button class="btn" id="a-btn" type="button"></button>
+    <div style="margin-top:16px;text-align:center;"><span class="lang-toggle"></span></div>
+  </div>
+
+  <!-- PANEL -->
+  <div id="dash" class="hidden">
+    <div class="top">
+      <div class="brand">maat<small id="s-top-sub"></small></div>
+      <div class="top-right">
+        <span class="who" id="who"></span>
+        <span class="lang-toggle"></span>
+        <button class="btn-ghost" id="btn-logout" type="button"></button>
+      </div>
+    </div>
+    <div class="hello"><h1 id="hello"></h1><p id="hello-sub"></p></div>
+    <div class="kpis" id="kpis"></div>
+    <div id="groups"></div>
+    <p class="note" id="note"></p>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+const CONFIG={
+  SUPABASE_URL:"https://pcclptmojjzqmfmzftot.supabase.co",
+  SUPABASE_ANON_KEY:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjY2xwdG1vamp6cW1mbXpmdG90Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4OTg3MjAsImV4cCI6MjA4NzQ3NDcyMH0.VuFBEy19fgNN5pSp_r8p2ZVViniunKdVW7Hy3AmqJXE"
+};
+const sb=supabase.createClient(CONFIG.SUPABASE_URL,CONFIG.SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+
+/* ---------- i18n (comparte la clave maat-lang con la app) ---------- */
+let lang=localStorage.getItem("maat-lang")||"es";
+function L(es,en){return lang==="es"?es:en;}
+function setLang(l){
+  lang=l;localStorage.setItem("maat-lang",l);
+  renderLangToggle();applyStaticI18N();
+  if(!document.getElementById("dash").classList.contains("hidden"))renderAll();
+}
+function renderLangToggle(){
+  const html=`<button class="${lang==="es"?"on":""}" data-lang="es">ES</button><button class="${lang==="en"?"on":""}" data-lang="en">EN</button>`;
+  document.querySelectorAll(".lang-toggle").forEach(el=>{el.innerHTML=html;});
+}
+function setTxt(id,txt){const e=document.getElementById(id);if(e)e.textContent=txt;}
+function applyStaticI18N(){
+  document.documentElement.lang=lang;
+  document.title=L("MAAT \u2014 Panel de control","MAAT \u2014 Control panel");
+  setTxt("s-brand-sub",L("Panel de control","Control panel"));
+  setTxt("s-top-sub",L("Panel de control","Control panel"));
+  setTxt("s-auth-h1",L("Entrar al panel","Sign in to the panel"));
+  setTxt("s-auth-sub",L("Con tu usuario de MAAT. Solo mentores y administradores.","With your MAAT account. Mentors and admins only."));
+  setTxt("lbl-email",L("Correo","Email"));
+  setTxt("lbl-pass",L("Contrase\u00F1a","Password"));
+  setTxt("a-btn",L("Entrar","Sign in"));
+  setTxt("btn-logout",L("Salir","Sign out"));
+}
+
+/* ---------- Herramientas ----------
+   Para AGREGAR una herramienta: una linea mas aqui.
+   href = direccion de hoy. sub = nombre del subdominio planeado (ver SUBDOMINIOS_ACTIVOS).
+   roles = quien la ve. rune = simbolo de la marca (https://somosmaat.org/assets/img/runas/). */
+const GROUPS=[
+  {id:"mentoria",es:"Mentor\u00EDa",en:"Mentoring"},
+  {id:"ventas",es:"Ventas y contenido",en:"Sales & content"},
+  {id:"web",es:"Sitio web",en:"Website"}
+];
+const TOOLS=[
+  {id:"app",group:"mentoria",roles:["mentor","admin"],rune:"runa-12",col:"var(--c)",href:"/app/",sub:"app",
+   es:["App del cliente","La app que usan tus clientes cada d\u00EDa."],en:["Client app","The app your clients use every day."]},
+  {id:"mentor",group:"mentoria",roles:["mentor","admin"],rune:"runa-06",col:"var(--o)",href:"/mentor/",
+   es:["Portal del mentor","Seguimiento de tus clientes, sesiones y alertas."],en:["Mentor portal","Your clients, sessions and alerts."]},
+  {id:"feedback",group:"mentoria",roles:["mentor","admin"],rune:"runa-05",col:"var(--m)",href:"/feedback-panel/",sub:"feedback",badge:"closings",
+   es:["Dashboard de feedback","Satisfacci\u00F3n, NPS, transformaci\u00F3n y referidos."],en:["Feedback dashboard","Satisfaction, NPS, transformation and referrals."]},
+  {id:"testimonios",group:"mentoria",roles:["mentor","admin"],rune:"runa-02",col:"var(--v)",href:"/feedback-panel/#tw-card",badge:"pendingTestimonials",
+   es:["Testimonios por revisar","Aprueba lo que env\u00EDan tus clientes, con su satisfacci\u00F3n al lado."],en:["Testimonials to review","Approve what your clients send, with their satisfaction next to it."]},
+  {id:"crm",group:"ventas",roles:["admin"],rune:"runa-19",col:"var(--o)",href:"https://maatcrm.vercel.app/",ext:true,sub:"crm",
+   es:["CRM","Prospectos, pipeline y correos."],en:["CRM","Prospects, pipeline and emails."]},
+  {id:"redes",group:"ventas",roles:["admin"],rune:"runa-16",col:"var(--c)",href:"https://content-os.vercel.app/",ext:true,sub:"redes",
+   es:["Redes sociales","Planifica y analiza tu contenido (Content OS)."],en:["Social media","Plan and analyze your content (Content OS)."]},
+  {id:"web",group:"web",roles:["mentor","admin"],rune:"runa-17",col:"var(--m)",href:"/es/",
+   es:["Sitio web","somosmaat.org, tal como lo ve el p\u00FAblico."],en:["Website","somosmaat.org, as the public sees it."]},
+  {id:"v2",group:"web",roles:["admin"],rune:"runa-08",col:"var(--v)",href:"https://v2.somosmaat.org/es/",ext:true,
+   es:["Versi\u00F3n alternativa (v2)","La versi\u00F3n \u00ABdolor primero\u00BB, sin indexar."],en:["Alternate version (v2)","The pain-first version, not indexed."]}
+];
+/* Cuando crees un subdominio en cPanel/Vercel, agregalo aqui y la tarjeta lo usara:
+   {app:"https://app.somosmaat.org/", crm:"https://crm.somosmaat.org/"} */
+const SUBDOMINIOS_ACTIVOS={};
+function toolHref(t){return (t.sub&&SUBDOMINIOS_ACTIVOS[t.sub])||t.href;}
+
+const D={me:null,stats:{}};
+function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");}
+function show(id){document.getElementById(id).classList.remove("hidden");}
+function hide(id){document.getElementById(id).classList.add("hidden");}
+function showErr(id,m){const e=document.getElementById(id);e.textContent=m;e.classList.add("show");}
+
+/* ---------- Entrada ---------- */
+async function doLogin(){
+  document.getElementById("auth-err").classList.remove("show");
+  const email=document.getElementById("a-email").value.trim().toLowerCase();
+  const pass=document.getElementById("a-pass").value;
+  const btn=document.getElementById("a-btn");btn.disabled=true;btn.textContent=L("Entrando...","Signing in...");
+  try{
+    const{error}=await sb.auth.signInWithPassword({email,password:pass});
+    if(error){showErr("auth-err",L("Credenciales incorrectas.","Incorrect credentials."));return;}
+    await boot();
+  }finally{btn.disabled=false;btn.textContent=L("Entrar","Sign in");}
+}
+async function doLogout(){try{await sb.auth.signOut();}catch(_){}location.reload();}
+
+async function boot(){
+  const{data:{user}}=await sb.auth.getUser();
+  if(!user){hide("dash");show("auth-card");return;}
+  const{data:me}=await sb.from("profiles").select("role,full_name,preferred_lang").eq("id",user.id).maybeSingle();
+  if(!me||!["mentor","admin"].includes(me.role)){
+    showErr("auth-err",L("Tu cuenta no tiene acceso a este panel.","Your account has no access to this panel."));
+    await sb.auth.signOut();hide("dash");show("auth-card");return;
+  }
+  D.me=me;
+  if(me.preferred_lang&&me.preferred_lang!==lang){
+    lang=me.preferred_lang;localStorage.setItem("maat-lang",lang);
+    renderLangToggle();applyStaticI18N();
+  }
+  hide("auth-card");show("dash");
+  renderAll();
+  loadStats();
+}
+
+/* Regla 6: Promise.allSettled. Cada cifra es independiente: si una tabla falla, solo esa se omite. */
+async function loadStats(){
+  const q=(t,f)=>{let r=sb.from(t).select("id",{count:"exact",head:true});return f?f(r):r;};
+  const res=await Promise.allSettled([
+    q("profiles",r=>r.eq("role","client").neq("active",false)),
+    q("client_feedback",r=>r.eq("moment","final")),
+    q("testimonials",r=>r.eq("status","pending")),
+    q("client_referrals",r=>r.eq("synced_to_crm",false))
+  ]);
+  const get=i=>(res[i].status==="fulfilled"&&!res[i].value.error&&res[i].value.count!=null)?res[i].value.count:null;
+  D.stats={clients:get(0),closings:get(1),pendingTestimonials:get(2),referrals:get(3)};
+  renderKPIs();renderGroups();
+}
+
+/* ---------- Pantalla ---------- */
+function renderAll(){
+  const first=String((D.me&&D.me.full_name)||"").trim().split(/\s+/)[0]||"";
+  setTxt("who",(D.me?(D.me.full_name||"")+" \u00B7 "+D.me.role:""));
+  setTxt("hello",L("Hola","Hello")+(first?", "+first:""));
+  setTxt("hello-sub",L("Todo tu mundo MAAT en un solo lugar. Cada herramienta pide su propio acceso.","All your MAAT world in one place. Each tool asks for its own login."));
+  setTxt("note",L("El CRM y las redes tienen cuentas propias; la app, el feedback y los testimonios usan tu usuario de MAAT.","The CRM and social media have their own accounts; the app, feedback and testimonials use your MAAT login."));
+  renderKPIs();renderGroups();
+}
+function fmt(n){return n==null?"--":String(n);}
+function renderKPIs(){
+  const s=D.stats||{};
+  const k=(label,val,col,warn)=>`<div class="kpi${warn?" warn":""}" style="--k:${col}"><div class="label">${esc(label)}</div><div class="val">${fmt(val)}</div></div>`;
+  document.getElementById("kpis").innerHTML=
+    k(L("Clientes activos","Active clients"),s.clients,"var(--c)")+
+    k(L("Cierres completados","Completed closings"),s.closings,"var(--m)")+
+    k(L("Testimonios por revisar","Testimonials to review"),s.pendingTestimonials,"var(--o)",(s.pendingTestimonials||0)>0)+
+    k(L("Referidos pendientes","Pending referrals"),s.referrals,"var(--v)",(s.referrals||0)>0);
+}
+function badgeFor(t){
+  if(!t.badge)return "";
+  const n=(D.stats||{})[t.badge];
+  if(n==null)return "";
+  return `<span class="badge${t.badge==="pendingTestimonials"&&n>0?" on":""}" title="${esc(t.badge)}">${esc(n)}</span>`;
+}
+function renderGroups(){
+  const role=(D.me&&D.me.role)||"";
+  const html=GROUPS.map(g=>{
+    const tools=TOOLS.filter(t=>t.group===g.id&&t.roles.includes(role));
+    if(!tools.length)return "";
+    return `<section class="group"><h2>${esc(g[lang])}</h2><div class="tiles">`+tools.map(t=>{
+      const href=toolHref(t),name=t[lang][0],desc=t[lang][1];
+      const ext=t.ext||/^https?:/.test(href)&&href.indexOf(location.origin)!==0;
+      const mask=`/assets/img/runas/${t.rune}.webp`;
+      const addr=ext?href.replace(/^https?:\/\//,"").replace(/\/$/,""):"";
+      return `<a class="tile" style="--k:${t.col}" href="${esc(href)}"${ext?' target="_blank" rel="noopener"':""} aria-label="${esc(name)}">`+
+        `<span class="rune" aria-hidden="true" style="-webkit-mask-image:url(${mask});mask-image:url(${mask})"></span>`+
+        badgeFor(t)+
+        `<h3>${esc(name)}</h3><p>${esc(desc)}</p>`+
+        (addr?`<span class="addr">${esc(addr)}</span>`:"")+
+        `<span class="go">${L("Abrir","Open")} ${ext?"&#8599;":"&rarr;"}</span></a>`;
+    }).join("")+`</div></section>`;
+  }).join("");
+  document.getElementById("groups").innerHTML=html;
+}
+
+/* ---------- Eventos ---------- */
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-lang]");if(b)setLang(b.dataset.lang);
+});
+document.getElementById("a-btn").addEventListener("click",doLogin);
+document.getElementById("btn-logout").addEventListener("click",doLogout);
+["a-email","a-pass"].forEach(id=>{
+  document.getElementById(id).addEventListener("keydown",e=>{if(e.key==="Enter")doLogin();});
+});
+
+/* Init */
+renderLangToggle();
+applyStaticI18N();
+boot();
+</script>
+</body>
+</html>
