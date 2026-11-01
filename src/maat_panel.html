@@ -59,6 +59,33 @@ a{color:inherit;}
 .kpi .val{font-family:var(--font-title);font-size:34px;font-weight:700;line-height:1;}
 .kpi.warn .val{color:var(--o);}
 
+/* ---- seguimiento: embudo de cierre + salud del sistema ---- */
+.pulse{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:14px;margin-bottom:34px;}
+.card{background:var(--bg2);border:1px solid var(--bd);border-radius:14px;padding:18px 20px;}
+.card h2{font-family:var(--font-title);font-size:12px;font-weight:600;letter-spacing:1.6px;text-transform:uppercase;color:var(--mu);margin:0 0 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.seg{display:inline-flex;gap:2px;background:var(--bg);border:1px solid var(--bd);border-radius:16px;padding:2px;}
+.seg button{border:none;background:transparent;font-family:var(--font-title);font-size:11px;font-weight:700;letter-spacing:1px;color:var(--mu);padding:4px 10px;border-radius:13px;cursor:pointer;}
+.seg button.on{background:var(--v);color:#fff;}
+.fn{display:grid;gap:11px;}
+.fn-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:13px;}
+.fn-top b{font-family:var(--font-title);font-size:20px;font-weight:700;}
+.fn-top small{color:var(--mu);font-size:11.5px;margin-left:6px;}
+.fn-bar{height:5px;border-radius:3px;background:var(--bd);margin-top:5px;overflow:hidden;}
+.fn-bar i{display:block;height:100%;border-radius:3px;background:var(--k,var(--c));}
+.card .foot{margin-top:14px;padding-top:12px;border-top:1px solid var(--bd);font-size:12.5px;color:var(--mu);}
+.card .foot b{color:var(--text);}
+.card .muted{color:var(--mu);font-size:13px;}
+.chip{font-family:var(--font-title);font-size:11px;font-weight:700;letter-spacing:1.2px;padding:3px 10px;border-radius:12px;border:1px solid var(--bd);}
+.chip.ok{color:var(--m);border-color:var(--m);}
+.chip.bad{color:var(--bg);background:var(--o);border-color:var(--o);}
+.hl{display:grid;gap:7px;font-size:13px;}
+.hl-row{display:flex;align-items:center;gap:9px;}
+.hl-row .dot{width:8px;height:8px;border-radius:50%;background:var(--m);flex:none;}
+.hl-row .dot.bad{background:var(--o);}
+.hl-row .n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.hl-row .t{color:var(--mu);font-size:12px;}
+.hl-alert{font-size:12.5px;color:var(--o);padding:8px 10px;background:rgba(240,138,60,.08);border-radius:8px;}
+
 /* ---- grupos y tarjetas ---- */
 .group{margin-bottom:30px;}
 .group h2{font-family:var(--font-title);font-size:15px;font-weight:600;letter-spacing:2.4px;text-transform:uppercase;color:var(--mu);margin-bottom:12px;display:flex;align-items:center;gap:12px;}
@@ -107,6 +134,7 @@ a{color:inherit;}
     </div>
     <div class="hello"><h1 id="hello"></h1><p id="hello-sub"></p></div>
     <div class="kpis" id="kpis"></div>
+    <div class="pulse" id="pulse"></div>
     <div id="groups"></div>
     <p class="note" id="note"></p>
   </div>
@@ -215,6 +243,8 @@ async function boot(){
   hide("auth-card");show("dash");
   renderAll();
   loadStats();
+  loadFunnel();
+  loadHealth();
 }
 
 /* Regla 6: Promise.allSettled. Cada cifra es independiente: si una tabla falla, solo esa se omite. */
@@ -238,7 +268,7 @@ function renderAll(){
   setTxt("hello",L("Hola","Hello")+(first?", "+first:""));
   setTxt("hello-sub",L("Todo tu mundo MAAT en un solo lugar. Cada herramienta pide su propio acceso.","All your MAAT world in one place. Each tool asks for its own login."));
   setTxt("note",L("El CRM y las redes tienen cuentas propias; la app, el feedback y los testimonios usan tu usuario de MAAT.","The CRM and social media have their own accounts; the app, feedback and testimonials use your MAAT login."));
-  renderKPIs();renderGroups();
+  renderKPIs();renderPulse();renderGroups();
 }
 function fmt(n){return n==null?"--":String(n);}
 function renderKPIs(){
@@ -277,9 +307,104 @@ function renderGroups(){
   document.getElementById("groups").innerHTML=html;
 }
 
+/* ---------- Embudo de cierre: la cifra a mirar durante un mes ----------
+   Cuantos clientes llegan al cierre, dejan su NPS, aceptan dar testimonio, lo envian y se publica. */
+D.win="30";D.funnel=null;D.health=null;
+async function loadFunnel(){
+  const since=D.win==="30"?new Date(Date.now()-30*864e5).toISOString():null;
+  const win=(r,col)=>since?r.gte(col,since):r;
+  const cnt=(t,f)=>f(sb.from(t).select("id",{count:"exact",head:true}));
+  const res=await Promise.allSettled([
+    cnt("profiles",r=>r.eq("role","client").neq("active",false)),
+    cnt("client_feedback",r=>win(r.eq("moment","final"),"submitted_at")),
+    cnt("client_feedback",r=>win(r.eq("moment","final").not("nps","is",null),"submitted_at")),
+    cnt("client_feedback",r=>win(r.eq("moment","final").eq("testimonial_ok",true),"submitted_at")),
+    cnt("testimonials",r=>win(r.neq("status","withdrawn"),"created_at")),
+    cnt("testimonials",r=>win(r.eq("status","approved"),"created_at")),
+    win(sb.from("client_feedback").select("nps,satisfaccion").eq("moment","final"),"submitted_at")
+  ]);
+  const n=i=>(res[i].status==="fulfilled"&&!res[i].value.error&&res[i].value.count!=null)?res[i].value.count:null;
+  const rows=(res[6].status==="fulfilled"&&!res[6].value.error)?(res[6].value.data||[]):[];
+  const ns=rows.map(r=>r.nps).filter(x=>x!=null),ss=rows.map(r=>r.satisfaccion).filter(x=>x!=null);
+  D.funnel={clients:n(0),finals:n(1),nps:n(2),ok:n(3),sent:n(4),approved:n(5),
+    npsScore:ns.length?Math.round((ns.filter(x=>x>=9).length-ns.filter(x=>x<=6).length)/ns.length*100):null,
+    sat:ss.length?Math.round(ss.reduce((a,b)=>a+b,0)/ss.length*10)/10:null};
+  renderPulse();
+}
+/* ---------- Salud del sistema: crons, push y alertas (sql/maat_system_health.sql + funcion health-watch) ---------- */
+async function loadHealth(){
+  try{
+    const{data,error}=await sb.rpc("admin_system_health");
+    D.health=error?{missing:/function|schema cache|PGRST202/i.test(error.message||"")}:{data};
+  }catch(_){D.health={missing:false};}
+  renderPulse();
+}
+function ago(iso){
+  if(!iso)return "--";
+  const m=Math.max(0,Math.round((Date.now()-new Date(iso).getTime())/60000));
+  if(m<60)return L("hace "+m+" min",m+" min ago");
+  const h=Math.round(m/60);
+  if(h<48)return L("hace "+h+" h",h+" h ago");
+  const d=Math.round(h/24);return L("hace "+d+" d",d+" d ago");
+}
+function funnelCard(){
+  const f=D.funnel;
+  const head=`<h2>${esc(L("Embudo de cierre","Closing funnel"))}<span class="seg"><button type="button" data-win="30" class="${D.win==="30"?"on":""}">${esc(L("30 d","30 d"))}</button><button type="button" data-win="all" class="${D.win==="all"?"on":""}">${esc(L("Todo","All"))}</button></span></h2>`;
+  if(!f)return `<div class="card">${head}<p class="muted">${esc(L("Cargando...","Loading..."))}</p></div>`;
+  const row=(label,v,base,baseLbl,col)=>{
+    const pct=(v!=null&&base)?Math.round(v/base*100):null;
+    return `<div><div class="fn-top"><span>${esc(label)}</span><span><b>${fmt(v)}</b>${pct!=null&&baseLbl?`<small>${pct}% ${esc(baseLbl)}</small>`:""}</span></div>`+
+      `<div class="fn-bar"><i style="width:${pct!=null?Math.min(100,pct):(v?100:0)}%;--k:${col}"></i></div></div>`;
+  };
+  const body=`<div class="fn">`+
+    row(L("Clientes activos","Active clients"),f.clients,0,"","var(--c)")+
+    row(L("Cierre completado","Closing completed"),f.finals,f.clients,L("de clientes","of clients"),"var(--m)")+
+    row(L("Dejaron su NPS","Left their NPS"),f.nps,f.finals,L("de cierres","of closings"),"var(--c)")+
+    row(L("Aceptaron dar testimonio","Agreed to a testimonial"),f.ok,f.finals,L("de cierres","of closings"),"var(--o)")+
+    row(L("Enviaron su testimonio","Sent their testimonial"),f.sent,f.finals,L("de cierres","of closings"),"var(--v)")+
+    row(L("Testimonios publicados","Published testimonials"),f.approved,f.sent,L("de enviados","of sent"),"var(--m)")+
+    `</div>`;
+  const foot=(f.finals||0)>0
+    ?`<div class="foot">NPS <b>${f.npsScore==null?"--":(f.npsScore>0?"+":"")+f.npsScore}</b> &nbsp;&middot;&nbsp; ${esc(L("Satisfacci\u00F3n media","Avg. satisfaction"))} <b>${f.sat==null?"--":f.sat+"/10"}</b></div>`
+    :`<div class="foot">${esc(L("A\u00FAn no hay cierres en este periodo.","No closings in this period yet."))}</div>`;
+  return `<div class="card">${head}${body}${foot}</div>`;
+}
+function healthCard(){
+  const title=`<h2>${esc(L("Salud del sistema","System health"))}`;
+  const h=D.health;
+  if(!h)return `<div class="card">${title}</h2><p class="muted">${esc(L("Cargando...","Loading..."))}</p></div>`;
+  if(!h.data){
+    return `<div class="card">${title}</h2><p class="muted">${esc(h.missing
+      ?L("A\u00FAn no est\u00E1 activada: corre sql/maat_system_health.sql en Supabase y despliega la funci\u00F3n health-watch.","Not enabled yet: run sql/maat_system_health.sql in Supabase and deploy the health-watch function.")
+      :L("No se pudo leer el estado del sistema.","Could not read the system status."))}</p></div>`;
+  }
+  const d=h.data,jobs=d.jobs||[],http=d.http||{},push=d.push||{},alerts=d.alerts||[];
+  const watch=jobs.find(j=>j.jobname==="maat-health-watch");
+  const watchDown=!watch||!watch.active||(watch.last_run&&(Date.now()-new Date(watch.last_run).getTime())>3*3600000);
+  const bad=(http.errors_6h||0)>0||jobs.some(j=>!j.active||j.last_status==="failed")||(d.alerts_24h||0)>0||watchDown;
+  const chip=`<span class="chip ${bad?"bad":"ok"}">${esc(bad?L("ATENCI\u00D3N","ATTENTION"):L("TODO EN ORDEN","ALL GOOD"))}</span>`;
+  const rows=jobs.map(j=>{
+    const ko=!j.active||j.last_status==="failed";
+    return `<div class="hl-row"><span class="dot${ko?" bad":""}"></span><span class="n">${esc(String(j.jobname).replace(/^maat-/,""))}</span><span class="t">${esc(j.active?ago(j.last_run):L("desactivada","disabled"))}</span></div>`;
+  }).join("");
+  const warn=[];
+  if(watchDown)warn.push(L("El vigilante no corre: revisa el cron maat-health-watch.","The watchdog is not running: check the maat-health-watch cron."));
+  if((http.errors_6h||0)>0){const e=http.last_error||{};warn.push(L(`${http.errors_6h} llamada(s) fallaron en 6 h (\u00FAltima: HTTP ${e.status==null?"--":e.status}).`,`${http.errors_6h} call(s) failed in 6 h (last: HTTP ${e.status==null?"--":e.status}).`));}
+  alerts.slice(0,3).forEach(a=>warn.push(((a.detail&&a.detail.text)||a.kind)+" \u00B7 "+ago(a.created_at)));
+  return `<div class="card">${title}${chip}</h2><div class="hl">${rows||`<span class="muted">${esc(L("Sin tareas programadas.","No scheduled jobs."))}</span>`}`+
+    warn.map(w=>`<div class="hl-alert">${esc(w)}</div>`).join("")+`</div>`+
+    `<div class="foot">${esc(L("Push enviados (24 h)","Push sent (24 h)"))} <b>${fmt(push.sent_24h)}</b> &nbsp;&middot;&nbsp; ${esc(L("\u00DAltimo","Last"))} <b>${esc(ago(push.last_sent_at))}</b></div></div>`;
+}
+function renderPulse(){
+  const el=document.getElementById("pulse");if(!el)return;
+  el.innerHTML=funnelCard()+healthCard();
+}
+
 /* ---------- Eventos ---------- */
 document.addEventListener("click",e=>{
   const b=e.target.closest("[data-lang]");if(b)setLang(b.dataset.lang);
+  const w=e.target.closest("[data-win]");
+  if(w&&w.dataset.win!==D.win){D.win=w.dataset.win;D.funnel=null;renderPulse();loadFunnel();}
 });
 document.getElementById("a-btn").addEventListener("click",doLogin);
 document.getElementById("btn-logout").addEventListener("click",doLogout);

@@ -62,6 +62,7 @@ maat-project/
     ├── session-reminders                  ← Recordatorios + prep de sesion (cron 15min)
     ├── community-activity                 ← Reacciones agrupadas ComuniMAAT (cron 3h)
     ├── broadcast-session-notes / send-custom-push / send-biotipo-result / link-preview
+    ├── health-watch                       ← Vigilante de crons/push: alerta por correo + tarjeta del panel (cron hora :25; ver docs/SALUD-SISTEMA.md)
     ├── testimonial                        ← Testimonios autogestionados desde la web (publica, --no-verify-jwt; ver docs/TESTIMONIOS.md)
     └── _shared/webpush.ts                 ← Libreria push compartida
 ```
@@ -254,6 +255,8 @@ supabase functions deploy maat-summary
 **maat-summary** — Resumen IA del progreso de un cliente (Mistral). Recibe `{client_id}`, retorna `{summary}`.
 **send-notifications** — Push notifications cron. Auth via CRON_SECRET o admin JWT.
 **testimonial** — Recibe el testimonio (foto, profesion, ubicacion, experiencia) del formulario de somosmaat.org. Publica (`--no-verify-jwt`): valida en servidor, sube la foto y guarda como PENDIENTE; ops `submit|get|update|withdraw` (enlace privado por token). Pruebas: `node --test supabase/functions/testimonial/*.test.ts`.
+
+**health-watch** — Vigilante del sistema (cron `25 * * * *`, auth CRON_SECRET, `verify_jwt=false`). Lee `_system_health_raw()` (tareas pg_cron + respuestas HTTP de `net._http_response` + push enviados), decide con `core.ts` (probado con `node --test supabase/functions/health-watch/core.test.ts`) y, si hay un problema NUEVO (enfriamiento 12 h), lo guarda en `system_alerts` y avisa por correo (SMTP_* de `testimonial`; destino `HEALTH_NOTIFY_EMAIL`). Cuerpo `{"dry":true}` evalua sin enviar; `{"test":true}` manda un correo de prueba.
 
 ## Pendientes
 

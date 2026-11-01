@@ -30,7 +30,8 @@
 | 20 | `maat_cron_community_activity.sql` | Cron 3h community-activity | ✅ aplicado |
 | 21 | `maat_notif_custom.sql` | profiles.notif_custom_morning | ✅ aplicado |
 | 22 | `maat_ritual_cierre.sql` | Columnas del ritual de cierre en calibrations | ✅ aplicado |
-| 23 | `maat_testimonials.sql` | testimonials + RPC get_public_testimonials + bucket testimonial-photos (requiere #1 y #18) | ⏳ pendiente de correr (Oct 2026) |
+| 23 | `maat_testimonials.sql` | testimonials + RPC get_public_testimonials + bucket testimonial-photos (requiere #1 y #18) | ✅ aplicado (1-nov-2026) |
+| 24 | `maat_system_health.sql` | system_alerts + `_system_health_raw()` + `admin_system_health()` + cron `maat-health-watch` (cada hora, :25). Requiere desplegar la funcion `health-watch` | ⏳ pendiente de correr (1-nov-2026) |
 
 ## Mantenimiento puntual (correr cuando aplique)
 

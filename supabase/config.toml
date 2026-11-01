@@ -410,3 +410,7 @@ verify_jwt = false
 
 [functions.maat-summary]
 verify_jwt = false
+
+[functions.health-watch]
+# Auth por CRON_SECRET (no JWT): con verify_jwt=true el gateway lo rechaza con 401.
+verify_jwt = false

@@ -124,7 +124,7 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           protocol: ftps
           local-dir: deploy/dashboard/
-          server-dir: somosmaat.org/dashboard/
+          server-dir: dashboard/
 
       - name: Subir dashboard de feedback (/feedback-panel/)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
